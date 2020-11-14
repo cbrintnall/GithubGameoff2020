@@ -1,6 +1,7 @@
 extends StaticBody2D
 
 enum TowerState {
+	INVALID_PLACEMENT,
 	PURCHASING,
 	UNCHARGED,
 	CHARGING,
@@ -19,6 +20,7 @@ export(Gradient) var too_close_gradient
 export(AudioStream) var shoot_audio
 export(AudioStream) var charging_audio
 
+onready var collision_zone = get_node("CollisionShape2D")
 onready var charge_particles = get_node("CPUParticles2D")
 onready var tween = get_node("Tween")
 onready var vision_area = get_node("TargetZone")
@@ -33,26 +35,63 @@ var targets := []
 
 var _line_wind_down_time = .5
 
-func _ready():
-	charge_timer.wait_time = charge_time
+func purchase():
+	_set_state(TowerState.UNCHARGED)
 	
+	get_node("Area2D/CollisionShape2D").disabled = true
+
+func can_place() -> bool:
+	return state != TowerState.INVALID_PLACEMENT
+
+func _ready():
 	vision_area.connect("body_entered", self, "_on_body_enter")
 	vision_area.connect("body_exited", self, "_on_body_exit")
 	charge_timer.connect("timeout", self, "_on_finish_charging")
 	
+	var area = get_node("Area2D")
+	
+	area.connect("body_entered", self, "_on_collision_enter")
+	area.connect("body_exited", self, "_on_collision_exit")
+	area.connect("area_entered", self, "_on_collision_enter")
+	area.connect("area_entered", self, "_on_collision_exit")
+	
+	charge_timer.wait_time = charge_time
 	line_beam.points = PoolVector2Array()
-	state = TowerState.PURCHASING
 	
-	var color = Color.aqua
-	color.a = .4
-	
-	modulate = color
+	_set_state(TowerState.PURCHASING)
 
+func _on_collision_exit(body):
+	_set_state(TowerState.PURCHASING)
+
+func _on_collision_enter(body):
+	_set_state(TowerState.INVALID_PLACEMENT)
+
+# handle state initialization here
 func _set_state(_state):
-	pass
-
-func _purchase():
-	modulate = Color.white
+	match _state:
+		TowerState.UNCHARGED:
+			pass
+		TowerState.CHARGED:
+			pass
+		TowerState.FIRING:
+			pass
+		TowerState.PURCHASING:
+			var color = Color.aqua
+			color.a = .4
+			modulate = color
+			collision_zone.disabled = true
+		TowerState.CHARGING:
+			pass
+		TowerState.INVALID_PLACEMENT:
+			var color = Color.red
+			color.a = .4
+			modulate = color
+	
+	if _state != TowerState.PURCHASING and _state != TowerState.INVALID_PLACEMENT:
+		modulate = Color.white
+		collision_zone.disabled = false
+	
+	state = _state
 
 func _get_random_target():
 	return targets[int(floor(rand_range(0, len(targets)-1)))]
@@ -61,7 +100,7 @@ func _shoot_at_target(target):
 	_shoot_beam_at_point(target, target.global_position)
 
 func _shoot_beam_at_point(shot_at, point: Vector2):
-	state = TowerState.FIRING
+	_set_state(TowerState.FIRING)
 	
 	var vectors = PoolVector2Array()
 	var target_point = point-global_position
@@ -97,10 +136,10 @@ func _shoot_beam_at_point(shot_at, point: Vector2):
 
 	# clear the beam
 	line_beam.points = PoolVector2Array()
-	state = TowerState.UNCHARGED
+	_set_state(TowerState.UNCHARGED)
 
 func _charge():
-	state = TowerState.CHARGING
+	_set_state(TowerState.CHARGING)
 	charge_timer.start()
 	
 	tween.interpolate_property(

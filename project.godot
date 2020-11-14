@@ -148,6 +148,7 @@ quantity_change_10_mult={
 [layer_names]
 
 2d_physics/layer_1="BaseEntityCollide"
+2d_physics/layer_18="TowerCantPlace"
 2d_physics/layer_19="TowerDetectable"
 2d_physics/layer_20="ActionAreaDetectable"
 

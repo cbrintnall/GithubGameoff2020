@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=2]
+[gd_scene load_steps=18 format=2]
 
 [ext_resource path="res://scenes/scripts/tower.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/towers/moon_beam_idle.png" type="Texture" id=2]
@@ -59,8 +59,13 @@ radius = 63.9432
 offsets = PoolRealArray( 0.680982, 0.969325 )
 colors = PoolColorArray( 0.572549, 0.909804, 0.752941, 1, 1, 1, 1, 0 )
 
+[sub_resource type="RectangleShape2D" id=13]
+extents = Vector2( 6, 7 )
+
 [node name="MoonBeamTower" type="StaticBody2D"]
+collision_layer = 131073
 script = ExtResource( 1 )
+damage_per_hit = 50.0
 beam_scalar_max = 10.0
 charge_time = 3.0
 base_beam_gradient = SubResource( 1 )
@@ -121,3 +126,11 @@ scale_amount_random = 1.0
 color_ramp = SubResource( 12 )
 
 [node name="Tween" type="Tween" parent="."]
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 655360
+collision_mask = 655360
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2( 0, 16.075 )
+shape = SubResource( 13 )

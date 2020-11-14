@@ -13,6 +13,7 @@ export(Color) var invalid_selection_color = Color.red
 export(NodePath) onready var dirt_tilemap_path = get_node(dirt_tilemap_path)
 export(NodePath) onready var ground_manager = get_node(ground_manager)
 
+onready var bad_action_player = get_node("BadAction")
 onready var footsteps_particles = get_node("footsteps/CPUParticles2D")
 onready var footsteps_timer = get_node("footsteps/Timer")
 onready var action_area = get_node("ActionArea")
@@ -108,11 +109,34 @@ func _check_under_action_area():
 			
 	action_area.set_default()
 
+func _handle_use_and_has_pending_tower():
+	if !_current_tower_purchase.can_place():
+		bad_action_player.play()
+		return
+
+	var pos = action_area.global_position
+	action_area.remove_child(_current_tower_purchase)
+	get_tree().root.add_child(_current_tower_purchase)
+	_current_tower_purchase.global_position = pos
+	_current_tower_purchase.purchase()
+	_current_tower_purchase = null
+
+func _cancel_current_tower():
+	_current_tower_purchase.queue_free()
+	_current_tower_purchase = null
+
 func _input(event):
 	if event.is_action_pressed("select_hoe"):
-		_initiate_tower_transaction(0)
+		if _current_tower_purchase:
+			_cancel_current_tower()
+		else:
+			_initiate_tower_transaction(0)
 
 	if event.is_action_pressed("use"):
+		if _current_tower_purchase:
+			_handle_use_and_has_pending_tower()
+			return
+		
 		var areas = action_area.get_overlapping_areas()
 		
 		# check if we need to use something in this area

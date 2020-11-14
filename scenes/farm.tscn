@@ -1,4 +1,4 @@
-[gd_scene load_steps=43 format=2]
+[gd_scene load_steps=44 format=2]
 
 [ext_resource path="res://assets/tilesets/farm.tres" type="TileSet" id=1]
 [ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=2]
@@ -125,6 +125,9 @@ extents = Vector2( 1, 1 )
 
 [sub_resource type="CircleShape2D" id=5]
 radius = 10.2098
+
+[sub_resource type="RectangleShape2D" id=34]
+extents = Vector2( 104.464, 72.2403 )
 
 [sub_resource type="AtlasTexture" id=21]
 atlas = ExtResource( 10 )
@@ -446,6 +449,15 @@ dirt_tilemap_path = NodePath("../../DirtBase")
 ground_manager = NodePath("../../GroundManager")
 
 [node name="EnemySpawner" parent="WorldLayering" instance=ExtResource( 25 )]
+
+[node name="NoTowerZone" type="Area2D" parent="WorldLayering"]
+position = Vector2( 104.534, 63.7115 )
+collision_layer = 131072
+collision_mask = 131072
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="WorldLayering/NoTowerZone"]
+position = Vector2( 0.707916, 8.2589 )
+shape = SubResource( 34 )
 
 [node name="ShippingChest" type="Area2D" parent="."]
 position = Vector2( 68, 0 )
