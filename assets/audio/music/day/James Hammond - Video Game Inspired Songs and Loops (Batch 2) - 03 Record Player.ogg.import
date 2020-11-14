@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 03 Record Player.ogg-a7cf22d086d8ba19edb71d9b90552453.oggstr"
+
+[deps]
+
+source_file="res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 03 Record Player.ogg"
+dest_files=[ "res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 03 Record Player.ogg-a7cf22d086d8ba19edb71d9b90552453.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

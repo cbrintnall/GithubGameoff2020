@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 05 Devastation.ogg-5d1fc813ae7a0cb59a9ee18cf3b24acd.oggstr"
+
+[deps]
+
+source_file="res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 05 Devastation.ogg"
+dest_files=[ "res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 05 Devastation.ogg-5d1fc813ae7a0cb59a9ee18cf3b24acd.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

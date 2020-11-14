@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 01 Solace.ogg-ed7e82cbd51485c6571b7b4cc37b59cc.oggstr"
+
+[deps]
+
+source_file="res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 01 Solace.ogg"
+dest_files=[ "res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 01 Solace.ogg-ed7e82cbd51485c6571b7b4cc37b59cc.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

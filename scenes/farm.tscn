@@ -1,0 +1,554 @@
+[gd_scene load_steps=43 format=2]
+
+[ext_resource path="res://assets/tilesets/farm.tres" type="TileSet" id=1]
+[ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=2]
+[ext_resource path="res://assets/textures/farm/chest/chest_idle.png" type="Texture" id=3]
+[ext_resource path="res://assets/tilesets/fences.tres" type="TileSet" id=4]
+[ext_resource path="res://assets/textures/farm/moon_fragment.png" type="Texture" id=5]
+[ext_resource path="res://scenes/scripts/GroundManager.gd" type="Script" id=6]
+[ext_resource path="res://scenes/scripts/moon.gd" type="Script" id=7]
+[ext_resource path="res://scenes/scripts/resource_spawner.gd" type="Script" id=8]
+[ext_resource path="res://scenes/resource.tscn" type="PackedScene" id=9]
+[ext_resource path="res://assets/textures/farm/chest/chest_open.png" type="Texture" id=10]
+[ext_resource path="res://scenes/scripts/MouseManager.gd" type="Script" id=11]
+[ext_resource path="res://assets/fonts/MinimalPixel v2.ttf" type="DynamicFontData" id=12]
+[ext_resource path="res://scenes/scripts/EventManager.gd" type="Script" id=13]
+[ext_resource path="res://scenes/shipping_chest.gd" type="Script" id=14]
+[ext_resource path="res://scenes/option_chooser.tscn" type="PackedScene" id=15]
+[ext_resource path="res://scenes/scripts/game_manager.gd" type="Script" id=16]
+[ext_resource path="res://themes/main.tres" type="Theme" id=17]
+[ext_resource path="res://scenes/scripts/farm_manager.gd" type="Script" id=18]
+[ext_resource path="res://assets/textures/ui/borders.png" type="Texture" id=19]
+[ext_resource path="res://assets/audio/next.wav" type="AudioStream" id=20]
+[ext_resource path="res://assets/textures/icons/lunar_rock.png" type="Texture" id=21]
+[ext_resource path="res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 07 Confrontation.ogg" type="AudioStream" id=22]
+[ext_resource path="res://assets/audio/lunar_rock_gained.wav" type="AudioStream" id=23]
+[ext_resource path="res://scenes/EnemySpawner.tscn" type="PackedScene" id=25]
+
+[sub_resource type="DynamicFont" id=1]
+size = 28
+font_data = ExtResource( 12 )
+
+[sub_resource type="DynamicFont" id=2]
+size = 21
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 12 )
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends Node2D
+
+onready var game_manager = get_node(\"/root/GameManager\")
+onready var player = get_node(\"AudioStreamPlayer\")
+onready var sfx_player = get_node(\"AudioStreamPlayer2\")
+onready var transition_tween = get_node(\"MusicTween\")
+
+export(float) var base_db = -6
+export(AudioStreamSample) var night_comes_sound := preload(\"res://assets/audio/348862__newagesoup__big-reverb-warhorn.wav\")
+
+export(Array, AudioStream) var day_music := [
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 03 Record Player.ogg\"),
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 05 Ressurection.ogg\"),
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 09 Sneaking Suspicion.ogg\"),
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 19 Sea of Trees.ogg\"),
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 01 Solace.ogg\"),
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 02 Organic.ogg\"),
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 03 Cabin.ogg\"),
+	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 13 Bug Catcher.ogg\")
+]
+
+export(Array, AudioStream) var night_music := [
+	preload(\"res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 07 Confrontation.ogg\"),
+	preload(\"res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 08 Enter the Dungeon.ogg\"),
+	preload(\"res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 16 Brimstone.ogg\"),
+	preload(\"res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 04 Prey.ogg\"),
+	preload(\"res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 05 Devastation.ogg\"),
+	preload(\"res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 08 Fight For Your Life!.ogg\")
+]
+
+func _sync_music():
+	var day = game_manager.get_farm_manager().is_day()
+	var target = night_music
+	
+	if day:
+		target = day_music
+
+	var selection = int(rand_range(0, len(target)-1))
+	player.stream = target[selection]
+	player.play()
+
+func _on_night():
+	sfx_player.stream = night_comes_sound
+	sfx_player.play()
+	
+	_transition_music()
+	
+func _on_day():
+	_transition_music()
+
+func _transition_music():
+	transition_tween.interpolate_property(
+		player,
+		\"volume_db\",
+		base_db,
+		-80, # AKA no sound..
+		5,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	
+	transition_tween.start()
+	yield(transition_tween,\"tween_all_completed\")
+	_sync_music()
+	transition_tween.interpolate_property(
+		player,
+		\"volume_db\",
+		-80, # AKA no sound..
+		base_db,
+		2.5,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	transition_tween.start()
+	
+func _ready():
+	game_manager.get_farm_manager().connect(\"day\", self, \"_on_day\")
+	game_manager.get_farm_manager().connect(\"night\", self, \"_on_night\")
+	player.volume_db = base_db
+	
+	_sync_music()
+	
+	player.connect(\"finished\", self, \"_sync_music\")
+"
+
+[sub_resource type="RectangleShape2D" id=4]
+extents = Vector2( 1, 1 )
+
+[sub_resource type="CircleShape2D" id=5]
+radius = 10.2098
+
+[sub_resource type="AtlasTexture" id=21]
+atlas = ExtResource( 10 )
+region = Rect2( 96, 0, 32, 20 )
+
+[sub_resource type="AtlasTexture" id=22]
+atlas = ExtResource( 10 )
+region = Rect2( 64, 0, 32, 20 )
+
+[sub_resource type="AtlasTexture" id=23]
+atlas = ExtResource( 10 )
+region = Rect2( 32, 0, 32, 20 )
+
+[sub_resource type="AtlasTexture" id=24]
+atlas = ExtResource( 10 )
+region = Rect2( 0, 0, 32, 20 )
+
+[sub_resource type="AtlasTexture" id=25]
+atlas = ExtResource( 10 )
+region = Rect2( 0, 0, 32, 20 )
+
+[sub_resource type="AtlasTexture" id=26]
+atlas = ExtResource( 10 )
+region = Rect2( 32, 0, 32, 20 )
+
+[sub_resource type="AtlasTexture" id=27]
+atlas = ExtResource( 10 )
+region = Rect2( 64, 0, 32, 20 )
+
+[sub_resource type="AtlasTexture" id=28]
+atlas = ExtResource( 10 )
+region = Rect2( 96, 0, 32, 20 )
+
+[sub_resource type="SpriteFrames" id=29]
+animations = [ {
+"frames": [ ExtResource( 3 ) ],
+"loop": true,
+"name": "default",
+"speed": 7.0
+}, {
+"frames": [ SubResource( 21 ), SubResource( 22 ), SubResource( 23 ), SubResource( 24 ) ],
+"loop": false,
+"name": "close",
+"speed": 8.0
+}, {
+"frames": [ SubResource( 25 ), SubResource( 26 ), SubResource( 27 ), SubResource( 28 ) ],
+"loop": false,
+"name": "open",
+"speed": 8.0
+} ]
+
+[sub_resource type="RectangleShape2D" id=30]
+extents = Vector2( 16.0672, 7.28363 )
+
+[sub_resource type="Curve" id=31]
+min_value = -360.0
+max_value = 360.0
+_data = [ Vector2( 0, 360 ), 0.0, 71.1818, 0, 0, Vector2( 1, 1 ), -2200.58, 0.0, 0, 0 ]
+
+[sub_resource type="Curve" id=32]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.836364 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="Gradient" id=33]
+offsets = PoolRealArray( 0.662577, 1 )
+colors = PoolColorArray( 0.996078, 0.611765, 0.00784314, 1, 0.996078, 0.611765, 0.00784314, 0 )
+
+[node name="GameManager" type="Node2D"]
+script = ExtResource( 16 )
+
+[node name="FarmManager" type="Node2D" parent="."]
+script = ExtResource( 18 )
+lunar_rock_gain_sound_divisor = 2
+day_color = Color( 0.917647, 0.917647, 0.917647, 1 )
+night_color = Color( 0.635294, 0.552941, 0.552941, 1 )
+day_breakpoint = 5
+night_breakpoint = 18
+transition_time = 1.0
+
+[node name="CanvasLayer" type="CanvasLayer" parent="FarmManager"]
+layer = -1
+
+[node name="VBoxContainer" type="VBoxContainer" parent="FarmManager/CanvasLayer"]
+margin_right = 132.0
+margin_bottom = 98.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="NinePatchRect2" type="NinePatchRect" parent="FarmManager/CanvasLayer/VBoxContainer"]
+margin_right = 132.0
+margin_bottom = 47.0
+size_flags_vertical = 3
+texture = ExtResource( 19 )
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect2"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/margin_right = 6
+custom_constants/margin_top = 6
+custom_constants/margin_left = 6
+custom_constants/margin_bottom = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label" type="Label" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect2/MarginContainer"]
+margin_left = 6.0
+margin_top = 9.0
+margin_right = 126.0
+margin_bottom = 37.0
+size_flags_horizontal = 3
+size_flags_vertical = 6
+theme = ExtResource( 17 )
+custom_fonts/font = SubResource( 1 )
+custom_colors/font_color = Color( 0.419608, 0.168627, 0.219608, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "00:00"
+align = 1
+valign = 1
+
+[node name="NinePatchRect3" type="NinePatchRect" parent="FarmManager/CanvasLayer/VBoxContainer"]
+margin_top = 51.0
+margin_right = 132.0
+margin_bottom = 98.0
+size_flags_vertical = 3
+texture = ExtResource( 19 )
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect3"]
+anchor_right = 1.0
+anchor_bottom = 0.948
+margin_bottom = 2.444
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/margin_right = 6
+custom_constants/margin_top = 6
+custom_constants/margin_left = 6
+custom_constants/margin_bottom = 6
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect3/MarginContainer"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 126.0
+margin_bottom = 41.0
+alignment = 1
+
+[node name="TextureRect" type="TextureRect" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect3/MarginContainer/HBoxContainer"]
+margin_left = 29.0
+margin_right = 39.0
+margin_bottom = 35.0
+texture = ExtResource( 21 )
+stretch_mode = 6
+
+[node name="Label" type="Label" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect3/MarginContainer/HBoxContainer"]
+margin_left = 43.0
+margin_top = 10.0
+margin_right = 91.0
+margin_bottom = 24.0
+theme = ExtResource( 17 )
+custom_colors/font_color = Color( 0.917647, 0.580392, 0.278431, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "123124"
+
+[node name="Tween" type="Tween" parent="FarmManager/CanvasLayer"]
+
+[node name="LunarRockGained" type="AudioStreamPlayer" parent="FarmManager/CanvasLayer"]
+stream = ExtResource( 23 )
+
+[node name="DayCycle" type="Node2D" parent="FarmManager"]
+
+[node name="CanvasModulate" type="CanvasModulate" parent="FarmManager/DayCycle"]
+color = Color( 0.635294, 0.552941, 0.552941, 1 )
+
+[node name="Timer" type="Timer" parent="FarmManager/DayCycle"]
+wait_time = 0.05
+autostart = true
+
+[node name="Tween" type="Tween" parent="FarmManager/DayCycle"]
+
+[node name="EventManager" type="CanvasLayer" parent="."]
+script = ExtResource( 13 )
+
+[node name="Control" type="Control" parent="EventManager"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="EventManager/Control"]
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+margin_left = -90.0
+margin_top = -300.0
+margin_bottom = 300.0
+grow_horizontal = 0
+grow_vertical = 0
+alignment = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="BaseLabel" type="Label" parent="EventManager/Control/VBoxContainer"]
+visible = false
+margin_top = 579.0
+margin_right = 90.0
+margin_bottom = 600.0
+grow_horizontal = 0
+grow_vertical = 0
+custom_fonts/font = SubResource( 2 )
+text = "+1 grass"
+align = 2
+
+[node name="MusicManager" type="Node2D" parent="."]
+script = SubResource( 3 )
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="MusicManager"]
+stream = ExtResource( 22 )
+
+[node name="AudioStreamPlayer2" type="AudioStreamPlayer" parent="MusicManager"]
+
+[node name="MusicTween" type="Tween" parent="MusicManager"]
+
+[node name="GroundManager" type="Node2D" parent="."]
+script = ExtResource( 6 )
+fence_tilemap = NodePath("../../GameManager/Fences")
+dirt_tilemap = NodePath("../../GameManager/DirtBase")
+audio_player = NodePath("../../GameManager/GroundManager/audio")
+moon = NodePath("../../GameManager/moon")
+untilled_dirt_tile = 1
+tilled_dirt_tile = 2
+
+[node name="ResourceSpawner" type="Node2D" parent="GroundManager"]
+script = ExtResource( 8 )
+resource_scene = ExtResource( 9 )
+ground_manager = NodePath("../../../GameManager/GroundManager")
+world_entities_parent = NodePath("../../WorldLayering")
+
+[node name="Timer" type="Timer" parent="GroundManager/ResourceSpawner"]
+autostart = true
+
+[node name="audio" type="AudioStreamPlayer2D" parent="GroundManager"]
+
+[node name="Timer" type="Timer" parent="GroundManager"]
+autostart = true
+
+[node name="MouseManager" type="Area2D" parent="."]
+collision_layer = 524288
+collision_mask = 524288
+script = ExtResource( 11 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MouseManager"]
+shape = SubResource( 4 )
+
+[node name="moon" type="Sprite" parent="."]
+position = Vector2( 105.792, 79.6948 )
+texture = ExtResource( 5 )
+script = ExtResource( 7 )
+
+[node name="StaticBody2D" type="StaticBody2D" parent="moon"]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="moon/StaticBody2D"]
+position = Vector2( -0.75, -0.875 )
+shape = SubResource( 5 )
+
+[node name="Timer" type="Timer" parent="moon"]
+wait_time = 10.0
+
+[node name="Fences" type="TileMap" parent="."]
+tile_set = ExtResource( 4 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( -1, 536870914, 0, -65536, 0, 0, -65535, 0, 0, -65534, 536870912, 0, -65533, 1, 0, -65532, 1, 0, -65528, 536870912, 0, -65527, 0, 0, -65526, 0, 0, -65525, 1, 0, -65524, 536870912, 0, -65523, -536870910, 0, 65535, 536870915, 0, 13, 1073741827, 0, 131071, 536870915, 0, 65549, 1073741827, 0, 196607, 536870915, 0, 131085, 1073741827, 0, 458751, 536870915, 0, 393229, 1073741827, 0, 524287, 536870915, 0, 458765, 1073741827, 0, 589823, 536870915, 0, 524301, 1073741827, 0, 655359, -2147483646, 0, 589824, 536870912, 0, 589825, 536870912, 0, 589826, 536870912, 0, 589827, 536870912, 0, 589828, 536870912, 0, 589832, 536870912, 0, 589833, 536870912, 0, 589834, 536870912, 0, 589835, 536870912, 0, 589836, 536870912, 0, 589837, 1073741826, 0 )
+
+[node name="DirtBase" type="TileMap" parent="."]
+z_index = -2
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( 0, 536870913, 0, 1, 536870913, 0, 2, 536870913, 0, 3, 536870913, 0, 4, 536870913, 0, 5, 536870913, 0, 6, 536870913, 0, 7, 536870913, 0, 8, 536870913, 0, 9, 536870913, 0, 10, 536870913, 0, 11, 536870913, 0, 12, 536870913, 0, 65536, 536870913, 0, 65537, 536870913, 0, 65538, 536870913, 0, 65539, 536870913, 0, 65540, 536870913, 0, 65541, 536870913, 0, 65542, 536870913, 0, 65543, 536870913, 0, 65544, 536870913, 0, 65545, 536870913, 0, 65546, 536870913, 0, 65547, 536870913, 0, 65548, 536870913, 0, 131072, 536870913, 0, 131073, 536870913, 0, 131074, 536870913, 0, 131075, 536870913, 0, 131076, 536870913, 0, 131077, 536870913, 0, 131078, 536870913, 0, 131079, 536870913, 0, 131080, 536870913, 0, 131081, 536870913, 0, 131082, 536870913, 0, 131083, 536870913, 0, 131084, 536870913, 0, 196608, 536870913, 0, 196609, 536870913, 0, 196610, 536870913, 0, 196611, 536870913, 0, 196612, 536870913, 0, 196613, 536870913, 0, 196614, 536870913, 0, 196615, 536870913, 0, 196616, 536870913, 0, 196617, 536870913, 0, 196618, 536870913, 0, 196619, 536870913, 0, 196620, 536870913, 0, 262144, 536870913, 0, 262145, 536870913, 0, 262146, 536870913, 0, 262147, 536870913, 0, 262148, 536870913, 0, 262149, 536870913, 0, 262150, 536870913, 0, 262151, 536870913, 0, 262152, 536870913, 0, 262153, 536870913, 0, 262154, 536870913, 0, 262155, 536870913, 0, 262156, 536870913, 0, 327680, 536870913, 0, 327681, 536870913, 0, 327682, 536870913, 0, 327683, 536870913, 0, 327684, 536870913, 0, 327685, 536870913, 0, 327686, 536870913, 0, 327687, 536870913, 0, 327688, 536870913, 0, 327689, 536870913, 0, 327690, 536870913, 0, 327691, 536870913, 0, 327692, 536870913, 0, 393216, 536870913, 0, 393217, 536870913, 0, 393218, 536870913, 0, 393219, 536870913, 0, 393220, 536870913, 0, 393221, 536870913, 0, 393222, 536870913, 0, 393223, 536870913, 0, 393224, 536870913, 0, 393225, 536870913, 0, 393226, 536870913, 0, 393227, 536870913, 0, 393228, 536870913, 0, 458752, 536870913, 0, 458753, 536870913, 0, 458754, 536870913, 0, 458755, 536870913, 0, 458756, 536870913, 0, 458757, 536870913, 0, 458758, 536870913, 0, 458759, 536870913, 0, 458760, 536870913, 0, 458761, 536870913, 0, 458762, 536870913, 0, 458763, 536870913, 0, 458764, 536870913, 0, 524288, 536870913, 0, 524289, 536870913, 0, 524290, 536870913, 0, 524291, 536870913, 0, 524292, 536870913, 0, 524293, 536870913, 0, 524294, 536870913, 0, 524295, 536870913, 0, 524296, 536870913, 0, 524297, 536870913, 0, 524298, 536870913, 0, 524299, 536870913, 0, 524300, 536870913, 0 )
+
+[node name="OuterDecorations" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+
+[node name="Paths" type="TileMap" parent="."]
+z_index = -1
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+format = 1
+tile_data = PoolIntArray( -786426, -1610612730, 0, -786425, 1610612743, 0, -786424, 7, 0, -786423, -1610612731, 0, -786422, 1610612743, 0, -786421, -1073741819, 0, -786420, 7, 0, -786419, 1610612743, 0, -786418, -1073741818, 0, -720890, 5, 0, -655354, 6, 0, -655353, -1610612731, 0, -655352, 7, 0, -655351, -1610612731, 0, -655350, -1610612731, 0, -655349, 7, 0, -655348, 1610612743, 0, -655347, -1610612731, 0, -655346, 1610612742, 0, -589810, 1610612741, 0, -524282, -1610612730, 0, -524281, 1610612743, 0, -524280, 7, 0, -524279, 1610612743, 0, -524278, 1610612743, 0, -524277, 7, 0, -524276, 1610612743, 0, -524275, 1610612743, 0, -524274, -1073741818, 0, -458746, -1610612729, 0, -393210, 1610612741, 0, -327674, -1610612729, 0, -262138, 1610612741, 0, -196602, 5, 0, -131066, 1610612741, 0, -1, 1610612740, 0, -65536, -1073741821, 0, -65535, -1073741821, 0, -65534, -1073741821, 0, -65533, -1073741821, 0, -65532, -1073741821, 0, -65531, -1073741821, 0, -65530, -1610612729, 0, -65529, -1073741821, 0, -65528, -1073741821, 0, -65527, -1073741821, 0, -65526, -1073741821, 0, -65525, -1073741821, 0, -65524, -1073741821, 0, -65523, -1073741820, 0, 65535, 1610612739, 0, 13, 3, 0, 131071, 1610612739, 0, 65549, 3, 0, 196607, 1610612739, 0, 131085, 3, 0, 262143, 1610612739, 0, 196621, 3, 0, 327671, -1610612731, 0, 327672, 7, 0, 327673, -1610612731, 0, 327674, 1610612743, 0, 327675, 7, 0, 327676, -1073741819, 0, 327677, -1610612731, 0, 327678, 1610612743, 0, 327679, -1073741819, 0, 262157, -1610612731, 0, 262158, 7, 0, 262159, -1610612731, 0, 262160, 1610612743, 0, 262161, 7, 0, 262162, 1610612743, 0, 262163, -1610612731, 0, 262164, 7, 0, 262165, 1610612743, 0, 393215, 1610612739, 0, 327693, 3, 0, 458751, 1610612739, 0, 393229, 3, 0, 524287, 1610612739, 0, 458765, 3, 0, 589823, 1610612739, 0, 524301, 3, 0, 655359, -1610612732, 0, 589824, -1610612733, 0, 589825, -1610612733, 0, 589826, -1610612733, 0, 589827, -1610612733, 0, 589828, -1610612733, 0, 589829, -1610612733, 0, 589830, -1073741817, 0, 589831, -1610612733, 0, 589832, -1610612733, 0, 589833, -1610612733, 0, 589834, -1610612733, 0, 589835, -1610612733, 0, 589836, -1610612733, 0, 589837, 4, 0, 655366, 5, 0, 720902, -1073741817, 0, 786438, 5, 0, 851974, 1610612741, 0, 917510, 5, 0, 983046, 1610612741, 0, 1048582, -1073741817, 0 )
+
+[node name="WorldLayering" type="YSort" parent="."]
+
+[node name="Player" parent="WorldLayering" instance=ExtResource( 2 )]
+position = Vector2( 28.7379, 24.1893 )
+dirt_tilemap_path = NodePath("../../DirtBase")
+ground_manager = NodePath("../../GroundManager")
+
+[node name="EnemySpawner" parent="WorldLayering" instance=ExtResource( 25 )]
+
+[node name="ShippingChest" type="Area2D" parent="."]
+position = Vector2( 68, 0 )
+collision_layer = 524288
+collision_mask = 524288
+script = ExtResource( 14 )
+
+[node name="ItemChooser" parent="ShippingChest" instance=ExtResource( 15 )]
+margin_left = -43.8964
+margin_top = -66.044
+margin_right = 46.1036
+margin_bottom = -17.044
+
+[node name="ValueLabel" type="Label" parent="ShippingChest"]
+margin_left = -57.2456
+margin_top = -4.77046
+margin_right = -17.2456
+margin_bottom = 9.22954
+theme = ExtResource( 17 )
+custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "$2"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="ShippingChest"]
+margin_left = 25.7708
+margin_top = -19.5211
+margin_right = 42.7708
+margin_bottom = 22.4789
+custom_constants/separation = 0
+alignment = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="ShippingChest/VBoxContainer"]
+position = Vector2( -93.7708, 19.5211 )
+stream = ExtResource( 20 )
+attenuation = 0.63728
+
+[node name="Up" type="Label" parent="ShippingChest/VBoxContainer"]
+margin_right = 17.0
+margin_bottom = 14.0
+theme = ExtResource( 17 )
+text = ">"
+align = 1
+valign = 2
+
+[node name="QuantityLabel" type="Label" parent="ShippingChest/VBoxContainer"]
+margin_top = 14.0
+margin_right = 17.0
+margin_bottom = 28.0
+theme = ExtResource( 17 )
+custom_colors/font_outline_modulate = Color( 0, 0, 0, 1 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "1"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Down" type="Label" parent="ShippingChest/VBoxContainer"]
+margin_top = 28.0
+margin_right = 17.0
+margin_bottom = 42.0
+theme = ExtResource( 17 )
+text = "<"
+align = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="ShippingChest"]
+frames = SubResource( 29 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ShippingChest"]
+position = Vector2( 0, 2.67572 )
+shape = SubResource( 30 )
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="ShippingChest"]
+z_index = -1
+amount = 50
+emission_shape = 2
+emission_rect_extents = Vector2( 12, 1 )
+angular_velocity_curve = SubResource( 31 )
+radial_accel = 10.1
+radial_accel_random = 1.0
+tangential_accel = 15.0
+tangential_accel_random = 1.0
+damping = 45.46
+damping_random = 1.0
+angle = 720.0
+angle_random = 1.0
+scale_amount = 3.0
+scale_amount_random = 1.0
+scale_amount_curve = SubResource( 32 )
+color_ramp = SubResource( 33 )
+hue_variation = 0.04
+hue_variation_random = 1.0
+
+[node name="Tween" type="Tween" parent="ShippingChest"]

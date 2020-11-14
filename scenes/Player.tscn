@@ -1,0 +1,426 @@
+[gd_scene load_steps=45 format=2]
+
+[ext_resource path="res://scenes/InventoryItemIcon.tscn" type="PackedScene" id=1]
+[ext_resource path="res://scenes/scripts/player.gd" type="Script" id=2]
+[ext_resource path="res://assets/textures/player/merchant/idle.png" type="Texture" id=3]
+[ext_resource path="res://assets/textures/player/merchant/walk.png" type="Texture" id=4]
+[ext_resource path="res://scenes/scripts/inventory_ui.gd" type="Script" id=5]
+[ext_resource path="res://scenes/scripts/player_inventory.gd" type="Script" id=6]
+[ext_resource path="res://assets/textures/player/reticle.png" type="Texture" id=7]
+[ext_resource path="res://assets/textures/icons/hoe.png" type="Texture" id=8]
+[ext_resource path="res://assets/fonts/MinimalPixel v2.ttf" type="DynamicFontData" id=9]
+[ext_resource path="res://assets/textures/player/merchant/hoe.png" type="Texture" id=10]
+[ext_resource path="res://assets/textures/player/merchant/pickup.png" type="Texture" id=11]
+[ext_resource path="res://assets/audio/footsteps.wav" type="AudioStream" id=13]
+[ext_resource path="res://assets/textures/player/walk_cloud.png" type="Texture" id=14]
+
+[sub_resource type="AtlasTexture" id=1]
+atlas = ExtResource( 3 )
+region = Rect2( 0, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=2]
+atlas = ExtResource( 3 )
+region = Rect2( 64, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=3]
+atlas = ExtResource( 3 )
+region = Rect2( 128, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=4]
+atlas = ExtResource( 3 )
+region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=5]
+atlas = ExtResource( 4 )
+region = Rect2( 0, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=6]
+atlas = ExtResource( 4 )
+region = Rect2( 64, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=7]
+atlas = ExtResource( 4 )
+region = Rect2( 128, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=8]
+atlas = ExtResource( 4 )
+region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=9]
+atlas = ExtResource( 4 )
+region = Rect2( 256, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=10]
+atlas = ExtResource( 11 )
+region = Rect2( 0, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=11]
+atlas = ExtResource( 11 )
+region = Rect2( 64, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=12]
+atlas = ExtResource( 11 )
+region = Rect2( 128, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=13]
+atlas = ExtResource( 11 )
+region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=14]
+atlas = ExtResource( 10 )
+region = Rect2( 0, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=15]
+atlas = ExtResource( 10 )
+region = Rect2( 64, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=16]
+atlas = ExtResource( 10 )
+region = Rect2( 128, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=17]
+atlas = ExtResource( 10 )
+region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=18]
+atlas = ExtResource( 10 )
+region = Rect2( 256, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=19]
+atlas = ExtResource( 10 )
+region = Rect2( 320, 0, 64, 64 )
+
+[sub_resource type="SpriteFrames" id=20]
+animations = [ {
+"frames": [ SubResource( 1 ), SubResource( 2 ), SubResource( 3 ), SubResource( 4 ) ],
+"loop": true,
+"name": "idle",
+"speed": 8.0
+}, {
+"frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ), SubResource( 9 ) ],
+"loop": true,
+"name": "walking",
+"speed": 10.0
+}, {
+"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
+"loop": true,
+"name": "pickup",
+"speed": 10.0
+}, {
+"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"loop": true,
+"name": "till",
+"speed": 12.0
+} ]
+
+[sub_resource type="CircleShape2D" id=21]
+radius = 3.10546
+
+[sub_resource type="GDScript" id=22]
+script/source = "
+extends Camera2D
+
+var _duration = 0.0
+var _period_in_ms = 0.0
+var _amplitude = 0.0
+var _timer = 0.0
+var _last_shook_timer = 0
+var _previous_x = 0.0
+var _previous_y = 0.0
+var _last_offset = Vector2(0, 0)
+
+func _ready():
+	set_process(true)
+
+
+# Shake with decreasing intensity while there's time remaining.
+func _process(delta):
+	# Only shake when there's shake time remaining.
+	if _timer == 0:
+		set_offset(Vector2())
+		set_process(false)
+		return
+	# Only shake on certain frames.
+	_last_shook_timer = _last_shook_timer + delta
+	# Be mathematically correct in the face of lag; usually only happens once.
+	while _last_shook_timer >= _period_in_ms:
+		_last_shook_timer = _last_shook_timer - _period_in_ms
+		# Lerp between [amplitude] and 0.0 intensity based on remaining shake time.
+		var intensity = _amplitude * (1 - ((_duration - _timer) / _duration))
+		# Noise calculation logic from http://jonny.morrill.me/blog/view/14
+		var new_x = rand_range(-1.0, 1.0)
+		var x_component = intensity * (_previous_x + (delta * (new_x - _previous_x)))
+		var new_y = rand_range(-1.0, 1.0)
+		var y_component = intensity * (_previous_y + (delta * (new_y - _previous_y)))
+		_previous_x = new_x
+		_previous_y = new_y
+		# Track how much we've moved the offset, as opposed to other effects.
+		var new_offset = Vector2(x_component, y_component)
+		set_offset(get_offset() - _last_offset + new_offset)
+		_last_offset = new_offset
+	# Reset the offset when we're done shaking.
+	_timer = _timer - delta
+	if _timer <= 0:
+		_timer = 0
+		set_offset(get_offset() - _last_offset)
+
+
+# Kick off a new screenshake effect.
+func shake(duration, frequency, amplitude):
+	# Don't interrupt current shake duration
+	if(_timer != 0):
+		return
+	
+	# Initialize variables.
+	_duration = duration
+	_timer = duration
+	_period_in_ms = 1.0 / frequency
+	_amplitude = amplitude
+	_previous_x = rand_range(-1.0, 1.0)
+	_previous_y = rand_range(-1.0, 1.0)
+	# Reset previous offset, if any.
+	set_offset(get_offset() - _last_offset)
+	_last_offset = Vector2(0, 0)
+	set_process(true)
+"
+
+[sub_resource type="GDScript" id=23]
+script/source = "extends Area2D
+
+onready var sprite = get_node(\"AnimatedSprite\")
+
+func set_can_use():
+	sprite.modulate = Color.green
+	
+func set_default():
+	sprite.modulate = Color.white
+	
+func set_cant_use():
+	sprite.modulate = Color.red
+
+"
+
+[sub_resource type="RectangleShape2D" id=24]
+extents = Vector2( 7.9, 7.9 )
+
+[sub_resource type="AtlasTexture" id=25]
+atlas = ExtResource( 7 )
+region = Rect2( 0, 0, 16, 16 )
+
+[sub_resource type="AtlasTexture" id=26]
+atlas = ExtResource( 7 )
+region = Rect2( 16, 0, 16, 16 )
+
+[sub_resource type="SpriteFrames" id=27]
+animations = [ {
+"frames": [ SubResource( 25 ), SubResource( 26 ) ],
+"loop": true,
+"name": "default",
+"speed": 4.0
+} ]
+
+[sub_resource type="StyleBoxFlat" id=28]
+bg_color = Color( 0, 0, 0, 0.219608 )
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="GDScript" id=29]
+script/source = "extends CanvasLayer
+
+export(String) var hoe_action = \"select_hoe\"
+export(String) var pickaxe_action
+export(String) var axe_action
+"
+
+[sub_resource type="DynamicFont" id=30]
+size = 14
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 9 )
+
+[sub_resource type="Gradient" id=31]
+offsets = PoolRealArray( 0.662577, 0.969325 )
+colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
+
+[node name="Player" type="KinematicBody2D"]
+position = Vector2( 0, 3 )
+script = ExtResource( 2 )
+speed = 1.0
+dirt_tilemap_path = NodePath("../../GameManager/DirtBase")
+ground_manager = NodePath("../../GameManager/GroundManager")
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="."]
+z_index = 4
+frames = SubResource( 20 )
+animation = "idle"
+frame = 1
+playing = true
+offset = Vector2( 0, -12 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( -1.88504, 2.67874 )
+shape = SubResource( 21 )
+
+[node name="Camera2D" type="Camera2D" parent="."]
+current = true
+zoom = Vector2( 0.2, 0.2 )
+script = SubResource( 22 )
+
+[node name="ActionArea" type="Area2D" parent="."]
+z_index = 2
+collision_layer = 524288
+collision_mask = 524288
+script = SubResource( 23 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ActionArea"]
+shape = SubResource( 24 )
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="ActionArea"]
+z_index = -1
+frames = SubResource( 27 )
+frame = 1
+playing = true
+
+[node name="Inventory" type="Node2D" parent="."]
+script = ExtResource( 6 )
+
+[node name="CanvasLayer" type="CanvasLayer" parent="Inventory"]
+
+[node name="Control" type="Control" parent="Inventory/CanvasLayer"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+script = ExtResource( 5 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+slot_scene = ExtResource( 1 )
+player_inventory = NodePath("../..")
+grid_parent = NodePath("MarginContainer/PanelContainer/MarginContainer/VBoxContainer")
+
+[node name="MarginContainer" type="MarginContainer" parent="Inventory/CanvasLayer/Control"]
+anchor_left = 0.1
+anchor_top = 0.1
+anchor_right = 0.9
+anchor_bottom = 0.9
+mouse_filter = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/margin_right = 0
+custom_constants/margin_top = 0
+custom_constants/margin_left = 0
+custom_constants/margin_bottom = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PanelContainer" type="PanelContainer" parent="Inventory/CanvasLayer/Control/MarginContainer"]
+margin_right = 819.0
+margin_bottom = 480.0
+mouse_filter = 1
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_styles/panel = SubResource( 28 )
+
+[node name="MarginContainer" type="MarginContainer" parent="Inventory/CanvasLayer/Control/MarginContainer/PanelContainer"]
+margin_right = 819.0
+margin_bottom = 480.0
+mouse_filter = 1
+custom_constants/margin_right = 50
+custom_constants/margin_top = 0
+custom_constants/margin_left = 50
+custom_constants/margin_bottom = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Inventory/CanvasLayer/Control/MarginContainer/PanelContainer/MarginContainer"]
+margin_left = 50.0
+margin_right = 769.0
+margin_bottom = 480.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+alignment = 1
+
+[node name="ToolsUi" type="CanvasLayer" parent="."]
+script = SubResource( 29 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ToolsUi"]
+visible = false
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_top = -128.0
+alignment = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="ToolsUi/HBoxContainer"]
+margin_left = 448.0
+margin_right = 576.0
+margin_bottom = 128.0
+rect_min_size = Vector2( 128, 128 )
+
+[node name="PanelContainer" type="PanelContainer" parent="ToolsUi/HBoxContainer/MarginContainer"]
+margin_right = 128.0
+margin_bottom = 128.0
+
+[node name="MarginContainer" type="MarginContainer" parent="ToolsUi/HBoxContainer/MarginContainer/PanelContainer"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 121.0
+margin_bottom = 121.0
+custom_constants/margin_right = 16
+custom_constants/margin_top = 16
+custom_constants/margin_left = 16
+custom_constants/margin_bottom = 16
+
+[node name="TextureRect" type="TextureRect" parent="ToolsUi/HBoxContainer/MarginContainer/PanelContainer/MarginContainer"]
+margin_left = 16.0
+margin_top = 16.0
+margin_right = 98.0
+margin_bottom = 98.0
+texture = ExtResource( 8 )
+expand = true
+stretch_mode = 1
+
+[node name="Label" type="Label" parent="ToolsUi/HBoxContainer/MarginContainer/PanelContainer"]
+margin_left = 113.0
+margin_top = 107.0
+margin_right = 121.0
+margin_bottom = 121.0
+grow_horizontal = 0
+grow_vertical = 0
+size_flags_horizontal = 8
+size_flags_vertical = 8
+custom_fonts/font = SubResource( 30 )
+text = "1"
+
+[node name="footsteps" type="Node2D" parent="."]
+
+[node name="audio" type="AudioStreamPlayer2D" parent="footsteps"]
+stream = ExtResource( 13 )
+
+[node name="Timer" type="Timer" parent="footsteps"]
+wait_time = 0.4
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="footsteps"]
+position = Vector2( -1.5, 2.199 )
+emitting = false
+amount = 10
+local_coords = false
+texture = ExtResource( 14 )
+emission_shape = 1
+emission_sphere_radius = 2.0
+gravity = Vector2( 0, 0 )
+initial_velocity = 3.0
+initial_velocity_random = 1.0
+angular_velocity = 30.0
+angular_velocity_random = 1.0
+radial_accel = 3.0
+angle = 720.0
+angle_random = 1.0
+scale_amount = 0.1
+scale_amount_random = 0.25
+color_ramp = SubResource( 31 )

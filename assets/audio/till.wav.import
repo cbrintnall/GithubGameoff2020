@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/till.wav-7470034c0c77ed897b3e178fdd50ddc6.sample"
+
+[deps]
+
+source_file="res://assets/audio/till.wav"
+dest_files=[ "res://.import/till.wav-7470034c0c77ed897b3e178fdd50ddc6.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

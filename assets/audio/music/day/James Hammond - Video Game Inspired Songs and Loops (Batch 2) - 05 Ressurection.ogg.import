@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 05 Ressurection.ogg-8a4b5be55f14a22c25326832dee013ad.oggstr"
+
+[deps]
+
+source_file="res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 05 Ressurection.ogg"
+dest_files=[ "res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 05 Ressurection.ogg-8a4b5be55f14a22c25326832dee013ad.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

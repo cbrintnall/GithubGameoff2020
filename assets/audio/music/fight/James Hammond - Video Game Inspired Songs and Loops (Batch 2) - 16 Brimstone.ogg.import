@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 16 Brimstone.ogg-e1c340d2468b64cdc3908072e0353321.oggstr"
+
+[deps]
+
+source_file="res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 16 Brimstone.ogg"
+dest_files=[ "res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 16 Brimstone.ogg-e1c340d2468b64cdc3908072e0353321.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

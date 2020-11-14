@@ -1,0 +1,123 @@
+[gd_scene load_steps=17 format=2]
+
+[ext_resource path="res://scenes/scripts/tower.gd" type="Script" id=1]
+[ext_resource path="res://assets/textures/farm/towers/moon_beam_idle.png" type="Texture" id=2]
+[ext_resource path="res://assets/textures/farm/towers/moon_beam_charged.png" type="Texture" id=3]
+[ext_resource path="res://assets/audio/sfx/towers/moon_beam_shoot.wav" type="AudioStream" id=4]
+
+[sub_resource type="Gradient" id=1]
+offsets = PoolRealArray( 0.00613497, 0.0584795, 1 )
+colors = PoolColorArray( 0.2, 0.313726, 0.258824, 0, 0.572549, 0.909804, 0.752941, 1, 0.572549, 0.909804, 0.752941, 1 )
+
+[sub_resource type="Gradient" id=2]
+offsets = PoolRealArray( 0, 0.140351 )
+colors = PoolColorArray( 0.572549, 0.909804, 0.752941, 0, 0.572549, 0.909804, 0.752941, 1 )
+
+[sub_resource type="Curve" id=3]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.245455 ), -1.69581, 0.0, 0, 0 ]
+
+[sub_resource type="AtlasTexture" id=4]
+atlas = ExtResource( 2 )
+region = Rect2( 0, 0, 32, 44 )
+
+[sub_resource type="AtlasTexture" id=5]
+atlas = ExtResource( 3 )
+region = Rect2( 0, 0, 32, 44 )
+
+[sub_resource type="AtlasTexture" id=6]
+atlas = ExtResource( 3 )
+region = Rect2( 32, 0, 32, 44 )
+
+[sub_resource type="AtlasTexture" id=7]
+atlas = ExtResource( 3 )
+region = Rect2( 64, 0, 32, 44 )
+
+[sub_resource type="AtlasTexture" id=8]
+atlas = ExtResource( 3 )
+region = Rect2( 96, 0, 32, 44 )
+
+[sub_resource type="SpriteFrames" id=9]
+animations = [ {
+"frames": [ SubResource( 4 ) ],
+"loop": false,
+"name": "default",
+"speed": 5.0
+}, {
+"frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ) ],
+"loop": true,
+"name": "charging",
+"speed": 20.0
+} ]
+
+[sub_resource type="CircleShape2D" id=10]
+radius = 8.22091
+
+[sub_resource type="CircleShape2D" id=11]
+radius = 63.9432
+
+[sub_resource type="Gradient" id=12]
+offsets = PoolRealArray( 0.680982, 0.969325 )
+colors = PoolColorArray( 0.572549, 0.909804, 0.752941, 1, 1, 1, 1, 0 )
+
+[node name="MoonBeamTower" type="StaticBody2D"]
+script = ExtResource( 1 )
+beam_scalar_max = 10.0
+charge_time = 3.0
+base_beam_gradient = SubResource( 1 )
+too_close_gradient = SubResource( 2 )
+shoot_audio = ExtResource( 4 )
+
+[node name="VariableNodes" type="Node2D" parent="."]
+
+[node name="ChargeAudio" type="AudioStreamPlayer2D" parent="VariableNodes"]
+
+[node name="ChargeTimer" type="Timer" parent="VariableNodes"]
+one_shot = true
+
+[node name="Beam" type="Node2D" parent="."]
+position = Vector2( -178.544, -11.6673 )
+
+[node name="Line2D" type="Line2D" parent="Beam"]
+position = Vector2( 178.544, -1.30074 )
+z_index = 1
+points = PoolVector2Array( 0, 0, 54.891, 0 )
+width = 3.0
+width_curve = SubResource( 3 )
+default_color = Color( 0.4, 0.501961, 1, 1 )
+gradient = SubResource( 1 )
+
+[node name="Tween" type="Tween" parent="Beam"]
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="."]
+frames = SubResource( 9 )
+playing = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2( -0.176777, 15.2028 )
+shape = SubResource( 10 )
+
+[node name="TargetZone" type="Area2D" parent="."]
+visible = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="TargetZone"]
+shape = SubResource( 11 )
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+position = Vector2( 0, -11.779 )
+amount = 15
+emission_shape = 1
+emission_sphere_radius = 30.0
+spread = 46.31
+gravity = Vector2( 0, 0 )
+orbit_velocity_random = 1.0
+linear_accel_random = 1.0
+radial_accel = 100.0
+radial_accel_random = 1.0
+tangential_accel = 15.0
+angle = 720.0
+angle_random = 1.0
+scale_amount = 2.0
+scale_amount_random = 1.0
+color_ramp = SubResource( 12 )
+
+[node name="Tween" type="Tween" parent="."]

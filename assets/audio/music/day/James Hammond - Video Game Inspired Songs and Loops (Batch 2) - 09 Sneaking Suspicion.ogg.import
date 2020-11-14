@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 09 Sneaking Suspicion.ogg-6a5f7a741d148ee4204f99e54adcc876.oggstr"
+
+[deps]
+
+source_file="res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 09 Sneaking Suspicion.ogg"
+dest_files=[ "res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 09 Sneaking Suspicion.ogg-6a5f7a741d148ee4204f99e54adcc876.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

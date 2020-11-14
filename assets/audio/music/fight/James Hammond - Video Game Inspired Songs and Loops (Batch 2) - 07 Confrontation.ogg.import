@@ -1,0 +1,15 @@
+[remap]
+
+importer="ogg_vorbis"
+type="AudioStreamOGGVorbis"
+path="res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 07 Confrontation.ogg-04ef71f9b6f24e1472d04eabba34888a.oggstr"
+
+[deps]
+
+source_file="res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 07 Confrontation.ogg"
+dest_files=[ "res://.import/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 07 Confrontation.ogg-04ef71f9b6f24e1472d04eabba34888a.oggstr" ]
+
+[params]
+
+loop=true
+loop_offset=0

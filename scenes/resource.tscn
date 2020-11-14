@@ -1,0 +1,76 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://assets/fonts/MinimalPixel v2.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://assets/textures/farm/grass.png" type="Texture" id=2]
+[ext_resource path="res://scenes/scripts/resource.gd" type="Script" id=3]
+[ext_resource path="res://scenes/ground_resources/grass.tres" type="Resource" id=4]
+
+[sub_resource type="CircleShape2D" id=1]
+radius = 5.25399
+
+[sub_resource type="DynamicFont" id=2]
+size = 7
+font_data = ExtResource( 1 )
+
+[sub_resource type="Curve" id=3]
+min_value = -360.0
+max_value = 360.0
+_data = [ Vector2( 0, 26.1818 ), 0.0, 0.0, 0, 0, Vector2( 1, 52.3636 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="Curve" id=4]
+max_value = 100.0
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 100 ), 305.818, 0.0, 0, 0 ]
+
+[sub_resource type="Gradient" id=5]
+offsets = PoolRealArray( 0.609272, 0.980132 )
+colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
+
+[node name="Resource" type="Area2D"]
+collision_layer = 524288
+collision_mask = 524288
+script = ExtResource( 3 )
+inner_resource = ExtResource( 4 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 1 )
+
+[node name="LabelParent" type="Node2D" parent="."]
+
+[node name="Label" type="Label" parent="LabelParent"]
+margin_left = -11.0087
+margin_top = -16.7043
+margin_right = 9.99133
+margin_bottom = -2.70427
+grow_horizontal = 2
+custom_fonts/font = SubResource( 2 )
+text = "Grass"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="onbreak" type="AudioStreamPlayer2D" parent="."]
+
+[node name="Particles2D" type="CPUParticles2D" parent="."]
+emitting = false
+one_shot = true
+explosiveness = 1.0
+local_coords = false
+texture = ExtResource( 2 )
+emission_shape = 1
+emission_sphere_radius = 3.0
+gravity = Vector2( 0, 90 )
+angular_velocity_curve = SubResource( 3 )
+damping = 65.58
+damping_curve = SubResource( 4 )
+angle = 174.5
+angle_random = 0.71
+scale_amount = 0.2
+scale_amount_random = 0.3
+color_ramp = SubResource( 5 )
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="ground_resource" type="Sprite" parent="."]
+texture = ExtResource( 2 )

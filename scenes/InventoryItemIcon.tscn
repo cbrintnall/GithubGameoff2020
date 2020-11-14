@@ -1,0 +1,90 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://assets/fonts/MinimalPixel v2.ttf" type="DynamicFontData" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends MarginContainer
+
+onready var button = get_node(\"PanelContainer/TextureButton\")
+onready var label = get_node(\"Label\")
+
+var this_item: Item
+
+func _ready():
+	button.connect(\"pressed\", self, \"_on_press\")
+
+func _on_press():
+	print(\"pressed\")
+
+func has_item(item: Item) -> bool:
+	return item == this_item
+
+func is_open() -> bool:
+	return this_item == null
+
+func set_quantity(amount):
+	label.text = str(amount)
+
+func set_item(item: Item):
+	button.texture_disabled = item.texture
+	button.texture_hover = item.texture
+	button.texture_normal = item.texture
+	button.texture_pressed = item.texture
+
+	this_item = item
+"
+
+[sub_resource type="StyleBoxFlat" id=2]
+content_margin_left = 4.0
+content_margin_right = 4.0
+content_margin_top = 4.0
+content_margin_bottom = 4.0
+bg_color = Color( 0.792157, 0.690196, 0.690196, 1 )
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="DynamicFont" id=3]
+size = 14
+outline_color = Color( 0, 0, 0, 1 )
+font_data = ExtResource( 1 )
+
+[node name="InventoryItemIcon" type="MarginContainer"]
+margin_right = 80.0
+margin_bottom = 80.0
+rect_min_size = Vector2( 80, 80 )
+custom_constants/margin_right = 8
+custom_constants/margin_top = 8
+custom_constants/margin_left = 8
+custom_constants/margin_bottom = 8
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="PanelContainer" type="PanelContainer" parent="."]
+margin_left = 8.0
+margin_top = 8.0
+margin_right = 72.0
+margin_bottom = 72.0
+custom_styles/panel = SubResource( 2 )
+
+[node name="TextureButton" type="TextureButton" parent="PanelContainer"]
+margin_left = 4.0
+margin_top = 4.0
+margin_right = 60.0
+margin_bottom = 60.0
+expand = true
+stretch_mode = 5
+
+[node name="Label" type="Label" parent="."]
+margin_left = 72.0
+margin_top = 58.0
+margin_right = 72.0
+margin_bottom = 72.0
+size_flags_horizontal = 8
+size_flags_vertical = 8
+custom_fonts/font = SubResource( 3 )
+align = 1
+valign = 2
