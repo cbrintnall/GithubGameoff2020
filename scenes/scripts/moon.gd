@@ -2,6 +2,9 @@ extends Sprite
 
 signal do_pulse(energy)
 
+export(float) var max_pulse
+export(float) var min_pulse
+
 onready var timer: Timer = get_node("Timer")
 
 var max_distance_in_tiles = 5
@@ -18,8 +21,9 @@ func _pulse():
 	
 	emit_signal("do_pulse", amt_energy)
 	
-	print("Energy emitted: %d" % amt_energy)
-	
-	next_energy_emitted = rand_range(75, 125)
+	next_energy_emitted = rand_range(
+		min_pulse, 
+		max_pulse
+	)
 	
 	timer.start()

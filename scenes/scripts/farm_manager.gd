@@ -76,7 +76,7 @@ func _sync_lunar_rock_to_label(by := 0):
 		lunar_rock_audio.set_pitch_scale(.75)
 	else:
 		lunar_rock_label.text = str(current_lunar_rocks)
-	
+
 func add_lunar_rocks(amt: int):
 	current_lunar_rocks += amt
 	

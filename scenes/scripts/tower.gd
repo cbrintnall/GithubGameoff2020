@@ -19,7 +19,9 @@ export(Gradient) var base_beam_gradient
 export(Gradient) var too_close_gradient
 export(AudioStream) var shoot_audio
 export(AudioStream) var charging_audio
+export(Texture) var icon_texture
 
+onready var no_place_area = get_node("Area2D")
 onready var collision_zone = get_node("CollisionShape2D")
 onready var charge_particles = get_node("CPUParticles2D")
 onready var tween = get_node("Tween")
@@ -48,12 +50,10 @@ func _ready():
 	vision_area.connect("body_exited", self, "_on_body_exit")
 	charge_timer.connect("timeout", self, "_on_finish_charging")
 	
-	var area = get_node("Area2D")
-	
-	area.connect("body_entered", self, "_on_collision_enter")
-	area.connect("body_exited", self, "_on_collision_exit")
-	area.connect("area_entered", self, "_on_collision_enter")
-	area.connect("area_entered", self, "_on_collision_exit")
+	no_place_area.connect("body_entered", self, "_on_collision_enter")
+	no_place_area.connect("body_exited", self, "_on_collision_exit")
+	no_place_area.connect("area_entered", self, "_on_collision_enter")
+	no_place_area.connect("area_exited", self, "_on_collision_exit")
 	
 	charge_timer.wait_time = charge_time
 	line_beam.points = PoolVector2Array()

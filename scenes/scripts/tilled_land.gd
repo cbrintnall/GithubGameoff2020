@@ -11,9 +11,14 @@ TODO:
 
 signal done_growing
 
+export(AudioStreamSample) var harvest_sound
+export(AudioStreamSample) var plant_sound
+
 # energy gained per tick
 const decr_amt = 10.0
 
+onready var player = get_node("AudioStreamPlayer2D")
+onready var energy_particles = get_node("CPUParticles2D")
 onready var seed_chooser = get_node("SeedChooser")
 onready var game_manager = get_node("/root/GameManager")
 onready var growing_sprite = get_node("GrowingPlant")
@@ -102,6 +107,7 @@ func _on_ground_tick():
 		
 func _on_finished_growing():
 	emit_signal("done_growing")
+	energy_particles.color = Color.limegreen
 
 func on_action_hover():
 	if !growing_plant:
@@ -118,6 +124,9 @@ func _do_harvest():
 	game_manager.get_player().inventory.add_item(growing_plant.finished_plant)
 	growing_plant = null
 	growing_sprite.visible = false
+	energy_particles.color = Color.white
+	player.stream = harvest_sound
+	player.play()
 	_enable_seed_menu()
 
 func done_growing():
@@ -137,6 +146,13 @@ func give_energy(amt: float):
 	current_energy = clamp(current_energy+amt, 0, 100)
 	var energy_gained = current_energy - initial_energy
 	
+	var amount = lerp(0, 10, current_energy/100)
+	
+	energy_particles.visible = amount > 0
+	
+	if amount != energy_particles.amount:
+		energy_particles.amount = clamp(lerp(0, 10, current_energy/100), 1, 10)
+	
 	if energy_gained > 0:
 		_energy_notification(true, energy_gained)
 
@@ -147,4 +163,6 @@ func set_growing(plant: GrowingPlant):
 	growing_sprite.visible = true
 	growing_sprite.frame = 0
 	current_progress = 0.0
+	player.stream = plant_sound
+	player.play()
 	seed_chooser.disable()

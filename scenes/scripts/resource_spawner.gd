@@ -4,6 +4,8 @@ export(PackedScene) var resource_scene
 export(NodePath) onready var ground_manager = get_node(ground_manager)
 export(NodePath) onready var world_entities_parent = get_node(world_entities_parent)
 
+onready var collider_check_ray = get_node("RayCast2D")
+
 #poisson params
 var radius = 5.0
 var retries = 30.0
@@ -22,17 +24,24 @@ func _generate_points():
 	_points_queue = _sampler.generate_points(radius, ground_manager.get_inbounds_rect(), retries)
 
 func _spawn_wave():
-	if current_count < max_points:
-		var point = _points_queue[randi() % _points_queue.size()]
+	var found_point = false
+	while current_count < max_points and !found_point and _points_queue.size() > 0:
+		var point_idx = randi() % _points_queue.size()
+		var point = _points_queue[point_idx]
 		var world_point = ground_manager.to_world(point.floor())
-		var new_instance = resource_scene.instance()
 		
-		new_instance.connect("destroyed", self, "_on_resource_destroyed")
-		new_instance.position = world_point
+		collider_check_ray.global_position = world_point
+		collider_check_ray.force_raycast_update()
 		
-		world_entities_parent.add_child(new_instance)
-		
-		current_count += 1
+		if !collider_check_ray.is_colliding():
+			var new_instance = resource_scene.instance()
+			new_instance.connect("destroyed", self, "_on_resource_destroyed")
+			new_instance.position = world_point
+			world_entities_parent.add_child(new_instance)
+			current_count += 1
+			found_point = true
+		else:
+			_points_queue.remove(point_idx)
 
 func _on_resource_destroyed(destroyed):
 	current_count -= 1

@@ -58,9 +58,18 @@ func use():
 	
 	if option:
 		_deposit_item(option, current_quantity)
+		_sync_options_chooser()
 
 func _sync_options_chooser():
-	item_chooser.set_options(_get_sellable_items())
+	var options = _get_sellable_items()
+	
+	if len(options) == 0:
+		item_chooser.disable()
+		quantity_root.visible = false
+		value_label.visible = false
+		return
+	
+	item_chooser.set_options(options)
 	_set_side_text(item_chooser.get_current_option())
 	item_chooser.enable()
 
@@ -75,8 +84,6 @@ func _deposit_item(item: Item, amt: int):
 		items[item] = 0
 		
 	items[item] += amt
-	
-	_sync_options_chooser()
 
 func _handle_quantity_change_input(event):
 	if event.is_action_pressed("select_next_alt"):

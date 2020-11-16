@@ -13,8 +13,10 @@ export(Color) var invalid_selection_color = Color.red
 export(NodePath) onready var dirt_tilemap_path = get_node(dirt_tilemap_path)
 export(NodePath) onready var ground_manager = get_node(ground_manager)
 
+onready var game_manager = get_node("/root/GameManager")
 onready var bad_action_player = get_node("BadAction")
-onready var footsteps_particles = get_node("footsteps/CPUParticles2D")
+onready var step_particles = get_node("footsteps/Steps")
+onready var footsteps_particles = get_node("footsteps/Puffs")
 onready var footsteps_timer = get_node("footsteps/Timer")
 onready var action_area = get_node("ActionArea")
 onready var animated_sprite = get_node("AnimatedSprite")
@@ -28,16 +30,17 @@ var move_vec_multiplier: Vector2 = Vector2.ONE
 var last_hovered_tile: Vector2
 var last_areas := []
 
+var _current_tower_scene: PackedScene
 var _current_tower_purchase
-var _tower_purchase_map := [
-	preload("res://scenes/towers/moon_beam_tower.tscn")
-]
 
 func _ready():
 	get_node("/root/GameManager").set_current_camera(get_node("Camera2D"))
+	get_node("ToolsUi").connect("tower_selected", self, "_initiate_tower_transaction")
 	set_equipped_tool(Tool.HOE)
 	
 	footsteps_timer.connect("timeout", get_node("footsteps/audio"), "play")
+	
+	action_area.visible = true
 
 func _handle_movement(delta):
 	var move_vec = Vector2.ZERO
@@ -58,11 +61,13 @@ func _handle_movement(delta):
 		footsteps_timer.autostart = true
 		footsteps_timer.start()
 		footsteps_particles.emitting = true
+		step_particles.emitting = true
 	elif move_vec == Vector2.ZERO and last_move_vec != Vector2.ZERO and move_vec_multiplier != Vector2.ZERO:
 		animated_sprite.play("idle")
 		footsteps_timer.autostart = false
 		footsteps_timer.stop()
 		footsteps_particles.emitting = false
+		step_particles.emitting = false
 
 	if move_vec.x > 0:
 		animated_sprite.flip_h = false
@@ -119,6 +124,11 @@ func _handle_use_and_has_pending_tower():
 	get_tree().root.add_child(_current_tower_purchase)
 	_current_tower_purchase.global_position = pos
 	_current_tower_purchase.purchase()
+	
+	# remove the currency from the player's wallet
+	game_manager.get_farm_manager().remove_lunar_rocks(
+		_current_tower_purchase.value
+	)
 	_current_tower_purchase = null
 
 func _cancel_current_tower():
@@ -126,11 +136,9 @@ func _cancel_current_tower():
 	_current_tower_purchase = null
 
 func _input(event):
-	if event.is_action_pressed("select_hoe"):
-		if _current_tower_purchase:
-			_cancel_current_tower()
-		else:
-			_initiate_tower_transaction(0)
+	# get rid of the current selection!
+	if event.is_action_pressed("cancel_selection") and _current_tower_purchase:
+		_current_tower_purchase.queue_free()
 
 	if event.is_action_pressed("use"):
 		if _current_tower_purchase:
@@ -164,13 +172,22 @@ func _handle_selected_tile(tile, data):
 	if !data.tilled:
 		ground_manager.till_dirt(tile)
 
-func _initiate_tower_transaction(idx):
+func _initiate_tower_transaction(tower):
+	if tower.instance().value > game_manager.get_farm_manager().current_lunar_rocks:
+		bad_action_player.play()
+		_current_tower_purchase = null
+		return
+	
+	# remove selection if they hit the same tower again
+	if _current_tower_scene == tower and _current_tower_purchase:
+		_current_tower_purchase.queue_free()
+
 	# if we are already purchasing, just return, we don't need another ya goose!
 	if _current_tower_purchase:
 		return
-		
-	_current_tower_purchase = _tower_purchase_map[idx].instance()
 	
+	_current_tower_purchase = tower.instance()
+	_current_tower_scene = tower
 	action_area.add_child(_current_tower_purchase)
 
 func _physics_process(delta):

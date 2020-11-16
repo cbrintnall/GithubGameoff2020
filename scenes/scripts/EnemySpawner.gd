@@ -4,15 +4,30 @@ export(float) var spawn_rate = 5.0
 export(PackedScene) var enemy
 
 onready var _path = get_node("Path2D")
+onready var _spawn_timer = get_node("Timer")
 
 var _cached_layer_root
+var _should_spawn := false
 
 func _ready():
-	_cached_layer_root = get_node("/root/GameManager/WorldLayering")
+	var farm_manager = get_node("/root/GameManager").get_farm_manager()
+
+	farm_manager.connect("night", self, "_on_night")
+	farm_manager.connect("day", self, "_on_day")
 	
-	while true:
+	_cached_layer_root = get_node("/root/GameManager/WorldLayering")
+	_spawn_timer.wait_time = spawn_rate
+	_spawn_timer.connect("timeout", self, "_on_timeout")
+
+func _on_timeout():
+	if _should_spawn:
 		_do_spawn()
-		yield(get_tree().create_timer(spawn_rate),"timeout")
+
+func _on_night():
+	_should_spawn = true
+	
+func _on_day():
+	_should_spawn = false
 
 func _do_spawn():
 	var new_enemy = enemy.instance()

@@ -1,10 +1,12 @@
-[gd_scene load_steps=23 format=2]
+[gd_scene load_steps=27 format=2]
 
 [ext_resource path="res://scenes/scripts/tilled_land.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/dirt.png" type="Texture" id=2]
 [ext_resource path="res://assets/textures/farm/plants/tomato.png" type="Texture" id=3]
 [ext_resource path="res://assets/fonts/MinimalPixel v2.ttf" type="DynamicFontData" id=4]
 [ext_resource path="res://scenes/option_chooser.tscn" type="PackedScene" id=5]
+[ext_resource path="res://assets/audio/sfx/plants/harvest.wav" type="AudioStream" id=6]
+[ext_resource path="res://assets/audio/sfx/plants/plant.wav" type="AudioStream" id=7]
 
 [sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 2 )
@@ -78,13 +80,23 @@ size = 7
 outline_color = Color( 0, 0, 0, 1 )
 font_data = ExtResource( 4 )
 
+[sub_resource type="Curve" id=18]
+max_value = 100.0
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 100 ), 210.909, 0.0, 0, 0 ]
+
+[sub_resource type="Curve" id=19]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.0636363 ), -3.60303, 0.0, 0, 0 ]
+
 [node name="TilledLand" type="Area2D"]
 z_index = 1
 collision_layer = 524288
 collision_mask = 524288
 script = ExtResource( 1 )
+harvest_sound = ExtResource( 6 )
+plant_sound = ExtResource( 7 )
 
 [node name="SeedChooser" parent="." instance=ExtResource( 5 )]
+visible = false
 
 [node name="Sprite" type="Sprite" parent="."]
 z_index = -1
@@ -92,13 +104,14 @@ texture = SubResource( 1 )
 centered = false
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
 position = Vector2( 8, 8 )
 shape = SubResource( 2 )
 
 [node name="GrowingPlant" type="AnimatedSprite" parent="."]
 visible = false
 frames = SubResource( 16 )
-frame = 5
+frame = 7
 playing = true
 centered = false
 
@@ -121,3 +134,18 @@ valign = 1
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+visible = false
+position = Vector2( 7.74732, 7.48246 )
+amount = 1
+emission_shape = 1
+emission_sphere_radius = 6.17
+gravity = Vector2( 0, -20 )
+tangential_accel = 1.0
+damping_curve = SubResource( 18 )
+angle = 720.0
+angle_random = 1.0
+scale_amount_curve = SubResource( 19 )
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]

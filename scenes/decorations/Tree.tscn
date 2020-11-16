@@ -1,0 +1,66 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://assets/textures/farm/decorations/atlas.png" type="Texture" id=1]
+
+[sub_resource type="AtlasTexture" id=1]
+atlas = ExtResource( 1 )
+region = Rect2( 460, 270, 70, 80 )
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends Sprite
+
+export(Color) var fade_color
+
+onready var fade_tween = get_node(\"Tween\")
+
+func _ready():
+	var area = get_node(\"Area2D\")
+	
+	area.connect(\"body_entered\", self, \"_on_body_enter\")
+	area.connect(\"body_exited\", self, \"_on_body_leave\")
+	
+func _on_body_enter(body):
+	fade_tween.interpolate_property(
+		self,
+		\"modulate\",
+		Color.white,
+		fade_color,
+		.25,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	
+	fade_tween.start()
+	
+func _on_body_leave(body):
+	fade_tween.interpolate_property(
+		self,
+		\"modulate\",
+		fade_color,
+		Color.white,
+		.25,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	
+	fade_tween.start()
+"
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 27.1819, 25.3102 )
+
+[node name="Tree" type="Sprite"]
+texture = SubResource( 1 )
+offset = Vector2( 0, -24 )
+script = SubResource( 3 )
+fade_color = Color( 1, 1, 1, 0.466667 )
+
+[node name="Area2D" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 65536
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2( 0, -29.6416 )
+shape = SubResource( 2 )
+
+[node name="Tween" type="Tween" parent="."]
