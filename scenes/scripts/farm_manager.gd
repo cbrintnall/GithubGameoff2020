@@ -2,6 +2,7 @@ extends Node2D
 
 signal night
 signal day
+signal shipment_time
 
 const tween_duration := 3.0
 
@@ -13,20 +14,28 @@ onready var lunar_rock_audio = get_node("CanvasLayer/LunarRockGained")
 onready var time_label = get_node("CanvasLayer/VBoxContainer/NinePatchRect2/MarginContainer/Label")
 onready var clock_base = get_node("CanvasLayer/VBoxContainer/NinePatchRect2")
 onready var lunar_rock_label = get_node("CanvasLayer/VBoxContainer/NinePatchRect3/MarginContainer/HBoxContainer/Label")
+onready var moonlight = get_node("MoonLight")
 
+export(int) var moonlight_min_x_offset = -500
+export(int) var moonlight_max_x_offset = 500
 export(int) var lunar_rock_gain_sound_divisor := 1
 export(Color) var day_color
 export(Color) var night_color
 # in hours
 export(int) var day_breakpoint
 export(int) var night_breakpoint
+export(int) var shipment_buffer_time = 2
 export(float) var transition_time
+
+var night_unit_time := 0.0
+var day_unit_time := 0.0
 
 var lunar_rock_amt := 0
 var current_lunar_rocks := 0
 
 var day: int
 # start the game at 7 AM!
+# TODO: change back to 7 am
 var hours := 7
 var minutes: int
 
@@ -120,10 +129,37 @@ func _ready():
 	_set_to_appropriate_time()
 	_sync_lunar_rock_to_label()
 	
-	add_lunar_rocks(500)
-	
 	# we set it to -1 in editor to hide it, this makes sure it's always there :)
 	get_node("CanvasLayer").layer = 1
+	
+	var prefs = get_node("/root/GameManager").get_player_prefs()
+	
+	prefs.register_command("coins", funcref(self, "_on_coins"))
+	prefs.register_command("time", funcref(self, "_on_time"))
+
+func _on_time(args):
+	match args:
+		["hour", "set", var to]:
+			hours = int(to)
+		["minute", "set", var to]:
+			minutes = int(to)
+		["set", "night"]:
+			hours = night_breakpoint-1
+			minutes = 59
+		["set", "day"]:
+			hours = day_breakpoint-1
+			minutes = 59
+
+func _on_coins(args):
+	match args:
+		["add", var amount]:
+			add_lunar_rocks(int(amount))
+		["remove", var amount]:
+			remove_lunar_rocks(int(amount))
+
+func _process(delta):
+	if !is_day():
+		pass
 
 func _on_timeout():
 	minutes += 1
@@ -137,7 +173,17 @@ func _on_timeout():
 			
 		if hours == night_breakpoint:
 			_transition_night()
+			
+		if hours == (night_breakpoint - shipment_buffer_time):
+			emit_signal("shipment_time")
 		
+		var minute_lerp = inverse_lerp(0, 59, minutes)
+		
+		if hours >= night_breakpoint:
+			night_unit_time = clamp(inverse_lerp(night_breakpoint, 24, hours), 0.0, 0.4)
+		if hours >= 0 and hours < day_breakpoint:
+			night_unit_time = clamp(inverse_lerp(0, day_breakpoint, hours), .4, 1.0)
+	
 	if hours > 23:
 		hours = 0
 		day += 1

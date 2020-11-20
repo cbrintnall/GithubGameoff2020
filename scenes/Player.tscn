@@ -1,6 +1,6 @@
-[gd_scene load_steps=45 format=2]
+[gd_scene load_steps=44 format=2]
 
-[ext_resource path="res://scenes/InventoryItemIcon.tscn" type="PackedScene" id=1]
+[ext_resource path="res://scenes/player/item_quantifier.tscn" type="PackedScene" id=1]
 [ext_resource path="res://scenes/scripts/player.gd" type="Script" id=2]
 [ext_resource path="res://assets/textures/player/merchant/idle.png" type="Texture" id=3]
 [ext_resource path="res://assets/textures/player/merchant/walk.png" type="Texture" id=4]
@@ -51,44 +51,44 @@ atlas = ExtResource( 4 )
 region = Rect2( 256, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=10]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 10 )
 region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=11]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 10 )
 region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=12]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 10 )
 region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=13]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 10 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=14]
 atlas = ExtResource( 10 )
-region = Rect2( 0, 0, 64, 64 )
+region = Rect2( 256, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=15]
 atlas = ExtResource( 10 )
-region = Rect2( 64, 0, 64, 64 )
+region = Rect2( 320, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=16]
-atlas = ExtResource( 10 )
-region = Rect2( 128, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=17]
-atlas = ExtResource( 10 )
-region = Rect2( 192, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=18]
-atlas = ExtResource( 10 )
-region = Rect2( 256, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=19]
-atlas = ExtResource( 10 )
-region = Rect2( 320, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="SpriteFrames" id=20]
 animations = [ {
@@ -102,15 +102,15 @@ animations = [ {
 "name": "walking",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
-"loop": true,
-"name": "pickup",
-"speed": 10.0
-}, {
-"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ), SubResource( 14 ), SubResource( 15 ) ],
 "loop": true,
 "name": "till",
 "speed": 12.0
+}, {
+"frames": [ SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"loop": true,
+"name": "pickup",
+"speed": 10.0
 } ]
 
 [sub_resource type="CircleShape2D" id=21]
@@ -189,14 +189,19 @@ script/source = "extends Area2D
 
 onready var sprite = get_node(\"AnimatedSprite\")
 
+var can_use := true
+
 func set_can_use():
 	sprite.modulate = Color.green
+	can_use = true
 	
 func set_default():
 	sprite.modulate = Color.white
+	can_use = true
 	
 func set_cant_use():
 	sprite.modulate = Color.red
+	can_use = false
 
 "
 
@@ -219,24 +224,17 @@ animations = [ {
 "speed": 4.0
 } ]
 
-[sub_resource type="StyleBoxFlat" id=28]
-bg_color = Color( 0, 0, 0, 0.219608 )
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-
-[sub_resource type="GDScript" id=29]
+[sub_resource type="GDScript" id=28]
 script/source = "extends CanvasLayer
 
 signal tower_selected(tower)
+signal tower_purchase_failed
 
-onready var tower_base = get_node(\"HBoxContainer\")
+onready var game_manager = get_node(\"/root/GameManager\")
+onready var tween := get_node(\"Tween\")
+onready var tower_base = get_node(\"MarginContainer/HBoxContainer\")
 
-var _idx_to_key := {
-	KEY_1: preload(\"res://scenes/towers/moon_beam_tower.tscn\")
-}
-
+var _idx_to_key := {}
 var _key_to_idx := {
 	KEY_1: 1,
 	KEY_2: 2,
@@ -247,12 +245,21 @@ var _key_to_idx := {
 	KEY_7: 7
 }
 
+var _instances := {}
 var _tower_selector = preload(\"res://scenes/towers/tower_selector.tscn\")
 
-func _ready():
+func register_tower(key, tower: PackedScene):
+	_idx_to_key[key] = tower
+	
 	_set_all_prices()
 	
+func _create_new_slot(key, tower: PackedScene):
+	pass
+	
 func _set_all_prices():
+	for i in range(0, tower_base.get_child_count()):
+		tower_base.get_child(i).queue_free()
+	
 	for i in _idx_to_key:
 		var instance = _idx_to_key[i].instance()
 		var selector = _tower_selector.instance()
@@ -261,20 +268,69 @@ func _set_all_prices():
 		selector.set_key(str(_key_to_idx[i]))
 		
 		tower_base.add_child(selector)
+		
+		_instances[_idx_to_key[i]] = selector
 
 func _unhandled_input(event):
 	if event is InputEventKey:
 		if event.pressed and _idx_to_key.has(event.scancode):
 			var tower = _idx_to_key[event.scancode]
 			
+			if tower.instance().value > game_manager.get_farm_manager().current_lunar_rocks:
+				_do_cant_purchase_tween(_instances[tower])
+				emit_signal(\"tower_purchase_failed\")
+				return
+			
 			emit_signal(\"tower_selected\", tower)
+
+func _do_cant_purchase_tween(instance):
+	var duration = .125
+	tween.interpolate_property(
+		instance,
+		\"rect_scale\",
+		Vector2.ONE,
+		Vector2.ONE * 1.1,
+		duration/2,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	tween.interpolate_property(
+		instance,
+		\"modulate\",
+		instance.modulate,
+		Color.red,
+		duration/2,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	tween.start()
+	yield(tween,\"tween_all_completed\")
+	tween.interpolate_property(
+		instance,
+		\"rect_scale\",
+		instance.rect_scale,
+		Vector2.ONE,
+		duration/2,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	tween.interpolate_property(
+		instance,
+		\"modulate\",
+		Color.red,
+		Color.white,
+		duration/2,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN
+	)
+	tween.start()
 "
 
-[sub_resource type="Gradient" id=31]
+[sub_resource type="Gradient" id=29]
 offsets = PoolRealArray( 0.662577, 0.969325 )
 colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
 
-[sub_resource type="Gradient" id=32]
+[sub_resource type="Gradient" id=30]
 offsets = PoolRealArray( 0.688742, 0.97351 )
 colors = PoolColorArray( 0.515625, 0.515625, 0.515625, 0.419608, 0, 0, 0, 0 )
 
@@ -327,72 +383,81 @@ script = ExtResource( 6 )
 [node name="CanvasLayer" type="CanvasLayer" parent="Inventory"]
 
 [node name="Control" type="Control" parent="Inventory/CanvasLayer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
-mouse_filter = 1
+mouse_filter = 2
 script = ExtResource( 5 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 slot_scene = ExtResource( 1 )
 player_inventory = NodePath("../..")
-grid_parent = NodePath("MarginContainer/PanelContainer/MarginContainer/VBoxContainer")
+slots_parent = NodePath("MarginContainer/VBoxContainer")
 
 [node name="MarginContainer" type="MarginContainer" parent="Inventory/CanvasLayer/Control"]
-anchor_left = 0.1
-anchor_top = 0.1
-anchor_right = 0.9
-anchor_bottom = 0.9
-mouse_filter = 1
-size_flags_horizontal = 3
-size_flags_vertical = 3
-custom_constants/margin_right = 0
-custom_constants/margin_top = 0
-custom_constants/margin_left = 0
-custom_constants/margin_bottom = 0
+anchor_top = 0.5
+anchor_right = 0.136
+anchor_bottom = 1.0
+margin_top = -1.0
+margin_right = -0.264008
+mouse_filter = 2
+custom_constants/margin_right = 8
+custom_constants/margin_top = 8
+custom_constants/margin_left = 8
+custom_constants/margin_bottom = 8
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="PanelContainer" type="PanelContainer" parent="Inventory/CanvasLayer/Control/MarginContainer"]
-margin_right = 819.0
-margin_bottom = 480.0
-mouse_filter = 1
+[node name="VBoxContainer" type="VBoxContainer" parent="Inventory/CanvasLayer/Control/MarginContainer"]
+margin_left = 8.0
+margin_top = 8.0
+margin_right = 131.0
+margin_bottom = 293.0
+mouse_filter = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-custom_styles/panel = SubResource( 28 )
-
-[node name="MarginContainer" type="MarginContainer" parent="Inventory/CanvasLayer/Control/MarginContainer/PanelContainer"]
-margin_right = 819.0
-margin_bottom = 480.0
-mouse_filter = 1
-custom_constants/margin_right = 50
-custom_constants/margin_top = 0
-custom_constants/margin_left = 50
-custom_constants/margin_bottom = 0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="Inventory/CanvasLayer/Control/MarginContainer/PanelContainer/MarginContainer"]
-margin_left = 50.0
-margin_right = 769.0
-margin_bottom = 480.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_horizontal = 3
-alignment = 1
+alignment = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="ToolsUi" type="CanvasLayer" parent="."]
-script = SubResource( 29 )
+script = SubResource( 28 )
 
-[node name="HBoxContainer" type="HBoxContainer" parent="ToolsUi"]
-anchor_top = 1.0
-anchor_right = 1.0
+[node name="MarginContainer" type="MarginContainer" parent="ToolsUi"]
+anchor_left = 0.083
+anchor_top = 0.762
+anchor_right = 0.934
 anchor_bottom = 1.0
-margin_top = -128.0
+margin_left = 0.00799561
+margin_top = -0.200012
+margin_right = -0.416016
+size_flags_vertical = 0
+custom_constants/margin_right = 12
+custom_constants/margin_left = 12
+custom_constants/margin_bottom = 12
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="HBoxContainer" parent="ToolsUi/MarginContainer"]
+margin_left = 12.0
+margin_top = 131.0
+margin_right = 859.0
+margin_bottom = 131.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+size_flags_horizontal = 9
+size_flags_vertical = 10
+custom_constants/separation = 8
 alignment = 1
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="Tween" type="Tween" parent="ToolsUi"]
 
 [node name="footsteps" type="Node2D" parent="."]
 
@@ -421,7 +486,7 @@ angle = 720.0
 angle_random = 1.0
 scale_amount = 0.1
 scale_amount_random = 0.25
-color_ramp = SubResource( 31 )
+color_ramp = SubResource( 29 )
 
 [node name="Steps" type="CPUParticles2D" parent="footsteps"]
 position = Vector2( -1.39674, 3.81854 )
@@ -434,7 +499,7 @@ emission_colors = PoolColorArray(  )
 flag_align_y = true
 direction = Vector2( 0, 0 )
 gravity = Vector2( 0, 0 )
-color_ramp = SubResource( 32 )
+color_ramp = SubResource( 30 )
 
 [node name="BadAction" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource( 12 )

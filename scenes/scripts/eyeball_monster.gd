@@ -14,7 +14,13 @@ var _moving := true
 var _moon
 
 func _ready():
-	_moon = get_node("/root/GameManager").get_moon()
+	var game_manager = get_node("/root/GameManager")
+	_moon = game_manager.get_moon()
+	game_manager.get_farm_manager().connect("day", self, "_on_day")
+
+# make monsters die during the day!
+func _on_day():
+	_die()
 
 func _physics_process(delta):
 	if _moving:

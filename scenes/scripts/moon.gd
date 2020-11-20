@@ -6,6 +6,7 @@ export(float) var max_pulse
 export(float) var min_pulse
 
 onready var timer: Timer = get_node("Timer")
+onready var particles: CPUParticles2D = get_node("CPUParticles2D")
 
 var max_distance_in_tiles = 5
 var next_energy_emitted := 100

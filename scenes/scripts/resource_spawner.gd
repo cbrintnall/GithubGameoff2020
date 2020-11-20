@@ -11,7 +11,7 @@ var radius = 5.0
 var retries = 30.0
 
 # max number of resources on map at a given moment
-var max_points = 10
+var max_points = 30
 # when resource emits signal destroyed, decrement this, when spawning, increment
 var current_count = 0
 var _points_queue := []

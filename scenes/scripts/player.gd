@@ -6,6 +6,7 @@ enum Tool {
 	PICKAXE
 }
 
+export(float) var max_action_distance := 40.0
 export(float) var speed = 10.0
 export(Vector2) var tilemap_size = Vector2(16, 16)
 export(Color) var valid_selection_color = Color.green
@@ -29,18 +30,24 @@ var last_move_vec: Vector2
 var move_vec_multiplier: Vector2 = Vector2.ONE
 var last_hovered_tile: Vector2
 var last_areas := []
+var last_bodies := []
 
 var _current_tower_scene: PackedScene
 var _current_tower_purchase
+var _controller_action_area := false
 
 func _ready():
-	get_node("/root/GameManager").set_current_camera(get_node("Camera2D"))
-	get_node("ToolsUi").connect("tower_selected", self, "_initiate_tower_transaction")
-	set_equipped_tool(Tool.HOE)
-	
+	game_manager.set_current_camera(get_node("Camera2D"))
 	footsteps_timer.connect("timeout", get_node("footsteps/audio"), "play")
-	
 	action_area.visible = true
+	
+	# setup the tower ui (formermly tools_ui..)
+	var tools_ui = get_node("ToolsUi")
+	tools_ui.connect("tower_selected", self, "_initiate_tower_transaction")
+	tools_ui.connect("tower_purchase_failed", self, "_tower_purchase_failed")
+	tools_ui.register_tower(KEY_1, preload("res://scenes/towers/moon_beam_tower.tscn"))
+	tools_ui.register_tower(KEY_2, preload("res://scenes/towers/EffectAoeTower.tscn"))
+	tools_ui.register_tower(KEY_3, preload("res://scenes/towers/lunar_pool.tscn"))
 
 func _handle_movement(delta):
 	var move_vec = Vector2.ZERO
@@ -74,23 +81,42 @@ func _handle_movement(delta):
 	elif move_vec.x < 0:
 		animated_sprite.flip_h = true
 	
-	if move_vec != Vector2.ZERO:
-		var base_position = dirt_tilemap_path.map_to_world(
-			dirt_tilemap_path.world_to_map(position)
-		)
-		
-		var shape_extents = action_area.get_node("CollisionShape2D").shape.extents.ceil()
-		
-		base_position += shape_extents
-		base_position += (move_vec * (shape_extents * 2))
-		base_position -= move_vec
-		
-		action_area.global_position = base_position
-		hovered_tile = dirt_tilemap_path.world_to_map(position) + move_vec
+	if _controller_action_area:
+		if move_vec != Vector2.ZERO:
+			_position_action_area_controller(move_vec)
+	else:
+		_position_action_area_mouse(move_vec)
 		
 	move_and_collide(move_vec * speed)
 
 	last_move_vec = move_vec
+
+func _position_action_area_controller(move_vec: Vector2):
+	var base_position = dirt_tilemap_path.map_to_world(
+		dirt_tilemap_path.world_to_map(position)
+	)
+	
+	var shape_extents = action_area.get_node("CollisionShape2D").shape.extents.ceil()
+	
+	base_position += shape_extents
+	base_position += (move_vec * (shape_extents * 2))
+	base_position -= move_vec
+	
+	action_area.global_position = base_position
+	hovered_tile = dirt_tilemap_path.world_to_map(base_position) + move_vec
+	
+func _position_action_area_mouse(move_vec: Vector2):
+	var base_position = dirt_tilemap_path.map_to_world(
+		dirt_tilemap_path.world_to_map(get_global_mouse_position())
+	)
+	
+	var shape_extents = action_area.get_node("CollisionShape2D").shape.extents.ceil()
+	
+	base_position += shape_extents
+	
+	action_area.global_position = base_position
+	
+	hovered_tile = dirt_tilemap_path.world_to_map(base_position)
 
 func _check_under_action_area():
 	var areas = action_area.get_overlapping_areas()
@@ -105,13 +131,31 @@ func _check_under_action_area():
 			if area and area.has_method("on_action_leave"):
 				area.on_action_leave()
 	
+	var bodies = action_area.get_overlapping_bodies()
+	
+	for body in bodies:
+		if !(body in last_bodies):
+			if body and body.has_method("on_action_hover"):
+				body.on_action_hover()
+	
+	for body in last_bodies:
+		if !(body in bodies):
+			if body and body.has_method("on_action_leave"):
+				body.on_action_leave()
+	
 	last_areas = areas
+	last_bodies = bodies
+	
+	# we only care about canceling using, hovers are fine
+	if global_position.distance_to(action_area.global_position) > max_action_distance:
+		action_area.set_cant_use()
+		return
 	
 	for i in areas:
 		if i.has_method("use"):
 			action_area.set_can_use()
 			return
-			
+
 	action_area.set_default()
 
 func _handle_use_and_has_pending_tower():
@@ -121,7 +165,8 @@ func _handle_use_and_has_pending_tower():
 
 	var pos = action_area.global_position
 	action_area.remove_child(_current_tower_purchase)
-	get_tree().root.add_child(_current_tower_purchase)
+	# parent should be world layering, which is what the tower should live on
+	get_parent().add_child(_current_tower_purchase)
 	_current_tower_purchase.global_position = pos
 	_current_tower_purchase.purchase()
 	
@@ -140,7 +185,11 @@ func _input(event):
 	if event.is_action_pressed("cancel_selection") and _current_tower_purchase:
 		_current_tower_purchase.queue_free()
 
-	if event.is_action_pressed("use"):
+	if event.is_action_pressed("use") || (!_controller_action_area and event is InputEventMouseButton and event.button_index == 1):
+		if !action_area.can_use:
+			bad_action_player.play()
+			return
+
 		if _current_tower_purchase:
 			_handle_use_and_has_pending_tower()
 			return
@@ -172,19 +221,19 @@ func _handle_selected_tile(tile, data):
 	if !data.tilled:
 		ground_manager.till_dirt(tile)
 
-func _initiate_tower_transaction(tower):
-	if tower.instance().value > game_manager.get_farm_manager().current_lunar_rocks:
-		bad_action_player.play()
-		_current_tower_purchase = null
-		return
-	
-	# remove selection if they hit the same tower again
-	if _current_tower_scene == tower and _current_tower_purchase:
-		_current_tower_purchase.queue_free()
+func _tower_purchase_failed():
+	bad_action_player.play()
+	_current_tower_purchase = null
 
-	# if we are already purchasing, just return, we don't need another ya goose!
+func _initiate_tower_transaction(tower):
 	if _current_tower_purchase:
-		return
+		if _current_tower_scene == tower:
+			_current_tower_purchase.queue_free()
+			_current_tower_scene = null
+			return
+
+		_current_tower_purchase.queue_free()
+		_current_tower_purchase = null
 	
 	_current_tower_purchase = tower.instance()
 	_current_tower_scene = tower

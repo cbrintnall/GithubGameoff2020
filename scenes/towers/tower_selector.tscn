@@ -1,16 +1,17 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://assets/fonts/MinimalPixel v2.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://themes/main.tres" type="Theme" id=2]
 [ext_resource path="res://assets/textures/icons/hoe.png" type="Texture" id=3]
 [ext_resource path="res://assets/textures/icons/lunar_rock.png" type="Texture" id=4]
+[ext_resource path="res://assets/ui/GUI.png" type="Texture" id=5]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends MarginContainer
 
-onready var price = get_node(\"PanelContainer/HBoxContainer/Price\")
-onready var texture = get_node(\"PanelContainer/HBoxContainer/TextureRect\")
-onready var key = get_node(\"PanelContainer/Hotkey\")
+onready var price = get_node(\"PanelContainer/MarginContainer2/PanelContainer/HBoxContainer/Price\")
+onready var texture = get_node(\"PanelContainer/MarginContainer2/HBoxContainer/TextureRect\")
+onready var key = get_node(\"PanelContainer/MarginContainer2/MarginContainer3/MarginContainer/Hotkey\")
 
 func set_price(amt: int):
 	if !is_inside_tree():
@@ -23,29 +24,46 @@ func set_key(_key: String):
 	key.text = _key
 "
 
-[sub_resource type="StyleBoxFlat" id=2]
-bg_color = Color( 0, 0, 0, 0.407843 )
+[sub_resource type="AtlasTexture" id=3]
+atlas = ExtResource( 5 )
+region = Rect2( 2, 34, 44, 44 )
 
-[sub_resource type="DynamicFont" id=3]
+[sub_resource type="StyleBoxFlat" id=4]
+bg_color = Color( 0, 0, 0, 0.47451 )
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+expand_margin_left = 5.0
+expand_margin_right = 5.0
+expand_margin_top = 5.0
+expand_margin_bottom = 5.0
+
+[sub_resource type="DynamicFont" id=2]
 size = 14
 outline_color = Color( 0, 0, 0, 1 )
 font_data = ExtResource( 1 )
 
+[sub_resource type="AtlasTexture" id=5]
+atlas = ExtResource( 5 )
+region = Rect2( 1, 81, 14, 14 )
+
 [node name="MarginContainer" type="MarginContainer"]
-margin_left = 448.0
-margin_right = 576.0
+margin_right = 128.0
 margin_bottom = 128.0
 rect_min_size = Vector2( 128, 128 )
+rect_pivot_offset = Vector2( 64, 64 )
 script = SubResource( 1 )
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="PanelContainer" type="PanelContainer" parent="."]
+[node name="PanelContainer" type="NinePatchRect" parent="."]
 margin_right = 128.0
 margin_bottom = 128.0
 theme = ExtResource( 2 )
-custom_styles/panel = SubResource( 2 )
+texture = SubResource( 3 )
+region_rect = Rect2( 0, 0, 44, 44 )
 
 [node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
 margin_right = 128.0
@@ -54,6 +72,9 @@ custom_constants/margin_right = 16
 custom_constants/margin_top = 16
 custom_constants/margin_left = 16
 custom_constants/margin_bottom = 16
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
 [node name="TextureRect" type="TextureRect" parent="PanelContainer/MarginContainer"]
 margin_left = 16.0
@@ -64,31 +85,42 @@ texture = ExtResource( 3 )
 expand = true
 stretch_mode = 1
 
-[node name="Hotkey" type="Label" parent="PanelContainer"]
-margin_left = 120.0
-margin_top = 114.0
-margin_right = 128.0
-margin_bottom = 128.0
-grow_horizontal = 0
-grow_vertical = 0
-size_flags_horizontal = 8
-size_flags_vertical = 8
-custom_fonts/font = SubResource( 3 )
-text = "1"
+[node name="MarginContainer2" type="MarginContainer" parent="PanelContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+custom_constants/margin_right = 2
+custom_constants/margin_left = 3
+custom_constants/margin_bottom = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
 
-[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer"]
-margin_top = 114.0
-margin_right = 22.0
-margin_bottom = 128.0
+[node name="PanelContainer" type="PanelContainer" parent="PanelContainer/MarginContainer2"]
+margin_left = 3.0
+margin_top = 113.0
+margin_right = 25.0
+margin_bottom = 127.0
 size_flags_horizontal = 0
 size_flags_vertical = 8
+custom_styles/panel = SubResource( 4 )
 
-[node name="TextureRect" type="TextureRect" parent="PanelContainer/HBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="PanelContainer/MarginContainer2/PanelContainer"]
+margin_right = 22.0
+margin_bottom = 14.0
+size_flags_horizontal = 0
+size_flags_vertical = 8
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect" type="TextureRect" parent="PanelContainer/MarginContainer2/PanelContainer/HBoxContainer"]
 margin_right = 10.0
 margin_bottom = 14.0
 texture = ExtResource( 4 )
 
-[node name="Price" type="Label" parent="PanelContainer/HBoxContainer"]
+[node name="Price" type="Label" parent="PanelContainer/MarginContainer2/PanelContainer/HBoxContainer"]
 margin_left = 14.0
 margin_right = 22.0
 margin_bottom = 14.0
@@ -96,5 +128,42 @@ grow_horizontal = 0
 grow_vertical = 0
 size_flags_horizontal = 0
 size_flags_vertical = 0
-custom_fonts/font = SubResource( 3 )
+custom_fonts/font = SubResource( 2 )
 text = "1"
+
+[node name="MarginContainer3" type="MarginContainer" parent="PanelContainer/MarginContainer2"]
+margin_left = 98.0
+margin_top = 99.0
+margin_right = 126.0
+margin_bottom = 127.0
+size_flags_horizontal = 8
+size_flags_vertical = 8
+
+[node name="TextureRect" type="TextureRect" parent="PanelContainer/MarginContainer2/MarginContainer3"]
+margin_right = 28.0
+margin_bottom = 28.0
+rect_min_size = Vector2( 28, 28 )
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = SubResource( 5 )
+stretch_mode = 6
+
+[node name="MarginContainer" type="MarginContainer" parent="PanelContainer/MarginContainer2/MarginContainer3"]
+margin_right = 28.0
+margin_bottom = 28.0
+custom_constants/margin_left = 2
+
+[node name="Hotkey" type="Label" parent="PanelContainer/MarginContainer2/MarginContainer3/MarginContainer"]
+margin_left = 2.0
+margin_top = 7.0
+margin_right = 28.0
+margin_bottom = 21.0
+grow_horizontal = 0
+grow_vertical = 0
+custom_fonts/font = SubResource( 2 )
+text = "1"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}

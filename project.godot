@@ -9,6 +9,11 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "Node2D",
+"class": "Constants",
+"language": "GDScript",
+"path": "res://scenes/scripts/constants.gd"
+}, {
 "base": "Resource",
 "class": "GroundResource",
 "language": "GDScript",
@@ -33,13 +38,20 @@ _global_script_classes=[ {
 "class": "PoissonDiscSampling",
 "language": "GDScript",
 "path": "res://addons/PoissonDiscSampling/PoissonDiscSampling.gd"
+}, {
+"base": "StaticBody2D",
+"class": "Tower",
+"language": "GDScript",
+"path": "res://scenes/scripts/tower.gd"
 } ]
 _global_script_class_icons={
+"Constants": "",
 "GroundResource": "",
 "GrowingPlant": "",
 "Item": "",
 "MouseManager": "",
-"PoissonDiscSampling": ""
+"PoissonDiscSampling": "",
+"Tower": ""
 }
 
 [application]
@@ -149,10 +161,16 @@ cancel_selection={
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777217,"unicode":0,"echo":false,"script":null)
  ]
 }
+sprint_modifier={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777237,"unicode":0,"echo":false,"script":null)
+ ]
+}
 
 [layer_names]
 
 2d_physics/layer_1="BaseEntityCollide"
+2d_physics/layer_16="TowerOnly"
 2d_physics/layer_17="PlayerOnly"
 2d_physics/layer_18="TowerCantPlace"
 2d_physics/layer_19="TowerDetectable"
@@ -160,7 +178,7 @@ cancel_selection={
 
 [rendering]
 
-quality/driver/driver_name="GLES2"
 vram_compression/import_etc=true
 vram_compression/import_etc2=false
+environment/default_clear_color=Color( 0.458824, 0.458824, 0.458824, 1 )
 environment/default_environment="res://default_env.tres"

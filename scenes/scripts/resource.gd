@@ -18,9 +18,6 @@ var _mouse_manager: MouseManager
 var _destroyed:bool
 
 func _ready():
-	connect("area_entered", self, "_on_mouse_enter")
-	connect("area_exited", self, "_on_mouse_exit")
-	
 	label.visible = false
 	label.text = inner_resource.ground_resource_name
 	

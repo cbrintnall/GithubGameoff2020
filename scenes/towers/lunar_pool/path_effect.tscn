@@ -1,0 +1,90 @@
+[gd_scene load_steps=11 format=2]
+
+[ext_resource path="res://assets/textures/fx/SmallStar_64x64.png" type="Texture" id=1]
+
+[sub_resource type="Curve2D" id=1]
+_data = {
+"points": PoolVector2Array(  )
+}
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends Path2D
+
+export(float) var speed = .001
+
+onready var path_follow = get_node(\"PathFollow2D\")
+onready var particles = get_node(\"PathFollow2D/Particles2D\")
+
+func set_target(target: Tower):
+	set_curve(curve.duplicate())
+	
+	curve.add_point(Vector2.ZERO)
+	curve.add_point(target.global_position - global_position)
+	
+	particles.z_index = target.z_index
+
+func _process(delta):
+	path_follow.unit_offset = path_follow.unit_offset + speed
+	particles.process_material.scale = lerp(0.0, 0.25, path_follow.unit_offset)
+
+func draw_path():
+	if curve.get_baked_points().size() > 0:
+		draw_line(
+			curve.get_point_position(0), 
+			curve.get_point_position(1), 
+			Color.white
+		)
+"
+
+[sub_resource type="CanvasItemMaterial" id=3]
+blend_mode = 1
+particles_animation = true
+particles_anim_h_frames = 60
+particles_anim_v_frames = 1
+particles_anim_loop = true
+
+[sub_resource type="Gradient" id=4]
+offsets = PoolRealArray( 0, 0.97037 )
+colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
+
+[sub_resource type="GradientTexture" id=5]
+gradient = SubResource( 4 )
+
+[sub_resource type="ParticlesMaterial" id=6]
+
+[sub_resource type="Curve" id=7]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.0454545 ), -4.2065, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=8]
+curve = SubResource( 7 )
+
+[sub_resource type="ParticlesMaterial" id=9]
+next_pass = SubResource( 6 )
+trail_divisor = 3
+emission_shape = 1
+emission_sphere_radius = 0.01
+flag_disable_z = true
+gravity = Vector3( 0, 0, 0 )
+angular_velocity = 107.58
+angular_velocity_random = 1.0
+orbit_velocity = 0.0
+orbit_velocity_random = 1.0
+radial_accel = 22.99
+scale = 0.15
+scale_random = 0.25
+scale_curve = SubResource( 8 )
+color_ramp = SubResource( 5 )
+anim_speed = 1.0
+
+[node name="Path2D" type="Path2D"]
+curve = SubResource( 1 )
+script = SubResource( 2 )
+
+[node name="PathFollow2D" type="PathFollow2D" parent="."]
+
+[node name="Particles2D" type="Particles2D" parent="PathFollow2D"]
+material = SubResource( 3 )
+amount = 4
+local_coords = false
+process_material = SubResource( 9 )
+texture = ExtResource( 1 )

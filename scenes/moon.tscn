@@ -1,10 +1,17 @@
-[gd_scene load_steps=4 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://scenes/scripts/moon.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/moon_fragment.png" type="Texture" id=2]
 
 [sub_resource type="CircleShape2D" id=1]
 radius = 10.2098
+
+[sub_resource type="Curve" id=2]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.381818 ), -2.49761, -2.49761, 0, 0, Vector2( 1, 0 ), -3.65454, 0.0, 0, 0 ]
+
+[sub_resource type="Gradient" id=3]
+offsets = PoolRealArray( 0.638037, 0.98773 )
+colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
 
 [node name="moon" type="Sprite"]
 position = Vector2( 105.792, 79.6948 )
@@ -14,6 +21,8 @@ max_pulse = 50.0
 min_pulse = 25.0
 
 [node name="StaticBody2D" type="StaticBody2D" parent="."]
+collision_layer = 524289
+collision_mask = 524289
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2( -0.75, -0.875 )
@@ -21,3 +30,20 @@ shape = SubResource( 1 )
 
 [node name="Timer" type="Timer" parent="."]
 wait_time = 10.0
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
+position = Vector2( -4.05625, -4.47719 )
+z_index = -1
+emitting = false
+one_shot = true
+gravity = Vector2( -55.304, -98 )
+angular_velocity = 683.64
+radial_accel = 10.1
+radial_accel_random = 1.0
+tangential_accel = 42.42
+tangential_accel_random = 1.0
+angle = 720.0
+angle_random = 1.0
+scale_amount = 1.5
+scale_amount_curve = SubResource( 2 )
+color_ramp = SubResource( 3 )

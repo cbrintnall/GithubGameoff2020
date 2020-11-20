@@ -127,7 +127,8 @@ func _do_harvest():
 	energy_particles.color = Color.white
 	player.stream = harvest_sound
 	player.play()
-	_enable_seed_menu()
+	yield(get_tree().create_timer(.25), "timeout")
+	queue_free()
 
 func done_growing():
 	return growing_plant and current_progress >= growing_plant.required_energy
@@ -163,6 +164,7 @@ func set_growing(plant: GrowingPlant):
 	growing_sprite.visible = true
 	growing_sprite.frame = 0
 	current_progress = 0.0
+	energy_particles.color = Color.aliceblue
 	player.stream = plant_sound
 	player.play()
 	seed_chooser.disable()

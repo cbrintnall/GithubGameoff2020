@@ -118,7 +118,7 @@ func _ready():
 	quantity_root.visible = false
 	
 	game_manager.get_farm_manager().connect("day", self, "_come_back")
-	game_manager.get_farm_manager().connect("night", self, "_take_off")
+	game_manager.get_farm_manager().connect("shipment_time", self, "_take_off")
 	
 	resting_position = position
 	
@@ -133,9 +133,12 @@ func _do_sale():
 	items = {}
 	
 	game_manager.get_farm_manager().add_lunar_rocks(grand_total)
+	game_manager.get_event_manager().new_message(
+		"You sold {rocks} worth of goods".format({"rocks": grand_total}),
+		Constants.EventLevel.GOOD
+	)
 
 func _come_back():
-	_do_sale()
 	rocket_particles.emitting = true
 	
 	move_tween.interpolate_property(
@@ -155,6 +158,11 @@ func _come_back():
 	
 	rocket_particles.emitting = false
 	locked = false
+	
+	game_manager.get_event_manager().new_message(
+		"The shipping container has returned!",
+		Constants.EventLevel.GOOD
+	)
 
 func _take_off():
 	locked = true
@@ -175,9 +183,15 @@ func _take_off():
 	move_tween.start()
 	game_manager.get_current_camera().shake(duration, 25.0, 10.0)
 	
+	game_manager.get_event_manager().new_message(
+		"The shipping container is leaving",
+		Constants.EventLevel.WARNING
+	)
+	
 	yield(move_tween,"tween_all_completed")
 	
 	rocket_particles.emitting = false
+	_do_sale()
 
 func _set_side_text(item: Item):
 	if !item:

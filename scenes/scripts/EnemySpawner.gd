@@ -1,9 +1,8 @@
-extends Node2D
+extends Path2D
 
 export(float) var spawn_rate = 5.0
 export(PackedScene) var enemy
 
-onready var _path = get_node("Path2D")
 onready var _spawn_timer = get_node("Timer")
 
 var _cached_layer_root
@@ -35,7 +34,7 @@ func _do_spawn():
 	new_enemy.global_position = global_position
 	
 	if new_enemy.has_method("set_path"):
-		new_enemy.set_path(global_position, _path.get_curve())
+		new_enemy.set_path(global_position, get_curve())
 	else:
 		print("Enemy didn't have a set_path method!")
 

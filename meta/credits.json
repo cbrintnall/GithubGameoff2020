@@ -2,7 +2,11 @@
     "art": {
         "character": {
             "link": "https://penusbmic.itch.io/sci-fi-character-pack-4",
-            "text": "'Penusbmic' on itch.io"
+            "text": "'Penusbmic' on itch.io."
+        },
+        "crops": {
+            "link": "https://opengameart.org/users/josehzz",
+            "text": "Thank you josehzz for the beautiful crops."
         }
     },
     "music": {
