@@ -1,5 +1,7 @@
 extends Path2D
 
+signal wave_finished
+
 class_name EnemySpawner
 
 export(int) var difficulty_modifier
@@ -10,27 +12,26 @@ export(PackedScene) var enemy
 onready var _spawn_timer = get_node("Timer")
 
 var _should_spawn := false
+var _current_wave: Dictionary
+
+func set_wave(wave: Dictionary):
+	_current_wave = wave
+
+func start_wave():
+	for enemy in _current_wave:
+		for count in range(0, _current_wave[enemy]):
+			_spawn_enemy(enemy)
+			_spawn_timer.start()
+			yield(_spawn_timer, "timeout")
+
+	emit_signal("wave_finished", _current_wave)
+	_current_wave = {}
 
 func _ready():
 	var farm_manager = get_node("/root/GameManager").get_farm_manager()
-
-	farm_manager.connect("night", self, "_on_night")
-	farm_manager.connect("day", self, "_on_day")
-	
 	_spawn_timer.wait_time = spawn_rate
-	_spawn_timer.connect("timeout", self, "_on_timeout")
 
-func _on_timeout():
-	if _should_spawn:
-		_do_spawn()
-
-func _on_night():
-	_should_spawn = true
-	
-func _on_day():
-	_should_spawn = false
-
-func _do_spawn():
+func _spawn_enemy(enemy: PackedScene):
 	var new_enemy = enemy.instance()
 	
 	new_enemy.global_position = global_position
