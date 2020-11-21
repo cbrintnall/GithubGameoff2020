@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/selector_revoke.wav-3e95ab8295fcefd4f947b14100eaff12.sample"
+
+[deps]
+
+source_file="res://assets/audio/sfx/ui/selector_revoke.wav"
+dest_files=[ "res://.import/selector_revoke.wav-3e95ab8295fcefd4f947b14100eaff12.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

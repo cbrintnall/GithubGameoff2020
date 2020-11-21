@@ -14,6 +14,7 @@ export(Color) var invalid_selection_color = Color.red
 export(NodePath) onready var dirt_tilemap_path = get_node(dirt_tilemap_path)
 export(NodePath) onready var ground_manager = get_node(ground_manager)
 
+onready var tools_ui = get_node("ToolsUi")
 onready var game_manager = get_node("/root/GameManager")
 onready var bad_action_player = get_node("BadAction")
 onready var step_particles = get_node("footsteps/Steps")
@@ -42,7 +43,6 @@ func _ready():
 	action_area.visible = true
 	
 	# setup the tower ui (formermly tools_ui..)
-	var tools_ui = get_node("ToolsUi")
 	tools_ui.connect("tower_selected", self, "_initiate_tower_transaction")
 	tools_ui.connect("tower_purchase_failed", self, "_tower_purchase_failed")
 	tools_ui.register_tower(KEY_1, preload("res://scenes/towers/moon_beam_tower.tscn"))
@@ -150,6 +150,11 @@ func _check_under_action_area():
 	if global_position.distance_to(action_area.global_position) > max_action_distance:
 		action_area.set_cant_use()
 		return
+		
+	for i in bodies:
+		if i.has_method("use"):
+			action_area.set_can_use()
+			return
 	
 	for i in areas:
 		if i.has_method("use"):
@@ -163,6 +168,7 @@ func _handle_use_and_has_pending_tower():
 		bad_action_player.play()
 		return
 
+	tools_ui.purchase_done()
 	var pos = action_area.global_position
 	action_area.remove_child(_current_tower_purchase)
 	# parent should be world layering, which is what the tower should live on
@@ -180,7 +186,7 @@ func _cancel_current_tower():
 	_current_tower_purchase.queue_free()
 	_current_tower_purchase = null
 
-func _input(event):
+func _unhandled_input(event):
 	# get rid of the current selection!
 	if event.is_action_pressed("cancel_selection") and _current_tower_purchase:
 		_current_tower_purchase.queue_free()
@@ -195,17 +201,28 @@ func _input(event):
 			return
 		
 		var areas = action_area.get_overlapping_areas()
+		var used = false
 		
 		# check if we need to use something in this area
 		for i in areas:
 			if i and i.has_method("use"):
 				i.use()
+				used = true
+				animated_sprite.play("pickup")
+				yield(animated_sprite,"animation_finished")
+				animated_sprite.play("idle")
+				
+		var bodies = action_area.get_overlapping_bodies()
+		for i in bodies:
+			if i and i.has_method("use"):
+				i.use()
+				used = true
 				animated_sprite.play("pickup")
 				yield(animated_sprite,"animation_finished")
 				animated_sprite.play("idle")
 
 		# otherwise we can just till the land!
-		if len(areas) == 0:
+		if !used:
 			if !ground_manager.is_tilled(hovered_tile):
 				animated_sprite.play("till")
 				move_vec_multiplier = Vector2.ZERO

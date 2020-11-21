@@ -1,10 +1,9 @@
-[gd_scene load_steps=24 format=2]
+[gd_scene load_steps=17 format=2]
 
 [ext_resource path="res://scenes/scripts/moon_beam_tower.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/towers/moon_beam_idle.png" type="Texture" id=2]
 [ext_resource path="res://assets/textures/farm/towers/moon_beam_charged.png" type="Texture" id=3]
-[ext_resource path="res://assets/ui/GUI.png" type="Texture" id=4]
-[ext_resource path="res://themes/main.tres" type="Theme" id=5]
+[ext_resource path="res://scenes/towers/lunar_pool/popup.tscn" type="PackedScene" id=4]
 
 [sub_resource type="Curve" id=1]
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.245455 ), -1.69581, 0.0, 0, 0 ]
@@ -44,6 +43,11 @@ animations = [ {
 "loop": true,
 "name": "charging",
 "speed": 20.0
+}, {
+"frames": [  ],
+"loop": true,
+"name": "fire",
+"speed": 5.0
 } ]
 
 [sub_resource type="CircleShape2D" id=9]
@@ -59,46 +63,12 @@ colors = PoolColorArray( 0.572549, 0.909804, 0.752941, 1, 1, 1, 1, 0 )
 [sub_resource type="RectangleShape2D" id=12]
 extents = Vector2( 0.5, 0.5 )
 
-[sub_resource type="GDScript" id=18]
-script/source = "extends MarginContainer
-
-signal remove_tower
-
-onready var title = get_node(\"NinePatchRect/MarginContainer/VBoxContainer/Label\")
-
-export(String) var tower_name
-
-func _ready():
-	set_tower_name(tower_name)
-
-func set_tower_name(name: String):
-	title.text = name
-"
-
-[sub_resource type="AtlasTexture" id=13]
-atlas = ExtResource( 4 )
-region = Rect2( 81, 97, 30, 30 )
-
-[sub_resource type="AtlasTexture" id=14]
-atlas = ExtResource( 4 )
-region = Rect2( 33, 81, 14, 14 )
-
-[sub_resource type="AtlasTexture" id=15]
-atlas = ExtResource( 4 )
-region = Rect2( 17, 82, 14, 13 )
-
-[sub_resource type="AtlasTexture" id=16]
-atlas = ExtResource( 4 )
-region = Rect2( 1, 81, 14, 14 )
-
-[sub_resource type="AtlasTexture" id=17]
-atlas = ExtResource( 4 )
-region = Rect2( 53, 68, 6, 5 )
-
 [node name="MoonBeamTower" type="StaticBody2D"]
 collision_layer = 950273
+collision_mask = 524289
 script = ExtResource( 1 )
 damage_per_hit = 25.0
+ui_parent = NodePath("UiRoot/MarginContainer")
 no_place_area = NodePath("Area2D")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("TargetZone")
@@ -167,80 +137,8 @@ collision_mask = 655360
 position = Vector2( 0, 16.075 )
 shape = SubResource( 12 )
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-margin_left = 12.9229
-margin_top = -23.7856
-margin_right = 135.923
-margin_bottom = 31.2144
-script = SubResource( 18 )
-__meta__ = {
-"_edit_use_anchors_": false
-}
-tower_name = "Beam Tower"
+[node name="UiRoot" type="Node2D" parent="."]
+z_index = 999
+z_as_relative = false
 
-[node name="NinePatchRect" type="NinePatchRect" parent="MarginContainer"]
-margin_right = 123.0
-margin_bottom = 55.0
-texture = SubResource( 13 )
-patch_margin_left = 6
-patch_margin_top = 6
-patch_margin_right = 6
-patch_margin_bottom = 6
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/NinePatchRect"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-custom_constants/margin_right = 2
-custom_constants/margin_top = 7
-custom_constants/margin_left = 2
-custom_constants/margin_bottom = 7
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/NinePatchRect/MarginContainer"]
-margin_left = 2.0
-margin_top = 7.0
-margin_right = 121.0
-margin_bottom = 48.0
-size_flags_horizontal = 3
-size_flags_vertical = 3
-alignment = 1
-
-[node name="Label" type="Label" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer"]
-margin_top = 4.0
-margin_right = 119.0
-margin_bottom = 18.0
-theme = ExtResource( 5 )
-custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
-text = "Tower Name"
-align = 1
-valign = 1
-
-[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer"]
-margin_top = 22.0
-margin_right = 119.0
-margin_bottom = 36.0
-size_flags_vertical = 0
-alignment = 1
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer/HBoxContainer"]
-margin_left = 52.0
-margin_right = 66.0
-margin_bottom = 14.0
-
-[node name="TextureButton" type="TextureButton" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer/HBoxContainer/MarginContainer"]
-margin_right = 14.0
-margin_bottom = 14.0
-rect_pivot_offset = Vector2( 7, 7 )
-texture_normal = SubResource( 14 )
-texture_pressed = SubResource( 15 )
-texture_hover = SubResource( 16 )
-
-[node name="TextureRect" type="TextureRect" parent="MarginContainer/NinePatchRect/MarginContainer/VBoxContainer/HBoxContainer/MarginContainer"]
-margin_right = 14.0
-margin_bottom = 14.0
-texture = SubResource( 17 )
-stretch_mode = 4
+[node name="MarginContainer" parent="UiRoot" instance=ExtResource( 4 )]

@@ -1,11 +1,14 @@
 extends Path2D
 
+class_name EnemySpawner
+
+export(int) var difficulty_modifier
 export(float) var spawn_rate = 5.0
+export(NodePath) onready var world_layering = get_node(world_layering)
 export(PackedScene) var enemy
 
 onready var _spawn_timer = get_node("Timer")
 
-var _cached_layer_root
 var _should_spawn := false
 
 func _ready():
@@ -14,7 +17,6 @@ func _ready():
 	farm_manager.connect("night", self, "_on_night")
 	farm_manager.connect("day", self, "_on_day")
 	
-	_cached_layer_root = get_node("/root/GameManager/WorldLayering")
 	_spawn_timer.wait_time = spawn_rate
 	_spawn_timer.connect("timeout", self, "_on_timeout")
 
@@ -38,4 +40,4 @@ func _do_spawn():
 	else:
 		print("Enemy didn't have a set_path method!")
 
-	_cached_layer_root.add_child(new_enemy)
+	world_layering.add_child(new_enemy)

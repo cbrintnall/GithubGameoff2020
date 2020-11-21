@@ -1,4 +1,4 @@
-[gd_scene load_steps=44 format=2]
+[gd_scene load_steps=46 format=2]
 
 [ext_resource path="res://scenes/player/item_quantifier.tscn" type="PackedScene" id=1]
 [ext_resource path="res://scenes/scripts/player.gd" type="Script" id=2]
@@ -7,6 +7,8 @@
 [ext_resource path="res://scenes/scripts/inventory_ui.gd" type="Script" id=5]
 [ext_resource path="res://scenes/scripts/player_inventory.gd" type="Script" id=6]
 [ext_resource path="res://assets/textures/player/reticle.png" type="Texture" id=7]
+[ext_resource path="res://assets/audio/sfx/ui/button_hover.wav" type="AudioStream" id=8]
+[ext_resource path="res://assets/audio/sfx/ui/selector_revoke.wav" type="AudioStream" id=9]
 [ext_resource path="res://assets/textures/player/merchant/hoe.png" type="Texture" id=10]
 [ext_resource path="res://assets/textures/player/merchant/pickup.png" type="Texture" id=11]
 [ext_resource path="res://assets/audio/sfx/towers/cant_place.wav" type="AudioStream" id=12]
@@ -31,64 +33,64 @@ atlas = ExtResource( 3 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=5]
-atlas = ExtResource( 4 )
+atlas = ExtResource( 11 )
 region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=6]
-atlas = ExtResource( 4 )
+atlas = ExtResource( 11 )
 region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=7]
-atlas = ExtResource( 4 )
+atlas = ExtResource( 11 )
 region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=8]
-atlas = ExtResource( 4 )
+atlas = ExtResource( 11 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=9]
 atlas = ExtResource( 4 )
-region = Rect2( 256, 0, 64, 64 )
-
-[sub_resource type="AtlasTexture" id=10]
-atlas = ExtResource( 10 )
 region = Rect2( 0, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=11]
-atlas = ExtResource( 10 )
+[sub_resource type="AtlasTexture" id=10]
+atlas = ExtResource( 4 )
 region = Rect2( 64, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=12]
-atlas = ExtResource( 10 )
+[sub_resource type="AtlasTexture" id=11]
+atlas = ExtResource( 4 )
 region = Rect2( 128, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=13]
-atlas = ExtResource( 10 )
+[sub_resource type="AtlasTexture" id=12]
+atlas = ExtResource( 4 )
 region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=13]
+atlas = ExtResource( 4 )
+region = Rect2( 256, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=14]
 atlas = ExtResource( 10 )
-region = Rect2( 256, 0, 64, 64 )
+region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=15]
 atlas = ExtResource( 10 )
-region = Rect2( 320, 0, 64, 64 )
-
-[sub_resource type="AtlasTexture" id=16]
-atlas = ExtResource( 11 )
-region = Rect2( 0, 0, 64, 64 )
-
-[sub_resource type="AtlasTexture" id=17]
-atlas = ExtResource( 11 )
 region = Rect2( 64, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=18]
-atlas = ExtResource( 11 )
+[sub_resource type="AtlasTexture" id=16]
+atlas = ExtResource( 10 )
 region = Rect2( 128, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=19]
-atlas = ExtResource( 11 )
+[sub_resource type="AtlasTexture" id=17]
+atlas = ExtResource( 10 )
 region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=18]
+atlas = ExtResource( 10 )
+region = Rect2( 256, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=19]
+atlas = ExtResource( 10 )
+region = Rect2( 320, 0, 64, 64 )
 
 [sub_resource type="SpriteFrames" id=20]
 animations = [ {
@@ -97,20 +99,20 @@ animations = [ {
 "name": "idle",
 "speed": 8.0
 }, {
-"frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ), SubResource( 9 ) ],
+"frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ) ],
+"loop": true,
+"name": "pickup",
+"speed": 10.0
+}, {
+"frames": [ SubResource( 9 ), SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
 "loop": true,
 "name": "walking",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ), SubResource( 14 ), SubResource( 15 ) ],
+"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
 "loop": true,
 "name": "till",
 "speed": 12.0
-}, {
-"frames": [ SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
-"loop": true,
-"name": "pickup",
-"speed": 10.0
 } ]
 
 [sub_resource type="CircleShape2D" id=21]
@@ -230,10 +232,16 @@ script/source = "extends CanvasLayer
 signal tower_selected(tower)
 signal tower_purchase_failed
 
+export(AudioStream) var revoke_selection
+export(AudioStream) var choose_selection
+
+onready var audio = get_node(\"AudioStreamPlayer\")
 onready var game_manager = get_node(\"/root/GameManager\")
 onready var tween := get_node(\"Tween\")
+onready var selection_tween := get_node(\"SelectionTween\")
 onready var tower_base = get_node(\"MarginContainer/HBoxContainer\")
 
+var _icon_selection_height := 20
 var _idx_to_key := {}
 var _key_to_idx := {
 	KEY_1: 1,
@@ -247,12 +255,36 @@ var _key_to_idx := {
 
 var _instances := {}
 var _tower_selector = preload(\"res://scenes/towers/tower_selector.tscn\")
+var _selected
+
+func purchase_done():
+	if _selected:
+		_revert_height_on_icon(_selected)
+		_selected = null
 
 func register_tower(key, tower: PackedScene):
 	_idx_to_key[key] = tower
-	
 	_set_all_prices()
+
+func _revert_height_on_icon(instance):
+	var duration = .25
 	
+	# prevents the selectors from flying off and tweening too far
+	if selection_tween.is_active():
+		selection_tween.stop_all()
+		tower_base.queue_sort()
+	
+	selection_tween.interpolate_property(
+		instance,
+		\"rect_position\",
+		instance.rect_position,
+		instance.rect_position + (Vector2.DOWN * _icon_selection_height),
+		duration,
+		Tween.TRANS_CUBIC,
+		Tween.EASE_OUT
+	)
+	selection_tween.start()
+
 func _create_new_slot(key, tower: PackedScene):
 	pass
 	
@@ -281,7 +313,46 @@ func _unhandled_input(event):
 				emit_signal(\"tower_purchase_failed\")
 				return
 			
+			# if we selected something, lower it
+			if _selected:
+				_revert_height_on_icon(_selected)
+
+			# if what is selected is the same, we wipe out our selection
+			if _selected != _instances[tower]:
+				_selected = _instances[tower]
+				_do_purchasing_tween(_selected)
+				audio.pitch_scale = 1.0
+				audio.stream = choose_selection
+				audio.play()
+			else:
+				_selected = null
+				audio.pitch_scale = .75
+				audio.stream = choose_selection
+				audio.play()
+
+			# todo: make this emit null, and have the player queue free
+			# on their current tower. that way full selection control
+			# comes from this node
 			emit_signal(\"tower_selected\", tower)
+
+func _do_purchasing_tween(instance):
+	var duration = .25
+
+	# prevents the selectors from flying off and tweening too far
+	if selection_tween.is_active():
+		selection_tween.stop_all()
+		tower_base.queue_sort()
+
+	selection_tween.interpolate_property(
+		instance,
+		\"rect_position\",
+		instance.rect_position,
+		instance.rect_position + (Vector2.UP * _icon_selection_height),
+		duration,
+		Tween.TRANS_CUBIC,
+		Tween.EASE_OUT
+	)
+	selection_tween.start()
 
 func _do_cant_purchase_tween(instance):
 	var duration = .125
@@ -346,7 +417,7 @@ ground_manager = NodePath("../../GameManager/GroundManager")
 position = Vector2( 0, -0.0196867 )
 frames = SubResource( 20 )
 animation = "idle"
-frame = 3
+frame = 1
 playing = true
 offset = Vector2( 0, -12 )
 
@@ -424,6 +495,8 @@ __meta__ = {
 
 [node name="ToolsUi" type="CanvasLayer" parent="."]
 script = SubResource( 28 )
+revoke_selection = ExtResource( 9 )
+choose_selection = ExtResource( 8 )
 
 [node name="MarginContainer" type="MarginContainer" parent="ToolsUi"]
 anchor_left = 0.083
@@ -433,6 +506,7 @@ anchor_bottom = 1.0
 margin_left = 0.00799561
 margin_top = -0.200012
 margin_right = -0.416016
+mouse_filter = 2
 size_flags_vertical = 0
 custom_constants/margin_right = 12
 custom_constants/margin_left = 12
@@ -458,6 +532,11 @@ __meta__ = {
 }
 
 [node name="Tween" type="Tween" parent="ToolsUi"]
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="ToolsUi"]
+stream = ExtResource( 8 )
+
+[node name="SelectionTween" type="Tween" parent="ToolsUi"]
 
 [node name="footsteps" type="Node2D" parent="."]
 

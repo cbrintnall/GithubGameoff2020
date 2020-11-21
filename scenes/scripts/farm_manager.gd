@@ -13,7 +13,7 @@ onready var rock_increase_tween = get_node("CanvasLayer/Tween")
 onready var lunar_rock_audio = get_node("CanvasLayer/LunarRockGained")
 onready var time_label = get_node("CanvasLayer/VBoxContainer/NinePatchRect2/MarginContainer/Label")
 onready var clock_base = get_node("CanvasLayer/VBoxContainer/NinePatchRect2")
-onready var lunar_rock_label = get_node("CanvasLayer/VBoxContainer/NinePatchRect3/MarginContainer/HBoxContainer/Label")
+onready var lunar_rock_label = get_node("CanvasLayer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Label")
 onready var moonlight = get_node("MoonLight")
 
 export(int) var moonlight_min_x_offset = -500

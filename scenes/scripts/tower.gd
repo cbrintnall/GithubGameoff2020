@@ -42,6 +42,10 @@ var targets := []
 
 var _line_wind_down_time = .5
 var _draw_vision := false
+var _ui_parent
+
+func in_world() -> bool:
+	return state != TowerState.PURCHASING and state != TowerState.INVALID_PLACEMENT
 
 func get_texture() -> Texture:
 	return null
@@ -69,6 +73,13 @@ func on_action_leave():
 func add_target(target):
 	targets.append(target)
 	emit_signal("new_target", target)
+
+func use():
+	if in_world():
+		_ui_parent.visible = true
+
+func destroy_tower():
+	queue_free()
 
 func _ready():
 	vision_area.connect("body_entered", self, "_on_target_enter")
@@ -98,6 +109,12 @@ func _ready():
 	add_child(charge_timer)
 	charge_timer.wait_time = charge_time
 	charge_timer.one_shot = true
+	
+	if ui_parent:
+		_ui_parent = get_node(ui_parent)
+		
+		_ui_parent.visible = false
+		_ui_parent.connect("remove_tower", self, "destroy_tower")
 	
 	_set_state(TowerState.PURCHASING)
 

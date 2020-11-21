@@ -1,44 +1,7 @@
-[gd_scene load_steps=19 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://assets/textures/enemies/eyeball/eyeball_monster_walk.png" type="Texture" id=1]
-[ext_resource path="res://assets/textures/enemies/eyeball/eyeball_monster_idle.png" type="Texture" id=2]
 [ext_resource path="res://scenes/scripts/eyeball_monster.gd" type="Script" id=3]
-
-[sub_resource type="AtlasTexture" id=1]
-atlas = ExtResource( 2 )
-region = Rect2( 0, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=2]
-atlas = ExtResource( 2 )
-region = Rect2( 16, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=3]
-atlas = ExtResource( 2 )
-region = Rect2( 32, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=4]
-atlas = ExtResource( 2 )
-region = Rect2( 48, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=5]
-atlas = ExtResource( 2 )
-region = Rect2( 64, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=6]
-atlas = ExtResource( 2 )
-region = Rect2( 80, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=7]
-atlas = ExtResource( 2 )
-region = Rect2( 96, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=8]
-atlas = ExtResource( 2 )
-region = Rect2( 112, 0, 16, 19 )
-
-[sub_resource type="AtlasTexture" id=9]
-atlas = ExtResource( 2 )
-region = Rect2( 128, 0, 16, 19 )
 
 [sub_resource type="AtlasTexture" id=10]
 atlas = ExtResource( 1 )
@@ -58,10 +21,15 @@ region = Rect2( 96, 0, 32, 16 )
 
 [sub_resource type="SpriteFrames" id=14]
 animations = [ {
-"frames": [ SubResource( 1 ), SubResource( 2 ), SubResource( 3 ), SubResource( 4 ), SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ), SubResource( 9 ) ],
+"frames": [  ],
 "loop": true,
-"name": "default",
-"speed": 10.0
+"name": "attack",
+"speed": 5.0
+}, {
+"frames": [  ],
+"loop": true,
+"name": "die",
+"speed": 5.0
 }, {
 "frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
 "loop": true,
@@ -72,15 +40,15 @@ animations = [ {
 [sub_resource type="CircleShape2D" id=15]
 radius = 2.99621
 
-[node name="Enemy" type="KinematicBody2D"]
+[node name="EyeballMonster" type="KinematicBody2D"]
 collision_layer = 262144
 script = ExtResource( 3 )
 speed = 5.0
+animation = NodePath("AnimatedSprite")
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 frames = SubResource( 14 )
 animation = "walk"
-frame = 3
 playing = true
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]

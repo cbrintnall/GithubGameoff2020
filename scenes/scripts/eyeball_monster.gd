@@ -1,8 +1,9 @@
 extends KinematicBody2D
 
-export(float) var speed = 2.0
+export(float) var damage := 0
+export(float) var speed := 2.0
+export(NodePath) onready var animation = get_node(animation) as AnimatedSprite
 
-onready var animation = get_node("AnimatedSprite")
 onready var damage_tween = get_node("Tween")
 
 var internal_path: PoolVector2Array
@@ -27,7 +28,7 @@ func _physics_process(delta):
 		_do_move(delta)
 
 func _do_move(delta):
-	if internal_path and len(internal_path) < 0:
+	if !internal_path:
 		return
 
 	var target_point = internal_path[_next_point]
@@ -88,4 +89,7 @@ func take_damage(amt: float):
 	damage_tween.start()
 	
 func _die():
+	_moving = false
+	animation.play("die")
+	yield(animation,"animation_finished")
 	queue_free()

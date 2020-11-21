@@ -1,0 +1,14 @@
+{
+  "enemy_paths": {
+    "eyeball": "res://scenes/enemies/eyeball.tscn",
+    "trash": "res://scenes/enemies/trash.tscn"
+  },
+  "waves": [
+    {
+      "difficulty": 1,
+      "enemies": {
+        "eyeball": 10
+      }
+    }
+  ]
+}
