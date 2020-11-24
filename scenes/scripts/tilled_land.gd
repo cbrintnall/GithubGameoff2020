@@ -1,16 +1,8 @@
 extends Area2D
 
-"""
-TODO:
-	- planting menu
-	- plot decay
-		- start timer when harvesting
-		- start timer when tilled
-		- kill timer when planted
-"""
-
 signal done_growing
 
+export(int) var max_energy_stored := 100
 export(AudioStreamSample) var harvest_sound
 export(AudioStreamSample) var plant_sound
 
@@ -32,15 +24,33 @@ var plant_done: bool
 var current_energy: float
 var current_progress = 0.0
 
+var _fading_out := false
+
 func _ready():
 	growing_sprite.playing = false
 	growing_sprite.visible = false
 	growing_sprite.connect("animation_finished", self, "_on_finish")
-	
-	get_node("/root/GameManager/GroundManager").connect("do_tick", self, "_on_ground_tick")
-	
+
+	game_manager.get_node("GroundManager").connect("do_tick", self, "_on_ground_tick")
+
 	seed_chooser.visible = false
 	seed_chooser.connect("chose", self, "_on_choose_seed")
+
+#hijack notification tween since we wont need it anymore
+func _destroy_plot():
+	_fading_out=true
+	energy_notification_tween.interpolate_property(
+		self,
+		"modulate",
+		Color.white,
+		Color.transparent,
+		1.0,
+		Tween.TRANS_CUBIC,
+		Tween.EASE_IN
+	)
+	energy_notification_tween.start()
+	yield(energy_notification_tween,"tween_all_completed")
+	queue_free()
 
 func _get_seeds_in_players_inventory() -> Array:
 	var seeds := []
@@ -110,7 +120,7 @@ func _on_finished_growing():
 	energy_particles.color = Color.limegreen
 
 func on_action_hover():
-	if !growing_plant:
+	if !growing_plant and !_fading_out:
 		_enable_seed_menu()
 	
 func on_action_leave():
@@ -127,14 +137,13 @@ func _do_harvest():
 	energy_particles.color = Color.white
 	player.stream = harvest_sound
 	player.play()
-	yield(get_tree().create_timer(.25), "timeout")
-	queue_free()
+	_destroy_plot()
 
 func done_growing():
 	return growing_plant and current_progress >= growing_plant.required_energy
 
 func use():
-	if done_growing():
+	if !_fading_out and done_growing():
 		_do_harvest()
 		return
 	elif growing_plant:

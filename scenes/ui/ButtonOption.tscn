@@ -1,0 +1,39 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://themes/main.tres" type="Theme" id=1]
+[ext_resource path="res://assets/audio/sfx/ui/button_hover.wav" type="AudioStream" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends MarginContainer
+
+onready var btn = get_node(\"Button\")
+onready var hover_audio = get_node(\"AudioStreamPlayer\")
+
+func _ready():
+	btn.connect(\"mouse_entered\", hover_audio, \"play\")
+
+func set_text(txt: String):
+	btn.text = txt
+	
+func on_press(node, callback, args := []):
+	btn.connect(\"button_down\", node, callback, args)
+"
+
+[node name="MarginContainer" type="MarginContainer"]
+margin_top = 102.0
+margin_right = 110.0
+margin_bottom = 122.0
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Button" type="Button" parent="."]
+margin_right = 110.0
+margin_bottom = 20.0
+theme = ExtResource( 1 )
+text = "Quit"
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 2 )
+bus = "Sfx"

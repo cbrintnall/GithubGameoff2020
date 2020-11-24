@@ -16,6 +16,7 @@ export(NodePath) onready var ground_manager = get_node(ground_manager)
 
 onready var tools_ui = get_node("ToolsUi")
 onready var game_manager = get_node("/root/GameManager")
+onready var event_manager = get_node("/root/GameManager/EventManager")
 onready var bad_action_player = get_node("BadAction")
 onready var step_particles = get_node("footsteps/Steps")
 onready var footsteps_particles = get_node("footsteps/Puffs")
@@ -166,6 +167,10 @@ func _check_under_action_area():
 func _handle_use_and_has_pending_tower():
 	if !_current_tower_purchase.can_place():
 		bad_action_player.play()
+		event_manager.new_message(
+			"Can't place tower there",
+			Constants.EventLevel.WARNING
+		)
 		return
 
 	tools_ui.purchase_done()
@@ -191,9 +196,24 @@ func _unhandled_input(event):
 	if event.is_action_pressed("cancel_selection") and _current_tower_purchase:
 		_current_tower_purchase.queue_free()
 
-	if event.is_action_pressed("use") || (!_controller_action_area and event is InputEventMouseButton and event.button_index == 1):
+	# gross
+	var action_used = (
+		event.is_action_pressed("use") || 
+		(
+			!_controller_action_area and 
+			event is InputEventMouseButton and 
+			event.button_index == 1 and
+			event.pressed
+		)
+	)
+
+	if action_used:
 		if !action_area.can_use:
 			bad_action_player.play()
+			event_manager.new_message(
+				"Target out of reach",
+				Constants.EventLevel.WARNING
+			)
 			return
 
 		if _current_tower_purchase:
@@ -224,10 +244,12 @@ func _unhandled_input(event):
 		# otherwise we can just till the land!
 		if !used:
 			if !ground_manager.is_tilled(hovered_tile):
+				# cache tile since play can move mouse before animation is finished and it'll still place
+				var to_till = hovered_tile
 				animated_sprite.play("till")
 				move_vec_multiplier = Vector2.ZERO
 				yield(animated_sprite,"animation_finished")
-				ground_manager.till_dirt(hovered_tile)
+				ground_manager.till_dirt(to_till)
 				animated_sprite.play("idle")
 				move_vec_multiplier = Vector2.ONE
 

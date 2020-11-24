@@ -1,0 +1,72 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://themes/main.tres" type="Theme" id=1]
+[ext_resource path="res://assets/audio/sfx/ui/button_hover.wav" type="AudioStream" id=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends MarginContainer
+
+onready var test_sound = get_node(\"AudioStreamPlayer\")
+onready var name_label = get_node(\"VBoxContainer/MarginContainer/Label\")
+onready var slider = get_node(\"VBoxContainer/HSlider\")
+
+export(String) var option_name
+export(int) var bus_index
+
+func _ready():
+	name_label.text = option_name
+	slider.value = db2linear(AudioServer.get_bus_volume_db(0))
+	
+	slider.connect(\"value_changed\", self, \"_on_slider_change\")
+	slider.connect(\"mouse_entered\", test_sound, \"play\")
+	
+func _on_slider_change(val):
+	AudioServer.set_bus_volume_db(
+		bus_index,
+		linear2db(val)
+	)
+	
+"
+
+[node name="SoundOption" type="MarginContainer"]
+margin_top = 26.0
+margin_right = 110.0
+margin_bottom = 60.0
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+margin_right = 110.0
+margin_bottom = 34.0
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+margin_right = 110.0
+margin_bottom = 14.0
+size_flags_horizontal = 3
+custom_constants/margin_right = 32
+custom_constants/margin_left = 32
+
+[node name="Label" type="Label" parent="VBoxContainer/MarginContainer"]
+margin_left = 32.0
+margin_right = 78.0
+margin_bottom = 14.0
+theme = ExtResource( 1 )
+text = "Music:"
+align = 1
+valign = 1
+
+[node name="HSlider" type="HSlider" parent="VBoxContainer"]
+margin_top = 18.0
+margin_right = 110.0
+margin_bottom = 34.0
+max_value = 1.0
+step = 0.01
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 2 )
+bus = "Sfx"

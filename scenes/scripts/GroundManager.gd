@@ -21,6 +21,15 @@ var TileData = preload("res://scenes/scripts/tile_data.gd")
 # keys are vects, values are whatever is stored at that location
 var data_storage = {  }
 
+func get_tilled_land() -> Array:
+	var land := []
+	
+	for stored in data_storage:
+		if data_storage[stored]:
+			land.append(data_storage[stored])
+	
+	return land
+
 func _ready():
 	_update_in_bound_tiles()
 	
@@ -28,6 +37,7 @@ func _ready():
 	var tm = dirt_tilemap as TileMap
 	var moon_tile = tm.world_to_map(moon.position)
 	
+	# tick is when tilled land consumes resources
 	tick_timer.connect("timeout", self, "_do_tick")
 	
 	for tile in tm.get_used_cells():
@@ -65,7 +75,7 @@ func cell_in_bounds(cell: Vector2):
 	return cell in in_bounds_tiles
 
 func is_tilled(vec: Vector2):
-	return vec in data_storage
+	return vec in data_storage and data_storage[vec]
 
 func till_dirt(vec: Vector2):
 	if !cell_in_bounds(vec):
@@ -87,5 +97,4 @@ func get_data_at(vec: Vector2):
 	return null
 
 func _on_free_tilled(vec):
-	print(vec)
 	data_storage[vec] = null

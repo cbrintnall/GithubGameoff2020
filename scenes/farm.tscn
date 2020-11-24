@@ -1,4 +1,4 @@
-[gd_scene load_steps=54 format=2]
+[gd_scene load_steps=55 format=2]
 
 [ext_resource path="res://assets/tilesets/farm.tres" type="TileSet" id=1]
 [ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=2]
@@ -18,7 +18,7 @@
 [ext_resource path="res://scenes/scripts/game_manager.gd" type="Script" id=16]
 [ext_resource path="res://themes/main.tres" type="Theme" id=17]
 [ext_resource path="res://scenes/scripts/farm_manager.gd" type="Script" id=18]
-[ext_resource path="res://scenes/enemies/trash.tscn" type="PackedScene" id=19]
+[ext_resource path="res://scenes/ui/SoundOption.tscn" type="PackedScene" id=19]
 [ext_resource path="res://assets/audio/next.wav" type="AudioStream" id=20]
 [ext_resource path="res://assets/textures/icons/lunar_rock.png" type="Texture" id=21]
 [ext_resource path="res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 07 Confrontation.ogg" type="AudioStream" id=22]
@@ -73,6 +73,126 @@ func _handle_command(command: String):
 		for i in cmd:
 			copy.append(i)
 		commands[cmd[0]].call_func(copy.slice(1, copy.size()-1))
+"
+
+[sub_resource type="GDScript" id=24]
+script/source = "extends CanvasLayer
+
+const PREFS_LOCATION = \"user://player.prefs\"
+
+onready var resolution = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/Resolution\")
+onready var prefs_base = get_node(\"MarginContainer\")
+onready var options_base = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer\")
+onready var fullscreen_toggle = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/FullscreenToggle\")
+
+var prefs := {
+	\"resolution\": \"1920x1080\",
+	\"fullscreen\": true,
+	\"audio\": {}
+}
+
+var _btn_option = preload(\"res://scenes/ui/ButtonOption.tscn\")
+var _resolution_options := [
+	\"1280x720\",
+	\"1920x1080\",
+	\"2560x1440\"
+]
+
+func new_button(txt: String, noderef, function, args := []):
+	var new_option = _btn_option.instance()
+	
+	options_base.add_child(new_option)
+	
+	new_option.set_text(txt)
+	new_option.on_press(noderef, function, args)
+	
+	prefs_base.connect(\"visibility_changed\", self, \"_on_visibility_changed\")
+
+func _generate_default_prefs():
+	var size = OS.get_screen_size()
+	
+	return {
+		\"resolution\": str(int(size.x)) + \"x\" + str(int(size.y)),
+		\"fullscreen\": true
+	}
+
+func _load_cached_options():
+	var options := {}
+	var saved_prefs = File.new()
+	if !saved_prefs.file_exists(PREFS_LOCATION):
+		options = _generate_default_prefs()
+		_write_out_prefs()
+	else:
+		saved_prefs.open(PREFS_LOCATION, File.READ)
+		var prefs = saved_prefs.get_as_text()
+		saved_prefs.close()
+		var loaded_prefs_result = JSON.parse(prefs)
+		if loaded_prefs_result.error == OK:
+			options = loaded_prefs_result.result
+
+	prefs = options
+
+func _set_settings_from_prefs(save := false):
+	# set resolution
+	var split_reso = prefs[\"resolution\"].split(\"x\")
+	var width = split_reso[0]
+	var height = split_reso[1]
+	var resolution_vec = Vector2(width, height)
+	
+	OS.window_size = resolution_vec
+	OS.window_fullscreen = prefs[\"fullscreen\"]
+	
+	resolution.visible = !OS.window_fullscreen
+	
+	if save:
+		_write_out_prefs()
+
+func _write_out_prefs():
+	var saved_prefs = File.new()
+	saved_prefs.open(PREFS_LOCATION, File.WRITE)
+	saved_prefs.store_line(to_json(prefs))
+
+func _on_visibility_changed():
+	get_tree().paused = prefs_base.visible
+
+func _quit_game():
+	get_tree().quit(0)
+
+func _ready():
+	_load_cached_options()
+	_set_settings_from_prefs()
+	
+	prefs_base.visible = false
+	
+	new_button(\"Resume\", prefs_base, \"set_visible\", [ false ])
+	new_button(\"Quit\", self, \"_quit_game\")
+	
+	var popup = resolution.get_popup()
+	
+	for i in range(0, len(_resolution_options)):
+		popup.add_item(_resolution_options[i], i)
+		popup.connect(\"id_pressed\", self, \"_on_resolution_chosen\")
+	
+	fullscreen_toggle.pressed = prefs[\"fullscreen\"]
+	fullscreen_toggle.connect(\"toggled\", self, \"_on_fullscreen_changed\")
+
+func _on_fullscreen_changed(value):
+	prefs[\"fullscreen\"] = value
+	
+	_set_settings_from_prefs(true)
+
+func _on_resolution_chosen(id):
+	prefs[\"resolution\"] = _resolution_options[id]
+	
+	_set_settings_from_prefs(true)
+
+func _unhandled_input(event):
+	if event.is_action_pressed(\"cancel_selection\"):
+		if !prefs_base.visible:
+			prefs_base.visible = true
+		else:
+			prefs_base.visible = false
+		
 "
 
 [sub_resource type="GDScript" id=2]
@@ -144,7 +264,7 @@ func generate_wave(day: int = farm_manager.day, offset := 1):
 					
 					for enemy in wave[\"enemies\"]:
 						var enemy_scene = _loaded_enemies[enemy]
-						
+
 						wave_data[\"wave\"][enemy_scene] = wave[\"enemies\"][enemy]
 
 					chosen_waves.append(wave_data)
@@ -158,9 +278,8 @@ func spawn_wave(waves):
 		spawner.set_wave(wave[\"wave\"])
 		spawner.start_wave()
 		
-		for spawn in spawners:
-			var message = \"Enemies coming from the {direction}\".format({\"direction\": spawn.name.to_lower()})
-			game_manager.get_event_manager().new_message(message, Constants.EventLevel.WARNING)
+		var message = \"Enemies coming from the {direction}\".format({\"direction\": spawner.name.to_lower()})
+		game_manager.get_event_manager().new_message(message, Constants.EventLevel.WARNING)
 
 func _handle_commands(args: Array):
 	match args:
@@ -547,10 +666,10 @@ largest_tilemap = NodePath("OuterLimits")
 pause_mode = 2
 script = ExtResource( 11 )
 
-[node name="CanvasLayer" type="CanvasLayer" parent="PlayerPrefs"]
+[node name="DebugUi" type="CanvasLayer" parent="PlayerPrefs"]
 script = SubResource( 1 )
 
-[node name="CenterContainer" type="CenterContainer" parent="PlayerPrefs/CanvasLayer"]
+[node name="CenterContainer" type="CenterContainer" parent="PlayerPrefs/DebugUi"]
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
@@ -558,19 +677,19 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="MarginContainer" type="MarginContainer" parent="PlayerPrefs/CanvasLayer/CenterContainer"]
-margin_left = 476.0
-margin_top = 281.0
-margin_right = 548.0
-margin_bottom = 319.0
+[node name="MarginContainer" type="MarginContainer" parent="PlayerPrefs/DebugUi/CenterContainer"]
+margin_left = 604.0
+margin_top = 341.0
+margin_right = 676.0
+margin_bottom = 379.0
 mouse_filter = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="PlayerPrefs/CanvasLayer/CenterContainer/MarginContainer"]
+[node name="PanelContainer" type="PanelContainer" parent="PlayerPrefs/DebugUi/CenterContainer/MarginContainer"]
 margin_right = 72.0
 margin_bottom = 38.0
 mouse_filter = 1
 
-[node name="LineEdit" type="LineEdit" parent="PlayerPrefs/CanvasLayer/CenterContainer/MarginContainer/PanelContainer"]
+[node name="LineEdit" type="LineEdit" parent="PlayerPrefs/DebugUi/CenterContainer/MarginContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 65.0
@@ -580,6 +699,98 @@ size_flags_horizontal = 3
 theme = ExtResource( 17 )
 expand_to_text_length = true
 caret_blink = true
+
+[node name="PlayerPreferences" type="CanvasLayer" parent="PlayerPrefs"]
+script = SubResource( 24 )
+
+[node name="MarginContainer" type="MarginContainer" parent="PlayerPrefs/PlayerPreferences"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CenterContainer" type="CenterContainer" parent="PlayerPrefs/PlayerPreferences/MarginContainer"]
+margin_right = 1280.0
+margin_bottom = 720.0
+
+[node name="PanelContainer" type="PanelContainer" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer"]
+margin_left = 552.0
+margin_top = 253.0
+margin_right = 728.0
+margin_bottom = 467.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 169.0
+margin_bottom = 207.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer"]
+margin_right = 162.0
+margin_bottom = 200.0
+
+[node name="VolumeLabel" type="Label" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_right = 162.0
+margin_bottom = 14.0
+theme = ExtResource( 17 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "Volume:"
+align = 1
+valign = 1
+
+[node name="HSeparator" type="HSeparator" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 18.0
+margin_right = 162.0
+margin_bottom = 22.0
+
+[node name="MasterOption" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer" instance=ExtResource( 19 )]
+margin_right = 162.0
+option_name = "Master"
+
+[node name="MusicOption" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer" instance=ExtResource( 19 )]
+margin_top = 64.0
+margin_right = 162.0
+margin_bottom = 98.0
+option_name = "Music"
+bus_index = 2
+
+[node name="HSeparator2" type="HSeparator" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 102.0
+margin_right = 162.0
+margin_bottom = 106.0
+
+[node name="Video" type="Label" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 110.0
+margin_right = 162.0
+margin_bottom = 124.0
+theme = ExtResource( 17 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "Video:"
+align = 1
+valign = 1
+
+[node name="FullscreenToggle" type="CheckButton" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 128.0
+margin_right = 162.0
+margin_bottom = 168.0
+theme = ExtResource( 17 )
+text = "Fullscreen:"
+
+[node name="Resolution" type="MenuButton" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 172.0
+margin_right = 162.0
+margin_bottom = 192.0
+theme = ExtResource( 17 )
+text = "Resolution"
+flat = false
+
+[node name="HSeparator3" type="HSeparator" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 196.0
+margin_right = 162.0
+margin_bottom = 200.0
 
 [node name="SpawnManager" type="Node2D" parent="."]
 script = SubResource( 2 )
@@ -635,8 +846,8 @@ __meta__ = {
 }
 
 [node name="NinePatchRect2" type="NinePatchRect" parent="FarmManager/CanvasLayer/VBoxContainer"]
-margin_right = 131.0
-margin_bottom = 81.0
+margin_right = 165.0
+margin_bottom = 100.0
 size_flags_vertical = 3
 texture = SubResource( 4 )
 patch_margin_left = 6
@@ -662,9 +873,9 @@ __meta__ = {
 
 [node name="Label" type="Label" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect2/MarginContainer"]
 margin_left = 6.0
-margin_top = 26.0
-margin_right = 125.0
-margin_bottom = 54.0
+margin_top = 36.0
+margin_right = 159.0
+margin_bottom = 64.0
 size_flags_horizontal = 3
 size_flags_vertical = 6
 theme = ExtResource( 17 )
@@ -675,9 +886,9 @@ align = 1
 valign = 1
 
 [node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer"]
-margin_top = 76.0
+margin_top = 95.0
 margin_right = 70.0
-margin_bottom = 98.0
+margin_bottom = 117.0
 size_flags_horizontal = 0
 
 [node name="NinePatchRect3" type="NinePatchRect" parent="FarmManager/CanvasLayer/VBoxContainer/MarginContainer"]
@@ -793,18 +1004,21 @@ align = 2
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="EventManager"]
 
 [node name="MusicManager" type="Node2D" parent="."]
+pause_mode = 2
 script = SubResource( 8 )
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="MusicManager"]
 stream = ExtResource( 22 )
+bus = "Music"
 
 [node name="AudioStreamPlayer2" type="AudioStreamPlayer" parent="MusicManager"]
+bus = "Music"
 
 [node name="MusicTween" type="Tween" parent="MusicManager"]
 
 [node name="GroundManager" type="Node2D" parent="."]
 script = ExtResource( 6 )
-fence_tilemap = NodePath("../../GameManager/Fences")
+fence_tilemap = NodePath("../WorldLayering/Fences")
 dirt_tilemap = NodePath("../../GameManager/DirtBase")
 audio_player = NodePath("../../GameManager/GroundManager/audio")
 moon = NodePath("../../GameManager/moon")
@@ -832,13 +1046,6 @@ collide_with_areas = true
 autostart = true
 
 [node name="moon" parent="." instance=ExtResource( 5 )]
-
-[node name="Fences" type="TileMap" parent="."]
-z_index = 2
-tile_set = ExtResource( 4 )
-cell_size = Vector2( 16, 16 )
-format = 1
-tile_data = PoolIntArray( -1, 536870914, 0, -65536, 0, 0, -65535, 0, 0, -65534, 536870912, 0, -65533, 1, 0, -65532, 1, 0, -65528, 536870912, 0, -65527, 0, 0, -65526, 0, 0, -65525, 1, 0, -65524, 536870912, 0, -65523, -536870910, 0, 65535, 536870915, 0, 13, 1073741827, 0, 131071, 536870915, 0, 65549, 1073741827, 0, 196607, 536870915, 0, 131085, 1073741827, 0, 458751, 536870915, 0, 393229, 1073741827, 0, 524287, 536870915, 0, 458765, 1073741827, 0, 589823, 536870915, 0, 524301, 1073741827, 0, 655359, -2147483646, 0, 589824, 536870912, 0, 589825, 536870912, 0, 589826, 536870912, 0, 589827, 536870912, 0, 589828, 536870912, 0, 589832, 536870912, 0, 589833, 536870912, 0, 589834, 536870912, 0, 589835, 536870912, 0, 589836, 536870912, 0, 589837, 1073741826, 0 )
 
 [node name="DirtBase" type="TileMap" parent="."]
 z_index = -2
@@ -1009,12 +1216,13 @@ position = Vector2( -24.5344, 75.2469 )
 dirt_tilemap_path = NodePath("../../DirtBase")
 ground_manager = NodePath("../../GroundManager")
 
-[node name="Enemy" parent="WorldLayering" instance=ExtResource( 25 )]
-position = Vector2( 58.1981, 222.904 )
-damage = 1.0
-
-[node name="TrashMonster" parent="WorldLayering" instance=ExtResource( 19 )]
-position = Vector2( 4.06582, 216.905 )
+[node name="Fences" type="TileMap" parent="WorldLayering"]
+z_index = 2
+tile_set = ExtResource( 4 )
+cell_size = Vector2( 16, 16 )
+cell_y_sort = true
+format = 1
+tile_data = PoolIntArray( -1, 536870914, 0, -65536, 0, 0, -65535, 0, 0, -65534, 536870912, 0, -65533, 1, 0, -65532, 1, 0, -65528, 536870912, 0, -65527, 0, 0, -65526, 0, 0, -65525, 1, 0, -65524, 536870912, 0, -65523, -536870910, 0, 65535, 536870915, 0, 13, 1073741827, 0, 131071, 536870915, 0, 65549, 1073741827, 0, 196607, 536870915, 0, 131085, 1073741827, 0, 458751, 536870915, 0, 393229, 1073741827, 0, 524287, 536870915, 0, 458765, 1073741827, 0, 589823, 536870915, 0, 524301, 1073741827, 0, 655359, -2147483646, 0, 589824, 536870912, 0, 589825, 536870912, 0, 589826, 536870912, 0, 589827, 536870912, 0, 589828, 536870912, 0, 589832, 536870912, 0, 589833, 536870912, 0, 589834, 536870912, 0, 589835, 536870912, 0, 589836, 536870912, 0, 589837, 1073741826, 0 )
 
 [node name="TreeBorder" type="Node2D" parent="."]
 

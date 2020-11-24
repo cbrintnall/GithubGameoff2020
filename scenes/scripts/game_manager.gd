@@ -23,6 +23,9 @@ func set_current_camera(camera: Camera2D):
 	
 	_camera = camera
 
+func get_ground_manager():
+	return get_node("GroundManager")
+
 func get_event_manager():
 	return event_manager
 

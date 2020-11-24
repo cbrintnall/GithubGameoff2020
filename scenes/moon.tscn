@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://scenes/scripts/moon.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/moon_fragment.png" type="Texture" id=2]
@@ -12,6 +12,18 @@ _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.381818 ), -2.49761, -2.
 [sub_resource type="Gradient" id=3]
 offsets = PoolRealArray( 0.638037, 0.98773 )
 colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
+
+[sub_resource type="StyleBoxFlat" id=4]
+bg_color = Color( 0.768627, 0.0705882, 0.0705882, 1 )
+
+[sub_resource type="StyleBoxFlat" id=5]
+bg_color = Color( 0, 0, 0, 0.341176 )
+
+[sub_resource type="StyleBoxFlat" id=6]
+bg_color = Color( 0.0705882, 0.768627, 0.701961, 1 )
+
+[sub_resource type="StyleBoxFlat" id=7]
+bg_color = Color( 0, 0, 0, 0.341176 )
 
 [node name="moon" type="Sprite"]
 position = Vector2( 105.792, 79.6948 )
@@ -47,3 +59,40 @@ angle_random = 1.0
 scale_amount = 1.5
 scale_amount_curve = SubResource( 2 )
 color_ramp = SubResource( 3 )
+
+[node name="UIBase" type="Node2D" parent="."]
+z_index = 999
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UIBase"]
+margin_left = -19.2138
+margin_top = -22.9148
+margin_right = 20.7862
+margin_bottom = 17.0852
+size_flags_horizontal = 0
+size_flags_vertical = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HealthBar" type="ProgressBar" parent="UIBase/VBoxContainer"]
+margin_right = 40.0
+margin_bottom = 1.0
+custom_styles/fg = SubResource( 4 )
+custom_styles/bg = SubResource( 5 )
+value = 50.0
+percent_visible = false
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="EnergyBar" type="ProgressBar" parent="UIBase/VBoxContainer"]
+margin_top = 5.0
+margin_right = 40.0
+margin_bottom = 6.0
+custom_styles/fg = SubResource( 6 )
+custom_styles/bg = SubResource( 7 )
+value = 50.0
+percent_visible = false
+__meta__ = {
+"_edit_use_anchors_": false
+}

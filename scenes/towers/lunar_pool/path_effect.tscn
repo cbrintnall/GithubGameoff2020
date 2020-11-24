@@ -10,22 +10,66 @@ _data = {
 [sub_resource type="GDScript" id=2]
 script/source = "extends Path2D
 
+signal path_done
+
 export(float) var speed = .001
 
+onready var fade_tween = get_node(\"Tween\")
 onready var path_follow = get_node(\"PathFollow2D\")
 onready var particles = get_node(\"PathFollow2D/Particles2D\")
 
-func set_target(target: Tower):
+var _done := false
+var _do_lerp := true
+var _max_scale = 0.15
+
+func set_scale_random(amt: float):
+	particles.process_material.scale_random = amt
+
+func set_amount(amt: int):
+	particles.amount = amt
+
+func fade_out(free_at_end := true):
+	fade_tween.interpolate_property(
+		particles,
+		\"modulate\",
+		Color.white,
+		Color.transparent,
+		1.0
+	)
+	fade_tween.start()
+	yield(fade_tween,\"tween_all_completed\")
+	if free_at_end:
+		queue_free()
+
+func set_do_lerp(state: bool):
+	_do_lerp = state
+
+func set_particle_size(size: float):
+	_max_scale = size
+	
+	if !_do_lerp:
+		particles.process_material.scale = size
+
+func set_looping(state: bool):
+	path_follow.loop = state
+
+func set_target(target: Node2D):
 	set_curve(curve.duplicate())
 	
 	curve.add_point(Vector2.ZERO)
 	curve.add_point(target.global_position - global_position)
 	
-	particles.z_index = target.z_index
+	particles.z_index = target.z_index+1
 
 func _process(delta):
+	if path_follow.unit_offset == 1.0 and !_done and !path_follow.loop:
+		_done = true
+		emit_signal(\"path_done\")
+
 	path_follow.unit_offset = path_follow.unit_offset + speed
-	particles.process_material.scale = lerp(0.0, 0.25, path_follow.unit_offset)
+	
+	if _do_lerp:
+		particles.process_material.scale = lerp(0.0, _max_scale, path_follow.unit_offset)
 
 func draw_path():
 	if curve.get_baked_points().size() > 0:
@@ -88,3 +132,5 @@ amount = 4
 local_coords = false
 process_material = SubResource( 9 )
 texture = ExtResource( 1 )
+
+[node name="Tween" type="Tween" parent="."]
