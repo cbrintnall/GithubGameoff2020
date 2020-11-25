@@ -1493,11 +1493,6 @@ hue_variation_random = 1.0
 
 [node name="Tween" type="Tween" parent="WorldLayering/ShippingChest"]
 
-[node name="Player" parent="WorldLayering" instance=ExtResource( 2 )]
-position = Vector2( -24.5344, 75.2469 )
-dirt_tilemap_path = NodePath("../../DirtBase")
-ground_manager = NodePath("../../GroundManager")
-
 [node name="Fences" type="TileMap" parent="WorldLayering"]
 z_index = 2
 tile_set = ExtResource( 4 )
@@ -1505,6 +1500,11 @@ cell_size = Vector2( 16, 16 )
 cell_y_sort = true
 format = 1
 tile_data = PoolIntArray( -1, 536870914, 0, -65536, 0, 0, -65535, 0, 0, -65534, 536870912, 0, -65533, 1, 0, -65532, 1, 0, -65528, 536870912, 0, -65527, 0, 0, -65526, 0, 0, -65525, 1, 0, -65524, 536870912, 0, -65523, -536870910, 0, 65535, 536870915, 0, 13, 1073741827, 0, 131071, 536870915, 0, 65549, 1073741827, 0, 196607, 536870915, 0, 131085, 1073741827, 0, 458751, 536870915, 0, 393229, 1073741827, 0, 524287, 536870915, 0, 458765, 1073741827, 0, 589823, 536870915, 0, 524301, 1073741827, 0, 655359, -2147483646, 0, 589824, 536870912, 0, 589825, 536870912, 0, 589826, 536870912, 0, 589827, 536870912, 0, 589828, 536870912, 0, 589832, 536870912, 0, 589833, 536870912, 0, 589834, 536870912, 0, 589835, 536870912, 0, 589836, 536870912, 0, 589837, 1073741826, 0 )
+
+[node name="Player" parent="WorldLayering" instance=ExtResource( 2 )]
+position = Vector2( -24.5344, 75.2469 )
+dirt_tilemap_path = NodePath("../../DirtBase")
+ground_manager = NodePath("../../GroundManager")
 
 [node name="TreeBorder" type="Node2D" parent="."]
 

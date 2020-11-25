@@ -12,9 +12,18 @@ script/source = "extends MarginContainer
 onready var price = get_node(\"PanelContainer/MarginContainer2/PanelContainer/HBoxContainer/Price\")
 #onready var texture = get_node(\"PanelContainer/MarginContainer2/HBoxContainer/TextureRect\")
 onready var key = get_node(\"PanelContainer/MarginContainer2/MarginContainer3/MarginContainer/Hotkey\")
+onready var key_base = get_node(\"PanelContainer/MarginContainer2/MarginContainer3\")
+
+func set_controller_selected(state: bool):
+	if state:
+		modulate = Color(\"#23cefc\")
+	else:
+		modulate = Color.white
 
 func show_button_hint(state: bool):
-	pass
+	if !is_inside_tree():
+		yield(self, \"ready\")
+	key_base.visible = state
 
 func set_price(amt: int):
 	if !is_inside_tree():

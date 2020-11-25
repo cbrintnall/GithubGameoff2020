@@ -86,6 +86,9 @@ func _deposit_item(item: Item, amt: int):
 	items[item] += amt
 
 func _handle_quantity_change_input(event):
+	if !open:
+		return
+
 	if event.is_action_pressed("select_next_alt"):
 		up.modulate = Color.black
 	elif event.is_action_pressed("select_previous_alt"):

@@ -33,64 +33,64 @@ atlas = ExtResource( 3 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=5]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 4 )
 region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=6]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 4 )
 region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=7]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 4 )
 region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=8]
-atlas = ExtResource( 11 )
+atlas = ExtResource( 4 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=9]
 atlas = ExtResource( 4 )
-region = Rect2( 0, 0, 64, 64 )
+region = Rect2( 256, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=10]
-atlas = ExtResource( 4 )
-region = Rect2( 64, 0, 64, 64 )
+atlas = ExtResource( 10 )
+region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=11]
-atlas = ExtResource( 4 )
-region = Rect2( 128, 0, 64, 64 )
+atlas = ExtResource( 10 )
+region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=12]
-atlas = ExtResource( 4 )
-region = Rect2( 192, 0, 64, 64 )
+atlas = ExtResource( 10 )
+region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=13]
-atlas = ExtResource( 4 )
-region = Rect2( 256, 0, 64, 64 )
+atlas = ExtResource( 10 )
+region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=14]
 atlas = ExtResource( 10 )
-region = Rect2( 0, 0, 64, 64 )
+region = Rect2( 256, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=15]
 atlas = ExtResource( 10 )
-region = Rect2( 64, 0, 64, 64 )
+region = Rect2( 320, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=16]
-atlas = ExtResource( 10 )
-region = Rect2( 128, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=17]
-atlas = ExtResource( 10 )
-region = Rect2( 192, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=18]
-atlas = ExtResource( 10 )
-region = Rect2( 256, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=19]
-atlas = ExtResource( 10 )
-region = Rect2( 320, 0, 64, 64 )
+atlas = ExtResource( 11 )
+region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="SpriteFrames" id=20]
 animations = [ {
@@ -99,20 +99,20 @@ animations = [ {
 "name": "idle",
 "speed": 8.0
 }, {
-"frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ) ],
-"loop": true,
-"name": "pickup",
-"speed": 10.0
-}, {
-"frames": [ SubResource( 9 ), SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
+"frames": [ SubResource( 5 ), SubResource( 6 ), SubResource( 7 ), SubResource( 8 ), SubResource( 9 ) ],
 "loop": true,
 "name": "walking",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ), SubResource( 14 ), SubResource( 15 ) ],
 "loop": true,
 "name": "till",
 "speed": 12.0
+}, {
+"frames": [ SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"loop": true,
+"name": "pickup",
+"speed": 10.0
 } ]
 
 [sub_resource type="CircleShape2D" id=21]
@@ -241,6 +241,8 @@ onready var tween := get_node(\"Tween\")
 onready var selection_tween := get_node(\"SelectionTween\")
 onready var tower_base = get_node(\"MarginContainer/HBoxContainer\")
 
+var input_handler
+
 var _icon_selection_height := 20
 var _idx_to_key := {}
 var _key_to_idx := {
@@ -253,6 +255,7 @@ var _key_to_idx := {
 	KEY_7: 7
 }
 
+var _selected_idx := 0
 var _instances := {}
 var _tower_selector = preload(\"res://scenes/towers/tower_selector.tscn\")
 var _selected
@@ -267,10 +270,28 @@ func register_tower(key, tower: PackedScene):
 	_idx_to_key[key] = tower
 	_set_all_prices()
 
-func ready():
-	var input_handler = game_manager.get_player_prefs().get_input_handler()
-	
+func _ready():
+	input_handler = game_manager.get_player_prefs().get_input_handler()
 	input_handler.connect(\"input_mode_changed\", self, \"_on_input_mode_changed\")
+
+	_on_input_mode_changed(input_handler.input_mode)
+
+# todo: if we ever add unlocking towers as we 
+func _on_input_mode_changed(mode):
+	_controller_selection = mode == Constants.InputMode.CONTROLLER
+	
+	if _controller_selection:
+		for instance in _instances.values():
+			instance.show_button_hint(false)
+			
+		if len(_instances.values()) > 0:
+			_instances.values()[_selected_idx].set_controller_selected(false)
+			_selected_idx = 0
+			_instances.values()[_selected_idx].set_controller_selected(true)
+	else:
+		for instance in _instances.values():
+			instance.show_button_hint(true)
+			instance.set_controller_selected(false)
 
 func _revert_height_on_icon(instance):
 	var duration = .25
@@ -298,48 +319,79 @@ func _set_all_prices():
 	for i in range(0, tower_base.get_child_count()):
 		tower_base.get_child(i).queue_free()
 	
+	var count := 0
 	for i in _idx_to_key:
 		var instance = _idx_to_key[i].instance()
 		var selector = _tower_selector.instance()
-		
+
+		if count == _selected_idx:
+			selector.set_controller_selected(true)
+
 		selector.set_price(instance.value)
 		selector.set_key(str(_key_to_idx[i]))
+		selector.show_button_hint(
+			input_handler.input_mode == Constants.InputMode.KEYBOARD
+		)
 		
 		tower_base.add_child(selector)
 		
 		_instances[_idx_to_key[i]] = selector
+		
+		# i am lazy
+		count += 1
 
 func _unhandled_input(event):
+	if _controller_selection:
+		if event.is_action_pressed(\"select_next_alt\"):
+			_instances.values()[_selected_idx].set_controller_selected(false)
+			_selected_idx = int(
+				clamp(_selected_idx+1, 0, _idx_to_key.values().size()-1)
+			)
+			_instances.values()[_selected_idx].set_controller_selected(true)
+
+		if event.is_action_pressed(\"select_previous_alt\"):
+			_instances.values()[_selected_idx].set_controller_selected(false)
+			_selected_idx = int(
+				clamp(_selected_idx-1, 0, _idx_to_key.values().size()-1)
+			)
+			_instances.values()[_selected_idx].set_controller_selected(true)
+
+		if event.is_action_pressed(\"select_next\"):
+			_do_purchase_tower(
+				_idx_to_key.values()[_selected_idx]
+			)
+
 	if event is InputEventKey:
 		if event.pressed and _idx_to_key.has(event.scancode):
-			var tower = _idx_to_key[event.scancode]
-			
-			if tower.instance().value > game_manager.get_farm_manager().current_lunar_rocks:
-				_do_cant_purchase_tween(_instances[tower])
-				emit_signal(\"tower_purchase_failed\")
-				return
-			
-			# if we selected something, lower it
-			if _selected:
-				_revert_height_on_icon(_selected)
+			_do_purchase_tower(_idx_to_key[event.scancode])
 
-			# if what is selected is the same, we wipe out our selection
-			if _selected != _instances[tower]:
-				_selected = _instances[tower]
-				_do_purchasing_tween(_selected)
-				audio.pitch_scale = 1.0
-				audio.stream = choose_selection
-				audio.play()
-			else:
-				_selected = null
-				audio.pitch_scale = .75
-				audio.stream = choose_selection
-				audio.play()
+func _do_purchase_tower(tower: PackedScene):
+	if tower.instance().value > game_manager.get_farm_manager().current_lunar_rocks:
+		_do_cant_purchase_tween(_instances[tower])
+		emit_signal(\"tower_purchase_failed\")
+		return
+	
+	# if we selected something, lower it
+	if _selected:
+		_revert_height_on_icon(_selected)
 
-			# todo: make this emit null, and have the player queue free
-			# on their current tower. that way full selection control
-			# comes from this node
-			emit_signal(\"tower_selected\", tower)
+	# if what is selected is the same, we wipe out our selection
+	if _selected != _instances[tower]:
+		_selected = _instances[tower]
+		_do_purchasing_tween(_selected)
+		audio.pitch_scale = 1.0
+		audio.stream = choose_selection
+		audio.play()
+	else:
+		_selected = null
+		audio.pitch_scale = .75
+		audio.stream = choose_selection
+		audio.play()
+
+	# todo: make this emit null, and have the player queue free
+	# on their current tower. that way full selection control
+	# comes from this node
+	emit_signal(\"tower_selected\", tower)
 
 func _do_purchasing_tween(instance):
 	var duration = .25
@@ -362,6 +414,7 @@ func _do_purchasing_tween(instance):
 
 func _do_cant_purchase_tween(instance):
 	var duration = .125
+	var previous_color = instance.modulate
 	tween.interpolate_property(
 		instance,
 		\"rect_scale\",
@@ -395,7 +448,7 @@ func _do_cant_purchase_tween(instance):
 		instance,
 		\"modulate\",
 		Color.red,
-		Color.white,
+		previous_color,
 		duration/2,
 		Tween.TRANS_LINEAR,
 		Tween.EASE_IN
@@ -423,7 +476,7 @@ ground_manager = NodePath("../../GameManager/GroundManager")
 position = Vector2( 0, -0.0196867 )
 frames = SubResource( 20 )
 animation = "idle"
-frame = 1
+frame = 2
 playing = true
 offset = Vector2( 0, -12 )
 
