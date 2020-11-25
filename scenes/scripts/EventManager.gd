@@ -12,7 +12,8 @@ const event_limit = 15
 const level_to_color := {
 	Constants.EventLevel.INFO: Color.white,
 	Constants.EventLevel.WARNING: Color.yellow,
-	Constants.EventLevel.GOOD: Color.greenyellow
+	Constants.EventLevel.GOOD: Color.greenyellow,
+	Constants.EventLevel.META: Color("#18d8ed")
 }
 
 func new_message(

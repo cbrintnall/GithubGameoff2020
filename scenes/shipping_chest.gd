@@ -98,7 +98,8 @@ func _handle_quantity_change_input(event):
 		quantity_change_audio.play()
 		current_quantity = int(clamp(current_quantity+1, 1, amt))
 		quantity_label.text = str(current_quantity)
-		value_label.text = "$" + str(option.value * current_quantity)
+		if option:
+			value_label.text = "$" + str(option.value * current_quantity)
 	elif event.is_action_released("select_previous_alt"):
 		var option = item_chooser.get_current_option()
 		var amt = game_manager.get_player().inventory.get_item_quantity(option)

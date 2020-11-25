@@ -6,11 +6,15 @@
 [sub_resource type="GDScript" id=1]
 script/source = "extends MarginContainer
 
+export(String) var text
+
 onready var btn = get_node(\"Button\")
 onready var hover_audio = get_node(\"AudioStreamPlayer\")
 
 func _ready():
 	btn.connect(\"mouse_entered\", hover_audio, \"play\")
+	
+	btn.text = text
 
 func set_text(txt: String):
 	btn.text = txt
@@ -36,4 +40,3 @@ text = "Quit"
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 2 )
-bus = "Sfx"

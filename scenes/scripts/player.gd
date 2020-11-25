@@ -49,6 +49,14 @@ func _ready():
 	tools_ui.register_tower(KEY_1, preload("res://scenes/towers/moon_beam_tower.tscn"))
 	tools_ui.register_tower(KEY_2, preload("res://scenes/towers/EffectAoeTower.tscn"))
 	tools_ui.register_tower(KEY_3, preload("res://scenes/towers/lunar_pool.tscn"))
+	
+	var input_handler = game_manager.get_player_prefs().get_input_handler()
+	
+	input_handler.connect("input_mode_changed", self, "_on_input_mode_changed")
+	_controller_action_area = input_handler.input_mode == Constants.InputMode.CONTROLLER
+
+func _on_input_mode_changed(mode):
+	_controller_action_area = mode == Constants.InputMode.CONTROLLER
 
 func _handle_movement(delta):
 	var move_vec = Vector2.ZERO
@@ -87,8 +95,13 @@ func _handle_movement(delta):
 			_position_action_area_controller(move_vec)
 	else:
 		_position_action_area_mouse(move_vec)
-		
-	move_and_collide(move_vec * speed)
+	
+	var input_strength = Vector2(
+		Input.get_action_strength("move_left") + Input.get_action_strength("move_right"),
+		Input.get_action_strength("move_down") + Input.get_action_strength("move_up")
+	)
+	
+	move_and_collide((move_vec * speed) * input_strength)
 
 	last_move_vec = move_vec
 

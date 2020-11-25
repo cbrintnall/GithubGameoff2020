@@ -49,48 +49,48 @@ atlas = ExtResource( 11 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=9]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 4 )
 region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=10]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 4 )
 region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=11]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 4 )
 region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=12]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 4 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=13]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 4 )
 region = Rect2( 256, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=14]
 atlas = ExtResource( 10 )
-region = Rect2( 320, 0, 64, 64 )
-
-[sub_resource type="AtlasTexture" id=15]
-atlas = ExtResource( 4 )
 region = Rect2( 0, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=16]
-atlas = ExtResource( 4 )
+[sub_resource type="AtlasTexture" id=15]
+atlas = ExtResource( 10 )
 region = Rect2( 64, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=17]
-atlas = ExtResource( 4 )
+[sub_resource type="AtlasTexture" id=16]
+atlas = ExtResource( 10 )
 region = Rect2( 128, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=18]
-atlas = ExtResource( 4 )
+[sub_resource type="AtlasTexture" id=17]
+atlas = ExtResource( 10 )
 region = Rect2( 192, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=19]
-atlas = ExtResource( 4 )
+[sub_resource type="AtlasTexture" id=18]
+atlas = ExtResource( 10 )
 region = Rect2( 256, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=19]
+atlas = ExtResource( 10 )
+region = Rect2( 320, 0, 64, 64 )
 
 [sub_resource type="SpriteFrames" id=20]
 animations = [ {
@@ -104,15 +104,15 @@ animations = [ {
 "name": "pickup",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 9 ), SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ), SubResource( 14 ) ],
-"loop": true,
-"name": "till",
-"speed": 12.0
-}, {
-"frames": [ SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"frames": [ SubResource( 9 ), SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
 "loop": true,
 "name": "walking",
 "speed": 10.0
+}, {
+"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"loop": true,
+"name": "till",
+"speed": 12.0
 } ]
 
 [sub_resource type="CircleShape2D" id=21]
@@ -256,6 +256,7 @@ var _key_to_idx := {
 var _instances := {}
 var _tower_selector = preload(\"res://scenes/towers/tower_selector.tscn\")
 var _selected
+var _controller_selection := false
 
 func purchase_done():
 	if _selected:
@@ -265,6 +266,11 @@ func purchase_done():
 func register_tower(key, tower: PackedScene):
 	_idx_to_key[key] = tower
 	_set_all_prices()
+
+func ready():
+	var input_handler = game_manager.get_player_prefs().get_input_handler()
+	
+	input_handler.connect(\"input_mode_changed\", self, \"_on_input_mode_changed\")
 
 func _revert_height_on_icon(instance):
 	var duration = .25
@@ -445,7 +451,6 @@ shape = SubResource( 24 )
 [node name="AnimatedSprite" type="AnimatedSprite" parent="ActionArea"]
 z_index = -1
 frames = SubResource( 27 )
-frame = 1
 playing = true
 
 [node name="Inventory" type="Node2D" parent="."]
