@@ -17,6 +17,12 @@ var _moving := true
 var _moon
 var _direction
 
+func get_path_progress() -> float:
+	if internal_path.size() == 0:
+		return 0.0
+	
+	return float(_next_point)/float(internal_path.size())
+
 func _ready():
 	var game_manager = get_node("/root/GameManager")
 	_moon = game_manager.get_moon()

@@ -83,4 +83,9 @@ func _shoot_beam_at_point(shot_at, point: Vector2):
 	_set_state(TowerState.UNCHARGED)
 
 func _do_fire():
-	_shoot_at_target(_get_random_target())
+	var target = _get_random_target()
+	var progress = target.get_path_progress() if target.has_method("get_path_progress") else 0.0
+	
+	print(progress)
+	
+	_shoot_at_target(target)

@@ -1,0 +1,602 @@
+[gd_scene load_steps=10 format=2]
+
+[ext_resource path="res://scenes/ui/ButtonOption.tscn" type="PackedScene" id=1]
+[ext_resource path="res://themes/main.tres" type="Theme" id=2]
+[ext_resource path="res://assets/ui/GUI.png" type="Texture" id=3]
+[ext_resource path="res://scenes/scripts/player_prefs.gd" type="Script" id=4]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends CanvasLayer
+
+onready var game_manager = get_node(\"/root/GameManager\")
+onready var input = get_node(\"CenterContainer/MarginContainer/PanelContainer/LineEdit\")
+onready var input_base = get_node(\"CenterContainer\")
+
+var commands := {}
+
+func _ready():
+	input.connect(\"text_entered\", self, \"_on_text_entered\")
+	
+	input_base.connect(\"visibility_changed\", self, \"_on_visibility_changed\")
+	input_base.visible = false
+
+func _unhandled_input(event):
+	if event is InputEventKey:
+		if event.pressed and event.scancode == KEY_F1:
+			input_base.visible = !input_base.visible
+		elif input_base.visible and event.pressed and event.scancode == KEY_ESCAPE:
+			input_base.visible = false
+
+func _on_visibility_changed():
+	if input_base.visible:
+		input.grab_focus()
+		get_tree().paused = true
+	else:
+		get_tree().paused = false
+
+func _on_text_entered(text):
+	input_base.visible = false
+	input.text = \"\"
+	_handle_command(text)
+	
+func _handle_command(command: String):
+	var cmd = command.split(' ')
+
+	if cmd[0] in commands:
+		var copy := []
+		for i in cmd:
+			copy.append(i)
+		commands[cmd[0]].call_func(copy.slice(1, copy.size()-1))
+"
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends CanvasLayer
+
+const PREFS_LOCATION = \"user://player.prefs\"
+
+onready var volume_options_base = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/VolumeOptions\")
+onready var resolution = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/Resolution\")
+onready var prefs_base = get_node(\"MarginContainer\")
+onready var options_base = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer\")
+onready var fullscreen_toggle = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/FullscreenToggle\")
+
+var prefs := {
+	\"resolution\": \"1920x1080\",
+	\"fullscreen\": true,
+	\"audio\": []
+}
+
+var _btn_option = preload(\"res://scenes/ui/ButtonOption.tscn\")
+var _volume_option = preload(\"res://scenes/ui/SoundOption.tscn\")
+
+var _resolution_options := [
+	\"1280x720\",
+	\"1920x1080\",
+	\"2560x1440\"
+]
+
+func new_button(txt: String, noderef, function, args := []):
+	var new_option = _btn_option.instance()
+	
+	options_base.add_child(new_option)
+	
+	new_option.set_text(txt)
+	new_option.on_press(noderef, function, args)
+	
+	prefs_base.connect(\"visibility_changed\", self, \"_on_visibility_changed\")
+
+func _ready():
+	# loading options should be done first
+	_load_cached_options()
+	_set_settings_from_prefs()
+	
+	prefs_base.visible = false
+	
+	new_button(\"Resume\", prefs_base, \"set_visible\", [ false ])
+	new_button(\"Quit\", self, \"_quit_game\")
+	
+	var popup = resolution.get_popup()
+	
+	for i in range(0, len(_resolution_options)):
+		popup.add_item(_resolution_options[i], i)
+		popup.connect(\"id_pressed\", self, \"_on_resolution_chosen\")
+	
+	fullscreen_toggle.pressed = prefs[\"fullscreen\"]
+	fullscreen_toggle.connect(\"toggled\", self, \"_on_fullscreen_changed\")
+	
+	_create_volume_options()
+	_center_window()
+	
+	if !prefs[\"fullscreen\"] and _resolution_vec() == OS.get_screen_size():
+		OS.window_maximized = true
+
+func _resolution_vec():
+	var split=prefs[\"resolution\"].split(\"x\")
+
+	return Vector2(split[0], split[1])
+
+func _generate_default_prefs():
+	var size = OS.get_screen_size()
+	var prefs_base := {
+		\"resolution\": str(int(size.x)) + \"x\" + str(int(size.y)),
+		\"audio\": [],
+		\"fullscreen\": true
+	}
+
+	for i in range(0, AudioServer.bus_count):
+		prefs_base[\"audio\"].append(
+			db2linear(AudioServer.get_bus_volume_db(i))
+		)
+	
+	return prefs_base
+
+func _load_cached_options():
+	var saved_prefs = File.new()
+	if !saved_prefs.file_exists(PREFS_LOCATION):
+		prefs = _generate_default_prefs()
+		_write_out_prefs()
+	else:
+		saved_prefs.open(PREFS_LOCATION, File.READ)
+		var unstructured_prefs = saved_prefs.get_as_text()
+		saved_prefs.close()
+		var loaded_prefs_result = JSON.parse(unstructured_prefs)
+		if loaded_prefs_result.error == OK:
+			prefs = loaded_prefs_result.result
+
+func _set_settings_from_prefs(save := false):
+	# set resolution
+	var split_reso = prefs[\"resolution\"].split(\"x\")
+	var width = split_reso[0]
+	var height = split_reso[1]
+	var resolution_vec = Vector2(width, height)
+	
+	OS.window_size = resolution_vec
+	OS.window_fullscreen = prefs[\"fullscreen\"]
+	
+	if OS.window_size == OS.get_screen_size():
+		OS.window_maximized = true
+
+	resolution.visible = !OS.window_fullscreen
+
+	for audio_option in prefs[\"audio\"]:
+		AudioServer.set_bus_volume_db(
+			audio_option,
+			linear2db(prefs[\"audio\"][audio_option])
+		)
+	
+	if save:
+		_write_out_prefs()
+
+func _write_out_prefs():
+	var saved_prefs = File.new()
+	saved_prefs.open(PREFS_LOCATION, File.WRITE)
+	saved_prefs.store_line(to_json(prefs))
+
+func _on_visibility_changed():
+	get_tree().paused = prefs_base.visible
+
+func _quit_game():
+	get_tree().quit(0)
+
+func _create_volume_options():
+	for i in range(0, AudioServer.bus_count):
+		var instance = _volume_option.instance()
+		var bus := AudioServer.get_bus_name(i)
+		var current_volume = prefs[\"audio\"][i]
+
+		instance.bus_index = i
+		instance.option_name = bus
+		
+		volume_options_base.add_child(instance)
+
+		instance.set_value(current_volume)
+		instance.connect(\"changed\", self, \"_cache_volume_setting\", [ i ])
+
+func _cache_volume_setting(val, idx):
+	prefs[\"audio\"][idx] = val
+	
+	_set_settings_from_prefs(true)
+
+func _on_fullscreen_changed(value):
+	prefs[\"fullscreen\"] = value
+	
+	if !value:
+		_center_window()
+	
+	_set_settings_from_prefs(true)
+
+func _on_resolution_chosen(id):
+	prefs[\"resolution\"] = _resolution_options[id]
+	
+	_center_window()
+	_set_settings_from_prefs(true)
+	
+func _center_window():
+	OS.set_window_position(
+		OS.get_screen_size()*0.5 - 
+		OS.window_size*0.5
+	)
+
+func _unhandled_input(event):
+	if event.is_action_pressed(\"cancel_selection\"):
+		if !prefs_base.visible:
+			prefs_base.visible = true
+		else:
+			prefs_base.visible = false
+		
+"
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends MarginContainer
+
+export(String) var text
+
+onready var btn = get_node(\"Button\")
+onready var hover_audio = get_node(\"AudioStreamPlayer\")
+
+func _ready():
+	btn.connect(\"mouse_entered\", hover_audio, \"play\")
+	
+	btn.text = text
+
+func set_text(txt: String):
+	btn.text = txt
+	
+func on_press(node, callback, args := []):
+	btn.connect(\"button_down\", node, callback, args)
+"
+
+[sub_resource type="GDScript" id=4]
+script/source = "extends Node2D
+
+signal input_mode_changed(mode)
+
+onready var input_notification_base = get_node(\"InputChangedNotification/MarginContainer\")
+onready var controller_disconnected_dialogue = input_notification_base.get_node(\"CenterContainer/MarginContainer/MarginContainer/ControllerDisconnected\")
+onready var set_keyboard_btn = controller_disconnected_dialogue.get_node(\"CenterContainer/Button\")
+onready var game_manager = get_node(\"/root/GameManager\")
+
+var input_mode = Constants.InputMode.KEYBOARD
+var _focused_controller := -1
+var _controller_disconnected := false
+
+# remove these when switching to the other mode, them when we switch to our mode.
+# this makes it so controller inputs won't work during keyboard and vice versa
+var _input_map := {
+	Constants.InputMode.KEYBOARD: {},
+	Constants.InputMode.CONTROLLER: {}
+}
+
+func _ready():
+	Input.connect(\"joy_connection_changed\", self, \"_on_joy_connection_changed\")
+	# figure out what input mode we should start in
+	_sync_input_mode()
+	# pull down the action map from project settings
+	_sync_input_map()
+	# wipe out all keybindings so we have the correct one
+	_wipe_action_map()
+	# load the correct map into the actions
+	_load_map_for(input_mode)
+
+	input_notification_base.visible = false
+	controller_disconnected_dialogue.visible = false
+	set_keyboard_btn.connect(\"button_down\", self, \"_on_controller_disconnect_press_btn\")
+
+func _on_controller_disconnect_press_btn():
+	input_notification_base.visible = false
+	controller_disconnected_dialogue.visible = false
+	get_tree().paused = false
+	_controller_disconnected = false
+	_set_to_keyboard()
+
+# probably don't need this anymore?
+func _notify_input_changed(mode):
+	var message = \"Input changed to {input}\".format({
+		\"input\": \"controller\" if mode == Constants.InputMode.CONTROLLER else \"keyboard\"
+	})
+	
+	game_manager.get_event_manager().new_message(message, Constants.EventLevel.META)
+	
+# wipes out all current events (not the actions themselves!)
+func _wipe_action_map():
+	for action in InputMap.get_actions():
+		InputMap.action_erase_events(action)
+
+func _load_map_for(input_mode):
+	# load all actions for the current input mode (controller or keyboard)
+	for action in _input_map[input_mode]:
+		for event in _input_map[input_mode][action]:
+			InputMap.action_add_event(action, event)
+
+func _sync_input_map():
+	for action in InputMap.get_actions():
+		for event in InputMap.get_action_list(action):
+			var is_controller = (
+				event is InputEventJoypadMotion or
+				event is InputEventJoypadButton
+			)
+			
+			var is_keyboard = (
+				event is InputEventKey or
+				event is InputEventMouseButton
+			)
+			
+			var input_key = Constants.InputMode.KEYBOARD if is_keyboard else Constants.InputMode.CONTROLLER
+			
+			if !(action in _input_map[input_key]):
+				_input_map[input_key][action] = [] 
+			
+			_input_map[input_key][action].append(event)
+
+func _sync_input_mode():
+	if len(Input.get_connected_joypads()) > 0:
+		_set_to_controller(Input.get_connected_joypads()[0])
+	else:
+		_set_to_keyboard()
+
+func _set_to_controller(device):
+	# ignore if we're already in this mode
+	if input_mode == Constants.InputMode.CONTROLLER:
+		return
+
+	input_mode = Constants.InputMode.CONTROLLER
+	emit_signal(\"input_mode_changed\", input_mode)
+	_focused_controller = device
+	_load_map_for(input_mode)
+	
+func _set_to_keyboard():
+	# ignore if we're already in this mode
+	if input_mode == Constants.InputMode.KEYBOARD:
+		return
+
+	input_mode = Constants.InputMode.KEYBOARD
+	emit_signal(\"input_mode_changed\", input_mode)
+	_load_map_for(input_mode)
+
+func _on_joy_connection_changed(device_idx: int, connected: bool):
+	var used_controller_disconnected = (
+		input_mode == Constants.InputMode.CONTROLLER and 
+		device_idx == _focused_controller and 
+		!connected
+	)
+	
+	# whenever the device disconnects..
+	if used_controller_disconnected:
+		input_notification_base.visible = true
+		controller_disconnected_dialogue.visible = true
+		get_tree().paused = true
+		_controller_disconnected = true
+	# if a controller connected and it we are currently using keyboard
+	elif connected and input_mode == Constants.InputMode.KEYBOARD:
+		_set_to_controller(device_idx)
+
+	if _controller_disconnected and connected:
+		_controller_disconnected = false
+		input_notification_base.visible = false
+		controller_disconnected_dialogue.visible = false
+		get_tree().paused = false
+
+func _input(event):
+	# set controls to keyboard if we get input from that or mouse, and we're not already in that mode
+	if input_mode != Constants.InputMode.KEYBOARD and (event is InputEventKey or event is InputEventMouseButton):
+		_set_to_keyboard()
+	# set controls to controller if not already in controller mode and we get input from one
+	elif input_mode != Constants.InputMode.CONTROLLER and (event is InputEventJoypadButton or event is InputEventJoypadMotion):
+		_set_to_controller(event.device)
+"
+
+[sub_resource type="AtlasTexture" id=5]
+atlas = ExtResource( 3 )
+region = Rect2( 2, 34, 44, 44 )
+
+[node name="PlayerPrefs" type="Node2D"]
+pause_mode = 2
+script = ExtResource( 4 )
+
+[node name="DebugUi" type="CanvasLayer" parent="."]
+script = SubResource( 1 )
+
+[node name="CenterContainer" type="CenterContainer" parent="DebugUi"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="MarginContainer" type="MarginContainer" parent="DebugUi/CenterContainer"]
+margin_left = 604.0
+margin_top = 341.0
+margin_right = 676.0
+margin_bottom = 379.0
+mouse_filter = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="DebugUi/CenterContainer/MarginContainer"]
+margin_right = 72.0
+margin_bottom = 38.0
+mouse_filter = 1
+
+[node name="LineEdit" type="LineEdit" parent="DebugUi/CenterContainer/MarginContainer/PanelContainer"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 65.0
+margin_bottom = 31.0
+mouse_filter = 1
+size_flags_horizontal = 3
+theme = ExtResource( 2 )
+expand_to_text_length = true
+caret_blink = true
+
+[node name="PlayerPreferences" type="CanvasLayer" parent="."]
+script = SubResource( 2 )
+
+[node name="MarginContainer" type="MarginContainer" parent="PlayerPreferences"]
+visible = false
+anchor_right = 1.0
+anchor_bottom = 1.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CenterContainer" type="CenterContainer" parent="PlayerPreferences/MarginContainer"]
+margin_right = 1280.0
+margin_bottom = 720.0
+
+[node name="PanelContainer" type="PanelContainer" parent="PlayerPreferences/MarginContainer/CenterContainer"]
+margin_left = 633.0
+margin_top = 353.0
+margin_right = 647.0
+margin_bottom = 367.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer"]
+margin_left = 7.0
+margin_top = 7.0
+margin_right = 169.0
+margin_bottom = 155.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer"]
+margin_right = 162.0
+margin_bottom = 148.0
+
+[node name="Resume" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer" instance=ExtResource( 1 )]
+margin_right = 162.0
+margin_bottom = 20.0
+script = SubResource( 3 )
+text = "Resume"
+
+[node name="VolumeOptions" type="VBoxContainer" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 24.0
+margin_right = 162.0
+margin_bottom = 46.0
+
+[node name="VolumeLabel" type="Label" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/VolumeOptions"]
+margin_right = 162.0
+margin_bottom = 14.0
+theme = ExtResource( 2 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "Volume:"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HSeparator" type="HSeparator" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/VolumeOptions"]
+margin_top = 18.0
+margin_right = 162.0
+margin_bottom = 22.0
+
+[node name="HSeparator2" type="HSeparator" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 50.0
+margin_right = 162.0
+margin_bottom = 54.0
+
+[node name="Video" type="Label" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 58.0
+margin_right = 162.0
+margin_bottom = 72.0
+theme = ExtResource( 2 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "Video:"
+align = 1
+valign = 1
+
+[node name="FullscreenToggle" type="CheckButton" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 76.0
+margin_right = 162.0
+margin_bottom = 116.0
+theme = ExtResource( 2 )
+text = "Fullscreen:"
+
+[node name="Resolution" type="MenuButton" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 120.0
+margin_right = 162.0
+margin_bottom = 140.0
+theme = ExtResource( 2 )
+text = "Resolution"
+flat = false
+
+[node name="HSeparator3" type="HSeparator" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
+margin_top = 144.0
+margin_right = 162.0
+margin_bottom = 148.0
+
+[node name="InputHandler" type="Node2D" parent="."]
+script = SubResource( 4 )
+
+[node name="InputChangedNotification" type="CanvasLayer" parent="InputHandler"]
+
+[node name="MarginContainer" type="MarginContainer" parent="InputHandler/InputChangedNotification"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CenterContainer" type="CenterContainer" parent="InputHandler/InputChangedNotification/MarginContainer"]
+margin_right = 1280.0
+margin_bottom = 720.0
+mouse_filter = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="InputHandler/InputChangedNotification/MarginContainer/CenterContainer"]
+margin_left = 542.0
+margin_top = 325.0
+margin_right = 738.0
+margin_bottom = 395.0
+mouse_filter = 1
+custom_constants/margin_right = 4
+
+[node name="NinePatchRect" type="NinePatchRect" parent="InputHandler/InputChangedNotification/MarginContainer/CenterContainer/MarginContainer"]
+margin_right = 192.0
+margin_bottom = 70.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+texture = SubResource( 5 )
+region_rect = Rect2( 0, 0, 44, 44 )
+patch_margin_left = 5
+patch_margin_top = 5
+patch_margin_right = 5
+patch_margin_bottom = 5
+axis_stretch_horizontal = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="InputHandler/InputChangedNotification/MarginContainer/CenterContainer/MarginContainer"]
+margin_right = 192.0
+margin_bottom = 70.0
+mouse_filter = 1
+custom_constants/margin_right = 12
+custom_constants/margin_top = 12
+custom_constants/margin_left = 12
+custom_constants/margin_bottom = 12
+
+[node name="ControllerDisconnected" type="VBoxContainer" parent="InputHandler/InputChangedNotification/MarginContainer/CenterContainer/MarginContainer/MarginContainer"]
+margin_left = 12.0
+margin_top = 12.0
+margin_right = 180.0
+margin_bottom = 58.0
+custom_constants/separation = 12
+
+[node name="Label" type="Label" parent="InputHandler/InputChangedNotification/MarginContainer/CenterContainer/MarginContainer/MarginContainer/ControllerDisconnected"]
+margin_right = 168.0
+margin_bottom = 14.0
+theme = ExtResource( 2 )
+text = "Controller disconnected"
+align = 1
+valign = 1
+
+[node name="CenterContainer" type="CenterContainer" parent="InputHandler/InputChangedNotification/MarginContainer/CenterContainer/MarginContainer/MarginContainer/ControllerDisconnected"]
+margin_top = 26.0
+margin_right = 168.0
+margin_bottom = 46.0
+mouse_filter = 1
+
+[node name="Button" type="Button" parent="InputHandler/InputChangedNotification/MarginContainer/CenterContainer/MarginContainer/MarginContainer/ControllerDisconnected/CenterContainer"]
+margin_left = 23.0
+margin_right = 145.0
+margin_bottom = 20.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+theme = ExtResource( 2 )
+text = "Set to keyboard"
