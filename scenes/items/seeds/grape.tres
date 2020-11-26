@@ -1,8 +1,9 @@
 [gd_resource type="Resource" load_steps=5 format=2]
 
 [ext_resource path="res://scenes/scripts/item.gd" type="Script" id=1]
-[ext_resource path="res://scenes/plants/grape.tres" type="Resource" id=2]
+[ext_resource path="res://scenes/items/plants/grape.tres" type="Resource" id=2]
 [ext_resource path="res://assets/textures/farm/plants/grape_growing.png" type="Texture" id=3]
+
 
 [sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 3 )

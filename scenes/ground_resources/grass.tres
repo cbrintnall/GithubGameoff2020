@@ -8,8 +8,6 @@
 [resource]
 script = ExtResource( 1 )
 drop_table = {
-Resource( "res://scenes/items/watermelon_seeds.tres" ): 2.0,
-Resource( "res://scenes/items/tomato_seeds.tres" ): 20.0,
 Resource( "res://scenes/items/grass.tres" ): 100.0
 }
 on_break = ExtResource( 4 )
