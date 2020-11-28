@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/remove_tower.wav-fde6aa511a70e294b5a519c882365dc3.sample"
+
+[deps]
+
+source_file="res://assets/audio/sfx/towers/remove_tower.wav"
+dest_files=[ "res://.import/remove_tower.wav-fde6aa511a70e294b5a519c882365dc3.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

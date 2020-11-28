@@ -1,30 +1,18 @@
-[gd_scene load_steps=13 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://scenes/scripts/moon_beam_tower.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/towers/moon_beam_idle.png" type="Texture" id=2]
 [ext_resource path="res://assets/textures/farm/towers/moon_tower_top.png" type="Texture" id=3]
 [ext_resource path="res://scenes/towers/lunar_pool/popup.tscn" type="PackedScene" id=4]
-[ext_resource path="res://assets/textures/farm/shadow.png" type="Texture" id=5]
-
-[sub_resource type="Curve" id=1]
-_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.245455 ), -1.69581, 0.0, 0, 0 ]
-
-[sub_resource type="Gradient" id=2]
-offsets = PoolRealArray( 0.00613497, 0.0584795, 1 )
-colors = PoolColorArray( 0.2, 0.313726, 0.258824, 0, 0.572549, 0.909804, 0.752941, 1, 0.572549, 0.909804, 0.752941, 1 )
 
 [sub_resource type="CircleShape2D" id=3]
-radius = 8.22091
+radius = 9.49324
 
 [sub_resource type="CircleShape2D" id=4]
 radius = 63.9432
 
-[sub_resource type="Gradient" id=5]
-offsets = PoolRealArray( 0.680982, 0.969325 )
-colors = PoolColorArray( 0.572549, 0.909804, 0.752941, 1, 1, 1, 1, 0 )
-
 [sub_resource type="RectangleShape2D" id=6]
-extents = Vector2( 0.5, 0.5 )
+extents = Vector2( 4.54831, 1.72658 )
 
 [sub_resource type="Animation" id=7]
 resource_name = "default"
@@ -62,16 +50,23 @@ tracks/2/keys = {
 "times": PoolRealArray( 0, 0.5, 1 )
 }
 
+[sub_resource type="Gradient" id=5]
+offsets = PoolRealArray( 0.680982, 0.969325 )
+colors = PoolColorArray( 0.572549, 0.909804, 0.752941, 1, 1, 1, 1, 0 )
+
 [node name="MoonBeamTower" type="StaticBody2D"]
-collision_layer = 950273
+collision_layer = 688129
 collision_mask = 524289
 script = ExtResource( 1 )
 damage_per_hit = 25.0
+charge_time = 2.0
+icon_texture = ExtResource( 3 )
 ui_parent = NodePath("UiRoot/MarginContainer")
 no_place_area = NodePath("Area2D")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("TargetZone")
 animation = NodePath("AnimationPlayer")
+max_targets = 1
 
 [node name="VariableNodes" type="Node2D" parent="."]
 
@@ -80,22 +75,11 @@ animation = NodePath("AnimationPlayer")
 [node name="ChargeTimer" type="Timer" parent="VariableNodes"]
 one_shot = true
 
-[node name="Beam" type="Node2D" parent="."]
-position = Vector2( -178.544, -11.6673 )
-
-[node name="Line2D" type="Line2D" parent="Beam"]
-position = Vector2( 178.544, -1.30074 )
-z_index = 1
-points = PoolVector2Array( 0, 0, 54.891, 0 )
-width = 3.0
-width_curve = SubResource( 1 )
-default_color = Color( 0.4, 0.501961, 1, 1 )
-gradient = SubResource( 2 )
-
-[node name="Tween" type="Tween" parent="Beam"]
+[node name="BeamRoot" type="Node2D" parent="VariableNodes"]
+position = Vector2( 0, -11.8467 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-position = Vector2( -0.176777, 15.2028 )
+position = Vector2( -0.176777, 1.90831 )
 shape = SubResource( 3 )
 
 [node name="TargetZone" type="Area2D" parent="."]
@@ -104,35 +88,19 @@ visible = false
 [node name="CollisionShape2D" type="CollisionShape2D" parent="TargetZone"]
 shape = SubResource( 4 )
 
-[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
-position = Vector2( 0, -11.779 )
-amount = 15
-emission_shape = 1
-emission_sphere_radius = 30.0
-spread = 46.31
-gravity = Vector2( 0, 0 )
-orbit_velocity_random = 1.0
-linear_accel_random = 1.0
-radial_accel = 100.0
-radial_accel_random = 1.0
-tangential_accel = 15.0
-angle = 720.0
-angle_random = 1.0
-scale_amount = 2.0
-scale_amount_random = 1.0
-color_ramp = SubResource( 5 )
-
 [node name="Tween" type="Tween" parent="."]
 
 [node name="Area2D" type="Area2D" parent="."]
+position = Vector2( 0, 6.84567 )
 collision_layer = 655360
 collision_mask = 655360
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
-position = Vector2( 0, 16.075 )
+position = Vector2( 0, -4.36279 )
 shape = SubResource( 6 )
 
 [node name="UiRoot" type="Node2D" parent="."]
+position = Vector2( 0, -7.04409 )
 z_index = 999
 z_as_relative = false
 
@@ -143,16 +111,28 @@ playback_speed = 0.6
 anims/default = SubResource( 7 )
 
 [node name="MoonTop" type="Sprite" parent="."]
-position = Vector2( 0, -12.4307 )
+position = Vector2( 0, -24.7331 )
 z_index = 1
 texture = ExtResource( 3 )
-offset = Vector2( 0, -0.00122514 )
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="MoonTop"]
+position = Vector2( 0, -0.836487 )
+z_index = 2
+amount = 15
+emission_shape = 1
+emission_sphere_radius = 5.0
+spread = 8.13
+gravity = Vector2( 0, 0 )
+orbit_velocity_random = 1.0
+radial_accel = 25.0
+radial_accel_random = 1.0
+tangential_accel = 15.0
+angle = 720.0
+angle_random = 1.0
+scale_amount = 2.0
+scale_amount_random = 1.0
+color_ramp = SubResource( 5 )
 
 [node name="TowerBody" type="Sprite" parent="."]
+position = Vector2( 0, -12.3024 )
 texture = ExtResource( 2 )
-
-[node name="Shadow" type="Sprite" parent="."]
-position = Vector2( 0, 15.3553 )
-scale = Vector2( 2.5, 2.5 )
-z_index = -1
-texture = ExtResource( 5 )

@@ -1,23 +1,33 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://assets/textures/farm/decorations/atlas.png" type="Texture" id=1]
+[ext_resource path="res://assets/textures/farm/decorations/leaf.png" type="Texture" id=2]
 
 [sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 1 )
 region = Rect2( 460, 270, 70, 80 )
 
-[sub_resource type="GDScript" id=3]
+[sub_resource type="GDScript" id=2]
 script/source = "extends Sprite
 
 export(Color) var fade_color
 
+onready var animation = get_node(\"AnimationPlayer\")
 onready var fade_tween = get_node(\"Tween\")
 
 func _ready():
 	var area = get_node(\"Area2D\")
+	var bumped_area = get_node(\"BumpedArea\")
 	
 	area.connect(\"body_entered\", self, \"_on_body_enter\")
 	area.connect(\"body_exited\", self, \"_on_body_leave\")
+	
+	bumped_area.connect(\"body_entered\", self, \"_curried_shake\")
+	
+	animation.play()
+	
+func _curried_shake(_ignored_body):
+	animation.play(\"shake\")
 	
 func _on_body_enter(body):
 	fade_tween.interpolate_property(
@@ -46,13 +56,72 @@ func _on_body_leave(body):
 	fade_tween.start()
 "
 
-[sub_resource type="RectangleShape2D" id=2]
+[sub_resource type="RectangleShape2D" id=3]
 extents = Vector2( 27.1819, 25.3102 )
+
+[sub_resource type="CircleShape2D" id=6]
+radius = 9.0
+
+[sub_resource type="CircleShape2D" id=4]
+radius = 7.78563
+
+[sub_resource type="Animation" id=5]
+resource_name = "shake"
+length = 0.8
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:rotation_degrees")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.2, 0.4, 0.6, 0.8 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 0,
+"values": [ 0.0, 1.0, 0.0, -1.0, 0.0 ]
+}
+
+[sub_resource type="Curve" id=13]
+min_value = -360.0
+max_value = 360.0
+_data = [ Vector2( 0, 1 ), 0.0, 772.046, 0, 0, Vector2( 0.740506, 117.818 ), 0.0, 0.0, 0, 0, Vector2( 1, 108 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=14]
+curve = SubResource( 13 )
+
+[sub_resource type="Gradient" id=15]
+offsets = PoolRealArray( 0.318519, 0.622222 )
+colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
+
+[sub_resource type="GradientTexture" id=16]
+gradient = SubResource( 15 )
+
+[sub_resource type="Curve" id=11]
+max_value = 100.0
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.968354, 100 ), 27.3593, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=12]
+curve = SubResource( 11 )
+
+[sub_resource type="ParticlesMaterial" id=8]
+emission_shape = 2
+emission_box_extents = Vector3( 16, 1, 1 )
+flag_disable_z = true
+flatness = 1.0
+gravity = Vector3( 0, 20, 0 )
+angular_velocity_random = 0.25
+angular_velocity_curve = SubResource( 14 )
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+radial_accel = 5.0
+radial_accel_random = 0.38
+damping_curve = SubResource( 12 )
+color_ramp = SubResource( 16 )
 
 [node name="Tree" type="Sprite"]
 texture = SubResource( 1 )
 offset = Vector2( 0, -24 )
-script = SubResource( 3 )
+script = SubResource( 2 )
 fade_color = Color( 1, 1, 1, 0.466667 )
 
 [node name="Area2D" type="Area2D" parent="."]
@@ -61,6 +130,33 @@ collision_mask = 65536
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
 position = Vector2( 0, -29.6416 )
-shape = SubResource( 2 )
+shape = SubResource( 3 )
 
 [node name="Tween" type="Tween" parent="."]
+
+[node name="BumpedArea" type="Area2D" parent="."]
+collision_layer = 65537
+collision_mask = 65537
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="BumpedArea"]
+position = Vector2( -0.0270663, 4.18835 )
+shape = SubResource( 6 )
+
+[node name="StaticBody2D" type="KinematicBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
+position = Vector2( 0, 4.23655 )
+shape = SubResource( 4 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/shake = SubResource( 5 )
+
+[node name="Particles2D" type="Particles2D" parent="."]
+visible = false
+position = Vector2( -0.410992, -6.92448 )
+z_index = -1
+emitting = false
+amount = 1
+lifetime = 3.0
+process_material = SubResource( 8 )
+texture = ExtResource( 2 )

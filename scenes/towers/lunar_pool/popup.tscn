@@ -1,13 +1,15 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://assets/ui/GUI.png" type="Texture" id=1]
 [ext_resource path="res://assets/audio/sfx/ui/button_hover.wav" type="AudioStream" id=2]
+[ext_resource path="res://assets/audio/sfx/towers/remove_tower.wav" type="AudioStream" id=3]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends MarginContainer
 
 signal remove_tower
 
+onready var remove_tower_audio = get_node(\"RemoveTower\")
 onready var audio = get_node(\"ButtonHover\")
 onready var remove_button = get_node(\"HBoxContainer/MarginContainer/TextureButton\")
 onready var fade_timer = get_node(\"Timer\")
@@ -17,6 +19,7 @@ var fade_tween: Tween
 func _ready():
 	remove_button.connect(\"button_down\", self, \"_on_press_remove\")
 	remove_button.connect(\"mouse_entered\", self, \"_on_hover_button\")
+	remove_button.connect(\"button_down\", remove_tower_audio, \"play\")
 	fade_timer.connect(\"timeout\", self, \"_on_timeout\")
 	
 	connect(\"mouse_entered\", self, \"_on_mouse_enter\")
@@ -79,6 +82,7 @@ func _on_fade_finish():
 		modulate = Color.white
 
 func _on_press_remove():
+	yield(remove_tower_audio,\"finished\")
 	emit_signal(\"remove_tower\")
 "
 
@@ -149,6 +153,7 @@ light_mask = 0
 margin_right = 14.0
 margin_bottom = 14.0
 rect_pivot_offset = Vector2( 7, 7 )
+hint_tooltip = "Test"
 mouse_default_cursor_shape = 2
 texture_normal = SubResource( 3 )
 texture_pressed = SubResource( 4 )
@@ -168,3 +173,8 @@ one_shot = true
 
 [node name="ButtonHover" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 2 )
+bus = "Sound Effects"
+
+[node name="RemoveTower" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 3 )
+bus = "Sound Effects"

@@ -3,9 +3,11 @@ extends Sprite
 signal do_pulse(energy)
 signal broken
 
+export(Vector2) var light_size = Vector2(32, 32)
 export(float) var max_pulse
 export(float) var min_pulse
 
+onready var beam_light = get_node("BeamLight")
 onready var ground_manager = get_node("/root/GameManager/").get_ground_manager()
 onready var health_bar := get_node("UIBase/VBoxContainer/HealthBar")
 onready var energy_bar := get_node("UIBase/VBoxContainer/EnergyBar")
@@ -33,6 +35,7 @@ func take_damage(amt: int):
 		emit_signal("broken")
 
 func _ready():
+	_fit_beam()
 	timer.connect("timeout", self, "_pulse")
 
 	health_bar.max_value = max_health
@@ -46,6 +49,12 @@ func _ready():
 
 	# do first pulse
 	_pulse()
+
+func _fit_beam():
+	var screen_size = OS.get_screen_size()
+#
+	beam_light.scale.y = (screen_size.y/2) / beam_light.texture.get_size().y
+	beam_light.global_position = Vector2(beam_light.global_position.x, beam_light.global_position.y-screen_size.y/4)
 
 func _path_finished(amount, location, path):
 	# notify location should gain energy since path is at end

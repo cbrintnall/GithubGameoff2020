@@ -10,11 +10,13 @@
 script/source = "extends MarginContainer
 
 onready var price = get_node(\"PanelContainer/MarginContainer2/PanelContainer/HBoxContainer/Price\")
-#onready var texture = get_node(\"PanelContainer/MarginContainer2/HBoxContainer/TextureRect\")
+onready var texture = get_node(\"PanelContainer/MarginContainer/TextureRect\")
 onready var key = get_node(\"PanelContainer/MarginContainer2/MarginContainer3/MarginContainer/Hotkey\")
 onready var key_base = get_node(\"PanelContainer/MarginContainer2/MarginContainer3\")
 
 func set_controller_selected(state: bool):
+	if !is_inside_tree():
+		yield(self, \"ready\")
 	if state:
 		modulate = Color(\"#23cefc\")
 	else:
@@ -24,6 +26,11 @@ func show_button_hint(state: bool):
 	if !is_inside_tree():
 		yield(self, \"ready\")
 	key_base.visible = state
+
+func set_texture(txt: Texture):
+	if !is_inside_tree():
+		yield(self, \"ready\")
+	texture.texture = txt
 
 func set_price(amt: int):
 	if !is_inside_tree():
@@ -76,6 +83,7 @@ __meta__ = {
 [node name="PanelContainer" type="NinePatchRect" parent="."]
 margin_right = 160.0
 margin_bottom = 153.0
+mouse_filter = 0
 theme = ExtResource( 2 )
 texture = SubResource( 2 )
 region_rect = Rect2( 0, 0, 44, 44 )
@@ -83,6 +91,9 @@ region_rect = Rect2( 0, 0, 44, 44 )
 [node name="MarginContainer" type="MarginContainer" parent="PanelContainer"]
 margin_right = 128.0
 margin_bottom = 128.0
+hint_tooltip = "Test"
+size_flags_horizontal = 3
+size_flags_vertical = 3
 custom_constants/margin_right = 16
 custom_constants/margin_top = 16
 custom_constants/margin_left = 16
@@ -98,7 +109,7 @@ margin_right = 112.0
 margin_bottom = 112.0
 texture = ExtResource( 3 )
 expand = true
-stretch_mode = 1
+stretch_mode = 6
 
 [node name="MarginContainer2" type="MarginContainer" parent="PanelContainer"]
 anchor_right = 1.0

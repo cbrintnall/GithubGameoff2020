@@ -35,6 +35,7 @@ export(NodePath) onready var animation = get_node(animation)
 onready var audio_player = get_node("VariableNodes/ChargeAudio")
 onready var vision_child: CollisionShape2D
 
+var max_damage_multipler := 4
 var damage_multiplier := 1
 var charge_timer = Timer.new()
 var state: int = TowerState.UNCHARGED
@@ -59,7 +60,7 @@ func can_place() -> bool:
 	return state != TowerState.INVALID_PLACEMENT
 
 func set_damage_multiplier(amt):
-	damage_multiplier = amt
+	damage_multiplier = clamp(amt, 0, max_damage_multipler)
 	
 func reset_damage_multiplier():
 	damage_multiplier = 1
@@ -75,7 +76,7 @@ func add_target(target):
 	emit_signal("new_target", target)
 
 func use():
-	if in_world():
+	if in_world() and _ui_parent:
 		_ui_parent.visible = true
 
 func destroy_tower():

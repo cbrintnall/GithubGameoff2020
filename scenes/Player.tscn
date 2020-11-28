@@ -53,44 +53,44 @@ atlas = ExtResource( 4 )
 region = Rect2( 256, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=10]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 11 )
 region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=11]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 11 )
 region = Rect2( 64, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=12]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 11 )
 region = Rect2( 128, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=13]
-atlas = ExtResource( 10 )
+atlas = ExtResource( 11 )
 region = Rect2( 192, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=14]
 atlas = ExtResource( 10 )
-region = Rect2( 256, 0, 64, 64 )
+region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="AtlasTexture" id=15]
 atlas = ExtResource( 10 )
-region = Rect2( 320, 0, 64, 64 )
-
-[sub_resource type="AtlasTexture" id=16]
-atlas = ExtResource( 11 )
-region = Rect2( 0, 0, 64, 64 )
-
-[sub_resource type="AtlasTexture" id=17]
-atlas = ExtResource( 11 )
 region = Rect2( 64, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=18]
-atlas = ExtResource( 11 )
+[sub_resource type="AtlasTexture" id=16]
+atlas = ExtResource( 10 )
 region = Rect2( 128, 0, 64, 64 )
 
-[sub_resource type="AtlasTexture" id=19]
-atlas = ExtResource( 11 )
+[sub_resource type="AtlasTexture" id=17]
+atlas = ExtResource( 10 )
 region = Rect2( 192, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=18]
+atlas = ExtResource( 10 )
+region = Rect2( 256, 0, 64, 64 )
+
+[sub_resource type="AtlasTexture" id=19]
+atlas = ExtResource( 10 )
+region = Rect2( 320, 0, 64, 64 )
 
 [sub_resource type="SpriteFrames" id=20]
 animations = [ {
@@ -104,15 +104,15 @@ animations = [ {
 "name": "walking",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ), SubResource( 14 ), SubResource( 15 ) ],
-"loop": true,
-"name": "till",
-"speed": 12.0
-}, {
-"frames": [ SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
 "loop": true,
 "name": "pickup",
 "speed": 10.0
+}, {
+"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ) ],
+"loop": true,
+"name": "till",
+"speed": 12.0
 } ]
 
 [sub_resource type="CircleShape2D" id=21]
@@ -329,6 +329,7 @@ func _set_all_prices():
 
 		selector.set_price(instance.value)
 		selector.set_key(str(_key_to_idx[i]))
+		selector.set_texture(instance.icon_texture)
 		selector.show_button_hint(
 			input_handler.input_mode == Constants.InputMode.KEYBOARD
 		)
@@ -413,6 +414,9 @@ func _do_purchasing_tween(instance):
 	selection_tween.start()
 
 func _do_cant_purchase_tween(instance):
+	if tween.is_active():
+		return
+
 	var duration = .125
 	var previous_color = instance.modulate
 	tween.interpolate_property(
@@ -466,7 +470,7 @@ colors = PoolColorArray( 0.515625, 0.515625, 0.515625, 0.419608, 0, 0, 0, 0 )
 
 [node name="Player" type="KinematicBody2D"]
 position = Vector2( 0, 3 )
-collision_layer = 65537
+collision_layer = 327681
 script = ExtResource( 2 )
 speed = 1.0
 dirt_tilemap_path = NodePath("../../GameManager/DirtBase")
@@ -476,7 +480,6 @@ ground_manager = NodePath("../../GameManager/GroundManager")
 position = Vector2( 0, -0.0196867 )
 frames = SubResource( 20 )
 animation = "idle"
-frame = 2
 playing = true
 offset = Vector2( 0, -12 )
 
@@ -504,6 +507,7 @@ shape = SubResource( 24 )
 [node name="AnimatedSprite" type="AnimatedSprite" parent="ActionArea"]
 z_index = -1
 frames = SubResource( 27 )
+frame = 1
 playing = true
 
 [node name="Inventory" type="Node2D" parent="."]
@@ -564,7 +568,7 @@ anchor_bottom = 1.0
 margin_left = 0.00799561
 margin_top = -0.200012
 margin_right = -0.416016
-mouse_filter = 2
+mouse_filter = 1
 size_flags_vertical = 0
 custom_constants/margin_right = 12
 custom_constants/margin_left = 12
@@ -580,7 +584,6 @@ margin_right = 1076.0
 margin_bottom = 159.0
 grow_horizontal = 0
 grow_vertical = 0
-mouse_filter = 2
 size_flags_horizontal = 9
 size_flags_vertical = 10
 custom_constants/separation = 8

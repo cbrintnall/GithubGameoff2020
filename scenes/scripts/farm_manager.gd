@@ -11,6 +11,7 @@ onready var day_canvas = get_node("DayCycle/CanvasModulate")
 onready var transition_tween = get_node("DayCycle/Tween")
 onready var rock_increase_tween = get_node("CanvasLayer/Tween")
 onready var lunar_rock_audio = get_node("CanvasLayer/LunarRockGained")
+onready var ui_base = get_node("CanvasLayer/VBoxContainer")
 onready var time_label = get_node("CanvasLayer/VBoxContainer/NinePatchRect2/MarginContainer/Label")
 onready var clock_base = get_node("CanvasLayer/VBoxContainer/NinePatchRect2")
 onready var lunar_rock_label = get_node("CanvasLayer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Label")
@@ -125,6 +126,7 @@ func _transition_to_color(c: Color):
 func _ready():
 	timer.connect("timeout", self, "_on_timeout")
 	clock_base.visible = true
+	ui_base.visible = true
 	
 	_set_to_appropriate_time()
 	_sync_lunar_rock_to_label()

@@ -1,7 +1,8 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=15 format=2]
 
 [ext_resource path="res://scenes/scripts/moon.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/moon_fragment.png" type="Texture" id=2]
+[ext_resource path="res://assets/textures/farm/light/beam.png" type="Texture" id=3]
 
 [sub_resource type="CircleShape2D" id=1]
 radius = 10.2098
@@ -24,6 +25,25 @@ bg_color = Color( 0.0705882, 0.768627, 0.701961, 1 )
 
 [sub_resource type="StyleBoxFlat" id=7]
 bg_color = Color( 0, 0, 0, 0.341176 )
+
+[sub_resource type="Shader" id=10]
+code = "shader_type canvas_item;
+render_mode blend_add;
+
+uniform sampler2D NOISE_PATTERN;
+
+void vertex() {
+	VERTEX.x += cos(TIME) * sin(UV.y);
+}"
+
+[sub_resource type="OpenSimplexNoise" id=12]
+
+[sub_resource type="NoiseTexture" id=13]
+noise = SubResource( 12 )
+
+[sub_resource type="ShaderMaterial" id=11]
+shader = SubResource( 10 )
+shader_param/NOISE_PATTERN = SubResource( 13 )
 
 [node name="moon" type="Sprite"]
 position = Vector2( 105.792, 79.6948 )
@@ -96,3 +116,10 @@ percent_visible = false
 __meta__ = {
 "_edit_use_anchors_": false
 }
+
+[node name="BeamLight" type="Sprite" parent="."]
+modulate = Color( 1, 1, 1, 0.705882 )
+material = SubResource( 11 )
+z_index = 4096
+z_as_relative = false
+texture = ExtResource( 3 )
