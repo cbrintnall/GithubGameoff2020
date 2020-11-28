@@ -7,8 +7,10 @@ export(Vector2) var light_size = Vector2(32, 32)
 export(float) var max_pulse
 export(float) var min_pulse
 
-onready var beam_light = get_node("BeamLight")
-onready var ground_manager = get_node("/root/GameManager/").get_ground_manager()
+onready var beam_light = get_node("Moonlight/BeamLight")
+onready var beam_tween = get_node("Moonlight/Tween")
+onready var game_manager = get_node("/root/GameManager")
+onready var ground_manager = game_manager.get_ground_manager()
 onready var health_bar := get_node("UIBase/VBoxContainer/HealthBar")
 onready var energy_bar := get_node("UIBase/VBoxContainer/EnergyBar")
 onready var timer: Timer = get_node("Timer")
@@ -35,8 +37,9 @@ func take_damage(amt: int):
 		emit_signal("broken")
 
 func _ready():
-	_fit_beam()
+	beam_light.visible = false;
 	timer.connect("timeout", self, "_pulse")
+	game_manager.get_farm_manager().connect("night", self, "_on_night")
 
 	health_bar.max_value = max_health
 	health_bar.min_value = 0
@@ -50,11 +53,24 @@ func _ready():
 	# do first pulse
 	_pulse()
 
-func _fit_beam():
+func _on_night():
 	var screen_size = OS.get_screen_size()
-#
+
+	beam_light.visible = true;
 	beam_light.scale.y = (screen_size.y/2) / beam_light.texture.get_size().y
-	beam_light.global_position = Vector2(beam_light.global_position.x, beam_light.global_position.y-screen_size.y/4)
+	beam_light.global_position = Vector2(beam_light.global_position.x, beam_light.global_position.y-screen_size.y/2)
+	
+	beam_tween.interpolate_property(
+		beam_light,
+		"global_position",
+		beam_light.global_position,
+		beam_light.global_position + Vector2(0, screen_size.y/4),
+		1.0,
+		Tween.TRANS_CUBIC,
+		Tween.EASE_OUT
+	)
+	
+	beam_tween.start()
 
 func _path_finished(amount, location, path):
 	# notify location should gain energy since path is at end

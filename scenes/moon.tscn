@@ -26,27 +26,40 @@ bg_color = Color( 0.0705882, 0.768627, 0.701961, 1 )
 [sub_resource type="StyleBoxFlat" id=7]
 bg_color = Color( 0, 0, 0, 0.341176 )
 
-[sub_resource type="Shader" id=10]
+[sub_resource type="Shader" id=8]
 code = "shader_type canvas_item;
 render_mode blend_add;
 
 uniform sampler2D NOISE_PATTERN;
 
+const float amt = .99;
+
+float inverse_flerp(float a, float b, float t) {
+	return clamp((t - a) / (b - a), 0.0, 1.0);
+}
+
+void fragment() {
+	float interop = 1.0 - inverse_flerp(amt, 1.0, UV.y);
+	COLOR.a = clamp(step(UV.y, amt) + interop, 0.0, 1.0);
+}
+
 void vertex() {
-	VERTEX.x += cos(TIME) * sin(UV.y);
+	float tOffset = max(TIME, clamp(TIME + 1000.0, 0.0, 10000.0));
+	float xOffset = cos(tOffset*tan(tOffset*0.001));
+	float yOffset = sin(tOffset*tan(tOffset*0.001));
+	VERTEX.x += cos(UV.x + xOffset) * sin(UV.y + yOffset);
 }"
 
-[sub_resource type="OpenSimplexNoise" id=12]
+[sub_resource type="OpenSimplexNoise" id=9]
 
-[sub_resource type="NoiseTexture" id=13]
-noise = SubResource( 12 )
+[sub_resource type="NoiseTexture" id=10]
+noise = SubResource( 9 )
 
 [sub_resource type="ShaderMaterial" id=11]
-shader = SubResource( 10 )
-shader_param/NOISE_PATTERN = SubResource( 13 )
+shader = SubResource( 8 )
+shader_param/NOISE_PATTERN = SubResource( 10 )
 
 [node name="moon" type="Sprite"]
-position = Vector2( 105.792, 79.6948 )
 texture = ExtResource( 2 )
 script = ExtResource( 1 )
 max_pulse = 50.0
@@ -117,9 +130,13 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="BeamLight" type="Sprite" parent="."]
+[node name="Moonlight" type="Node2D" parent="."]
+
+[node name="BeamLight" type="Sprite" parent="Moonlight"]
 modulate = Color( 1, 1, 1, 0.705882 )
 material = SubResource( 11 )
-z_index = 4096
+z_index = 998
 z_as_relative = false
 texture = ExtResource( 3 )
+
+[node name="Tween" type="Tween" parent="Moonlight"]

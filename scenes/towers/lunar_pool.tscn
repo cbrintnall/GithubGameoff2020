@@ -1,33 +1,37 @@
-[gd_scene load_steps=11 format=2]
+[gd_scene load_steps=12 format=2]
 
 [ext_resource path="res://assets/textures/farm/towers/moon_beam_idle.png" type="Texture" id=1]
 [ext_resource path="res://scenes/scripts/lunar_pool.gd" type="Script" id=2]
 [ext_resource path="res://assets/textures/fx/SmallStar_64x64.png" type="Texture" id=3]
 
-[sub_resource type="CircleShape2D" id=1]
-radius = 8.15003
+[sub_resource type="AtlasTexture" id=1]
+atlas = ExtResource( 3 )
+region = Rect2( 0, 0, 64, 64 )
 
 [sub_resource type="CircleShape2D" id=2]
+radius = 8.15003
+
+[sub_resource type="CircleShape2D" id=3]
 radius = 90.6146
 
-[sub_resource type="RectangleShape2D" id=3]
+[sub_resource type="RectangleShape2D" id=4]
 extents = Vector2( 0.5, 0.5 )
 
-[sub_resource type="CanvasItemMaterial" id=12]
+[sub_resource type="CanvasItemMaterial" id=5]
 blend_mode = 1
 particles_animation = true
 particles_anim_h_frames = 60
 particles_anim_v_frames = 1
 particles_anim_loop = true
 
-[sub_resource type="Gradient" id=4]
+[sub_resource type="Gradient" id=6]
 offsets = PoolRealArray( 0, 0.562963, 0.97037 )
 colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0.0610684, 1, 1, 1, 0 )
 
-[sub_resource type="GradientTexture" id=5]
-gradient = SubResource( 4 )
+[sub_resource type="GradientTexture" id=7]
+gradient = SubResource( 6 )
 
-[sub_resource type="ParticlesMaterial" id=11]
+[sub_resource type="ParticlesMaterial" id=8]
 trail_divisor = 3
 emission_shape = 1
 emission_sphere_radius = 0.01
@@ -39,7 +43,7 @@ orbit_velocity = 0.0
 orbit_velocity_random = 1.0
 radial_accel = 22.99
 scale = 0.5
-color_ramp = SubResource( 5 )
+color_ramp = SubResource( 7 )
 anim_speed = 1.0
 
 [node name="LunarPool" type="StaticBody2D"]
@@ -48,6 +52,7 @@ collision_mask = 131073
 script = ExtResource( 2 )
 value = 500.0
 damage_per_hit = 0.0
+icon_texture = SubResource( 1 )
 no_place_area = NodePath("NoPlaceArea")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("Visionarea")
@@ -55,7 +60,7 @@ animation = NodePath("AnimationPlayer")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 0.166855, -0.195751 )
-shape = SubResource( 1 )
+shape = SubResource( 2 )
 
 [node name="Sprite" type="Sprite" parent="."]
 position = Vector2( 0, -14.3316 )
@@ -67,13 +72,13 @@ collision_layer = 2147516416
 collision_mask = 32768
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Visionarea"]
-shape = SubResource( 2 )
+shape = SubResource( 3 )
 
 [node name="NoPlaceArea" type="Area2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NoPlaceArea"]
 position = Vector2( 0, 0.472507 )
-shape = SubResource( 3 )
+shape = SubResource( 4 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
 
@@ -82,8 +87,8 @@ wait_time = 0.5
 autostart = true
 
 [node name="Particles2D" type="Particles2D" parent="."]
-material = SubResource( 12 )
+material = SubResource( 5 )
 position = Vector2( 0, -23.4229 )
 amount = 4
-process_material = SubResource( 11 )
+process_material = SubResource( 8 )
 texture = ExtResource( 3 )

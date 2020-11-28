@@ -754,6 +754,7 @@ collide_with_areas = true
 autostart = true
 
 [node name="moon" parent="." instance=ExtResource( 5 )]
+position = Vector2( 103.43, 69.7944 )
 
 [node name="DirtBase" type="TileMap" parent="."]
 z_index = -2

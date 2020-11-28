@@ -139,27 +139,27 @@ extents = Vector2( 1, 1 )
 [sub_resource type="CircleShape2D" id=5]
 radius = 45.0
 
-[sub_resource type="Gradient" id=7]
+[sub_resource type="Gradient" id=6]
 offsets = PoolRealArray( 0.674074, 0.977778 )
 colors = PoolColorArray( 0, 0.584314, 0.0627451, 0.537255, 0, 0.584314, 0.0627451, 0 )
 
-[sub_resource type="GradientTexture" id=8]
-gradient = SubResource( 7 )
+[sub_resource type="GradientTexture" id=7]
+gradient = SubResource( 6 )
 
-[sub_resource type="Curve" id=9]
+[sub_resource type="Curve" id=8]
 max_value = 100.0
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.151899, 99.0909 ), 1350.18, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=10]
-curve = SubResource( 9 )
+[sub_resource type="CurveTexture" id=9]
+curve = SubResource( 8 )
 
-[sub_resource type="Curve" id=11]
+[sub_resource type="Curve" id=10]
 _data = [ Vector2( 0, 0 ), 0.0, 0.0, 0, 0, Vector2( 0.746835, 0.527273 ), 0.0, 0.0, 0, 0, Vector2( 0.993671, 0.0181818 ), 0.0, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=12]
-curve = SubResource( 11 )
+[sub_resource type="CurveTexture" id=11]
+curve = SubResource( 10 )
 
-[sub_resource type="ParticlesMaterial" id=6]
+[sub_resource type="ParticlesMaterial" id=12]
 emission_shape = 2
 emission_box_extents = Vector3( 11.848, 3, 1 )
 flag_align_y = true
@@ -173,11 +173,11 @@ orbit_velocity = 0.0
 orbit_velocity_random = 0.0
 tangential_accel = 30.0
 tangential_accel_random = 0.38
-damping_curve = SubResource( 10 )
+damping_curve = SubResource( 9 )
 angle = 720.0
 angle_random = 1.0
-scale_curve = SubResource( 12 )
-color_ramp = SubResource( 8 )
+scale_curve = SubResource( 11 )
+color_ramp = SubResource( 7 )
 hue_variation = 0.25
 hue_variation_random = 1.0
 
@@ -188,6 +188,7 @@ collision_mask = 524289
 script = ExtResource( 3 )
 value = 300.0
 charge_time = 5.0
+icon_texture = ExtResource( 2 )
 no_place_area = NodePath("NoPlaceArea")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("VisionArea")
@@ -227,5 +228,5 @@ shape = SubResource( 5 )
 [node name="Particles2D" type="Particles2D" parent="."]
 position = Vector2( 0, -15.264 )
 amount = 30
-process_material = SubResource( 6 )
+process_material = SubResource( 12 )
 texture = ExtResource( 1 )
