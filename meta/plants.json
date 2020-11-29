@@ -1,6 +1,7 @@
 {
 	"meta": {
 		"output_folder": "res://meta/resources/plants/",
+		"crops_base": "res://meta/resources/crops/",
 		"frames_base": "res://assets/textures/farm/plants/",
 		"frame_count": 5,
 		"frame_size": {
@@ -86,12 +87,6 @@
 			"frames_path": "starberry_growing.png",
 			"required_energy": 300,
 			"finished_plant_path": "res://scenes/items/watermelon.tres"
-		},
-		{
-			"name": "turnip",
-			"frames_path": "",
-			"required_energy": 500,
-			"finished_plant_path": ""	
 		}
 	]
 }

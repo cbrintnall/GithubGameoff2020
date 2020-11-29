@@ -46,10 +46,19 @@ func _spawn_wave():
 func _on_resource_destroyed(destroyed):
 	current_count -= 1
 	var loot = destroyed.get_loot_table()
+	var gained_items := []
 	
 	for i in loot:
 		if rand_range(0, 101) <= loot[i]:
-			get_node("/root/GameManager").get_player().inventory.add_item(i)
+			gained_items.append(i)
+	
+	print(gained_items)
+	
+	var loot_explosion = Exploder.new()
+	
+	get_tree().root.add_child(loot_explosion)
+	
+	loot_explosion.explode_at(gained_items, destroyed.global_position)
 
 func _on_timer():
 	_generate_points()

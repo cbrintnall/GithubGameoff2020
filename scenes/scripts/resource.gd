@@ -14,7 +14,6 @@ onready var grow_tween: Tween = get_node("Tween")
 var grown: bool
 var entered: bool
 
-var _mouse_manager: MouseManager
 var _destroyed:bool
 
 func _ready():

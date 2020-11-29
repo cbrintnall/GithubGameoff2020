@@ -1,11 +1,23 @@
 extends Node2D
 
+class_name Exploder
+
 export(float) var impulse_strength := 500.0
 
 var _ground_item := preload("res://scenes/items/ground_item.tscn")
 var _flipped_dir := 1
 
 var _items := { }
+
+func explode_at(items, at: Vector2):
+	global_position = at
+	
+	if items is Array:
+		set_items(items)
+	if items is Dictionary:
+		set_items_amt(items)
+		
+	explode()
 
 func set_items(items: Array):
 	for item in items:

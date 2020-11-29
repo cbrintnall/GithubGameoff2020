@@ -1,7 +1,8 @@
-[gd_resource type="Resource" load_steps=9 format=2]
+[gd_resource type="Resource" load_steps=10 format=2]
 
 [ext_resource path="res://scenes/scripts/growing_plant.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/plants/cinammon_growing.png" type="Texture" id=2]
+[ext_resource path="res://meta/resources/crops/cinammon.tres" type="Resource" id=3]
 
 [sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 2 )
@@ -34,4 +35,5 @@ animations = [ {
 [resource]
 script = ExtResource( 1 )
 grow_frames = SubResource( 6 )
+finished_plant = ExtResource( 3 )
 required_energy = 100.0

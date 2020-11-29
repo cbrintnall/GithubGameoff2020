@@ -141,11 +141,11 @@ _data = {
 "points": PoolVector2Array( 0, 0, 0, 0, -0.151031, -0.305054, 0, 0, 0, 0, -80.8685, 0.586853, 0, 0, 0, 0, -82.0577, 30.4657, 0, 0, 0, 0, -161.437, 32.6955, 0, 0, 0, 0, -160.694, 158.9, 0, 0, 0, 0, -83.2885, 160.635, 0, 0, 0, 0, -81.2411, 223.316, 0, 0, 0, 0, -225.187, 224.104, 0, 0, 0, 0, -315.114, 231.191 )
 }
 
-[sub_resource type="DynamicFont" id=5]
+[sub_resource type="DynamicFont" id=4]
 size = 28
 font_data = ExtResource( 12 )
 
-[sub_resource type="AtlasTexture" id=4]
+[sub_resource type="AtlasTexture" id=5]
 atlas = ExtResource( 30 )
 region = Rect2( 0, 96, 48, 32 )
 
@@ -597,7 +597,7 @@ margin_right = 72.0
 margin_bottom = 28.0
 size_flags_horizontal = 0
 theme = ExtResource( 17 )
-custom_fonts/font = SubResource( 5 )
+custom_fonts/font = SubResource( 4 )
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
 text = "00:00"
 align = 1
@@ -665,7 +665,7 @@ margin_left = 6.0
 margin_top = 6.0
 margin_right = 159.0
 margin_bottom = 94.0
-texture = SubResource( 4 )
+texture = SubResource( 5 )
 expand = true
 
 [node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer"]

@@ -1,0 +1,27 @@
+[gd_resource type="Resource" load_steps=5 format=2]
+
+[ext_resource path="res://assets/textures/farm/grass.png" type="Texture" id=1]
+[ext_resource path="res://assets/textures/farm/grass_hovered.png" type="Texture" id=2]
+[ext_resource path="res://assets/audio/grass_break.ogg" type="AudioStream" id=3]
+[ext_resource path="res://scenes/scripts/ground_resource.gd" type="Script" id=4]
+
+[resource]
+script = ExtResource( 4 )
+drop_table = {
+Resource( "res://meta/resources/seeds/cinammon_seed.tres" ): 1.0,
+Resource( "res://meta/resources/seeds/green_bean_seed.tres" ): 1.0,
+Resource( "res://meta/resources/seeds/watermelon_seed.tres" ): 2.0,
+Resource( "res://meta/resources/seeds/corn_seed.tres" ): 3.0,
+Resource( "res://meta/resources/seeds/grape_seed.tres" ): 3.0,
+Resource( "res://meta/resources/seeds/tomato_seed.tres" ): 10.0,
+Resource( "res://meta/resources/seeds/coffee_seed.tres" ): 5.0,
+Resource( "res://meta/resources/seeds/honeydew_seed.tres" ): 2.0,
+Resource( "res://meta/resources/seeds/apple_seed.tres" ): 7.0,
+Resource( "res://meta/resources/seeds/turnip_seed.tres" ): 1.0,
+Resource( "res://meta/resources/seeds/melon_seed.tres" ): 4.0,
+Resource( "res://scenes/items/grass.tres" ): 100.0
+}
+on_break = ExtResource( 3 )
+ground_resource_name = "Grass"
+normal_texture = ExtResource( 1 )
+hovered_texture = ExtResource( 2 )

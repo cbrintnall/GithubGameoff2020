@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://assets/textures/ui/main_menu_background.png" type="Texture" id=1]
 [ext_resource path="res://themes/main.tres" type="Theme" id=2]
@@ -18,45 +18,94 @@ func _ready():
 	_tween_buttons()
 	
 	var tree = get_tree()
-	var prefs_base = get_node(\"PlayerPrefs/PlayerPreferences/MarginContainer\")
+	var prefs_base = get_node(\"PlayerPrefs\")
 	
 	play_button.connect(\"button_down\", tree, \"change_scene\", [ \"res://scenes/farm.tscn\" ])
 	quit_button.connect(\"button_down\", tree, \"quit\")
 	options_button.connect(\"button_down\", prefs_base, \"set_visible\", [ true ])
 
-	#generate_items(\"res://scenes/items/seeds\", \"res://meta/seeds.json\")
-	#generate_plants(\"res://scenes/items/plants\", \"res://meta/plants.json\")
+	prefs_base.register_command(\"generate\", funcref(self, \"_on_generate\"))
+	
+	var args = OS.get_cmdline_args()
+	if len(args) > 0:
+		_on_generate(Array(args).slice(1, len(args)-1))
 
-	create_seed_resource(\"res://meta/seeds.json\")
-	create_plant_resource(\"res://meta/plants.json\")
+func _on_generate(args: Array):
+	var resource_initializer = get_node(\"ResourceInitializer\")
 
-	get_tree().quit(0)
-
-func handle_commands(args: Array):
 	match args:
-		[ \"generate\", \"items\", var path, var file_name ]:
-			generate_items(path, \"res://meta/seeds.json\")
-		[ \"read\", \"items\", var path ]:
-			read_items(path)
-		[ \"generate\", \"plants\", var path, var file_name ]:
-			generate_plants(path, \"res://meta/plants.json\")
+		[ \"crops\" ]:
+			resource_initializer.create_crop_resource(\"res://meta/crops.json\")
+		[ \"plants\" ]:
+			resource_initializer.create_plant_resource(\"res://meta/plants.json\")
+		[ \"seeds\" ]:
+			resource_initializer.create_seed_resource(\"res://meta/seeds.json\")
+		[ \"resources\" ]:
+			resource_initializer.create_ground_resource(\"res://meta/resources.json\")
+		[ \"all\" ]:
+			resource_initializer.create_crop_resource(\"res://meta/crops.json\")
+			resource_initializer.create_plant_resource(\"res://meta/plants.json\")
+			resource_initializer.create_seed_resource(\"res://meta/seeds.json\")
+			resource_initializer.create_ground_resource(\"res://meta/resources.json\")
+		[ var cmd, \"quit\" ]:
+			_on_generate([ cmd ])
+			get_tree().quit(0)
+
+func _tween_buttons():
+	var all_buttons = [
+		play_button,
+		options_button,
+		quit_button
+	]
+
+	for button in all_buttons:
+		button.rect_position = Vector2(
+			button.rect_position.x + button.rect_size.x,
+			button.rect_position.y
+		)
+"
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends Node2D
+
+func create_ground_resource(definition_path: String):
+	var data = _get_data_for(definition_path)
+	var meta = data.get(\"meta\", {})
+	
+	for resource in data.get(\"resources\", []):
+		var new_resource = GroundResource.new()
+		
+		new_resource.on_break = load(resource.get(\"on_break_path\"))
+		new_resource.ground_resource_name = resource.get(\"name\")
+		new_resource.normal_texture = load(resource.get(\"normal_texture_path\"))
+		new_resource.hovered_texture = load(resource.get(\"hovered_texture_path\"))
+		
+		var drop_table := {}
+		var def_table = resource.get(\"drop_table\", {})
+		
+		# translate the json version to ingame
+		for item in def_table:
+			drop_table[load(item)] = def_table[item]
 			
-	get_tree().quit(0)
+		new_resource.drop_table = drop_table
+		
+		ResourceSaver.save(meta.get(\"output_folder\", \"res://\") + _normalize_path(resource.get(\"name\", \"NO_NAME\")) + \".tres\", new_resource)
+
+func create_crop_resource(definition_path: String):
+	var data = _get_data_for(definition_path)
+	var meta = data.get(\"meta\", {})
+		
+	for crop in data.get(\"resources\", []):
+		var new_crop = Item.new()
+		
+		new_crop.value = crop.get(\"value\", 0)
+		new_crop.item_name = crop.get(\"name\", \"NO_NAME\")
+		new_crop.texture = load(meta.get(\"texture_base\", \"res://\") + crop.get(\"texture_path\", \"\"))
+		
+		ResourceSaver.save(meta.get(\"output_folder\", \"res://\") + _normalize_path(new_crop.item_name) + \".tres\", new_crop)
 	
 func create_plant_resource(definition_path: String):
-	var dir = Directory.new()
-	var cache := []
-	var definition = File.new()
-	definition.open(definition_path, File.READ)
-	var data = definition.get_as_text()
-	definition.close()
-	var parse_result = JSON.parse(data)
-	if parse_result.error == OK:
-		data = parse_result.result
-	else:
-		print(\"error parsing plant json\")
-		get_tree().quit(1)
-	
+	var data = _get_data_for(definition_path)
 	var meta = data.get(\"meta\", {})
 	var frame_base = meta.get(\"frames_base\", \"res://\")
 	var frame_size_base = meta.get(\"frame_size\", {})
@@ -87,28 +136,17 @@ func create_plant_resource(definition_path: String):
 
 		plant_resource.grow_frames = sprite_frames
 		plant_resource.required_energy = plant.get(\"required_energy\", 100)
+		plant_resource.finished_plant = load(meta.get(\"crops_base\") + _normalize_path(plant.get(\"name\", \"NO_NAME\")) + \".tres\")
 		
 		var out_name = plant.get(\"name\", \"NO_NAME\")
 		var full_output_path = \"{base}/{name}.tres\".format({
 			\"base\": meta.get(\"output_folder\", \"res://garbage\"),
-			\"name\": out_name
+			\"name\": _normalize_path(out_name)
 		})
 		ResourceSaver.save(full_output_path, plant_resource)
 
 func create_seed_resource(definition_path: String):
-	var dir = Directory.new()
-	var cache := []
-	var definition = File.new()
-	definition.open(definition_path, File.READ)
-	var data = definition.get_as_text()
-	definition.close()
-	var parse_result = JSON.parse(data)
-	if parse_result.error == OK:
-		data = parse_result.result
-	else:
-		print(\"error parsing seed json\")
-		get_tree().quit(1)
-
+	var data = _get_data_for(definition_path)
 	var meta = data.get(\"meta\", {})
 	
 	for s in data.get(\"resources\", []):
@@ -133,105 +171,33 @@ func create_seed_resource(definition_path: String):
 
 		var full_output_path = \"{base}/{name}.tres\".format({
 			\"base\": meta.get(\"output_folder\", \"res://garbage\"),
-			\"name\": seed_item.item_name
+			\"name\": _normalize_path(seed_item.item_name)
 		})
 
 		ResourceSaver.save(full_output_path, seed_item)
 
-func read_items(path):
-	var file = File.new()
-	file.open(path, File.READ)
-	print(file.get_as_text())
-	file.close()
-	
-func generate_plants(path, file_name: String):
-	var dir = Directory.new()
-	var cache := []
-	print(\"Will write to \" + file_name)
-	if dir.open(path) == OK:
-		dir.list_dir_begin()
-		var filename = dir.get_next()
-		while (filename != \"\"):
-			var resource = load(path + \"/\" + filename) as GrowingPlant
-			
-			if !resource:
-				filename = dir.get_next()
-				continue
-			
-			var item := {
-				\"frames_path\": resource.grow_frames,
-				\"required_energy\": resource.required_energy,
-				\"finished_plant_path\": resource.finished_plant.resource_path if resource.finished_plant else \"\"
-			}
-
-			cache.append(item)
-			filename = dir.get_next()
-		var out_file = File.new()
-		out_file.open(file_name, File.WRITE)
-		out_file.store_string(JSON.print(cache, \"\\t\"))
-		out_file.close()
-		print(\"Wrote out plants to \" + path)
+func _get_data_for(path: String) -> Dictionary:
+	var definition = File.new()
+	definition.open(path, File.READ)
+	var data = definition.get_as_text()
+	definition.close()
+	var parse_result = JSON.parse(data)
+	if parse_result.error == OK:
+		return parse_result.result
 	else:
-		print(\"Couldn't open \" + path)
+		print(\"error parsing crops json\")
+		get_tree().quit(1)
+	return {}
 
-func generate_items(path, file_name: String):
-	var dir = Directory.new()
-	var cache := []
-	print(\"Will write to \" + file_name)
-	if dir.open(path) == OK:
-		dir.list_dir_begin()
-		var filename = dir.get_next()
-		while (filename != \"\"):
-			var resource = load(path + \"/\" + filename) as Item
-			
-			if !resource:
-				filename = dir.get_next()
-				continue
-			
-			var item := {
-				\"name\": resource.item_name,
-				\"value\": resource.value,
-				\"plant_path\": resource.resource_path
-			}
-			
-			if resource.texture is AtlasTexture:
-				item[\"texture_path\"] = resource.texture.atlas.resource_path
-				item[\"texture_rect\"] = {
-					\"x\": resource.texture.region.position.x,
-					\"y\": resource.texture.region.position.y,
-					\"height\": resource.texture.region.size.y,
-					\"width\": resource.texture.region.size.x,
-				}
-			else:
-				item[\"texture_path\"] = resource.texture.resource_path
-
-			cache.append(item)
-			filename = dir.get_next()
-		var out_file = File.new()
-		out_file.open(file_name, File.WRITE)
-		out_file.store_string(JSON.print(cache, \"\\t\"))
-		out_file.close()
-		print(\"Wrote out seeds to \" + path)
-	else:
-		print(\"Couldn't open \" + path)
-
-func _tween_buttons():
-	var all_buttons = [
-		play_button,
-		options_button,
-		quit_button
-	]
-
-	for button in all_buttons:
-		button.rect_position = Vector2(
-			button.rect_position.x + button.rect_size.x,
-			button.rect_position.y
-		)
-
+func _normalize_path(path: String):
+	return path.replace(\" \", \"_\").to_lower()
 "
 
 [node name="MainMenu" type="CanvasLayer"]
 script = SubResource( 1 )
+
+[node name="ResourceInitializer" type="Node2D" parent="."]
+script = SubResource( 2 )
 
 [node name="MarginContainer" type="MarginContainer" parent="."]
 anchor_right = 1.0

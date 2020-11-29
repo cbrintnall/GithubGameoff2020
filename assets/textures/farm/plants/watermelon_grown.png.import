@@ -2,15 +2,15 @@
 
 importer="texture"
 type="StreamTexture"
-path="res://.import/watermelon (2).png-e6a906fa48b552fee969df846058e73d.stex"
+path="res://.import/watermelon_grown.png-a144ce86d6f1f9073adb4b62efecd982.stex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/textures/farm/plants/watermelon (2).png"
-dest_files=[ "res://.import/watermelon (2).png-e6a906fa48b552fee969df846058e73d.stex" ]
+source_file="res://assets/textures/farm/plants/watermelon_grown.png"
+dest_files=[ "res://.import/watermelon_grown.png-a144ce86d6f1f9073adb4b62efecd982.stex" ]
 
 [params]
 
