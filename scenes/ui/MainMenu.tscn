@@ -23,16 +23,156 @@ func _ready():
 	play_button.connect(\"button_down\", tree, \"change_scene\", [ \"res://scenes/farm.tscn\" ])
 	quit_button.connect(\"button_down\", tree, \"quit\")
 	options_button.connect(\"button_down\", prefs_base, \"set_visible\", [ true ])
-	
-	if len(OS.get_cmdline_args()) > 0:
-		handle_commands(OS.get_cmdline_args())
-	
+
+	#generate_items(\"res://scenes/items/seeds\", \"res://meta/seeds.json\")
+	#generate_plants(\"res://scenes/items/plants\", \"res://meta/plants.json\")
+
+	create_seed_resource(\"res://meta/seeds.json\")
+	create_plant_resource(\"res://meta/plants.json\")
+
+	get_tree().quit(0)
+
 func handle_commands(args: Array):
 	match args:
 		[ \"generate\", \"items\", var path, var file_name ]:
-			generate_items(path, file_name)
+			generate_items(path, \"res://meta/seeds.json\")
+		[ \"read\", \"items\", var path ]:
+			read_items(path)
+		[ \"generate\", \"plants\", var path, var file_name ]:
+			generate_plants(path, \"res://meta/plants.json\")
 			
 	get_tree().quit(0)
+	
+func create_plant_resource(definition_path: String):
+	var dir = Directory.new()
+	var cache := []
+	var definition = File.new()
+	definition.open(definition_path, File.READ)
+	var data = definition.get_as_text()
+	definition.close()
+	var parse_result = JSON.parse(data)
+	if parse_result.error == OK:
+		data = parse_result.result
+	else:
+		print(\"error parsing plant json\")
+		get_tree().quit(1)
+	
+	var meta = data.get(\"meta\", {})
+	var frame_base = meta.get(\"frames_base\", \"res://\")
+	var frame_size_base = meta.get(\"frame_size\", {})
+	var frame_size = Vector2(
+		frame_size_base.get(\"x\", 16),
+		frame_size_base.get(\"y\", 16)
+	)
+	
+	for plant in data.get(\"resources\", []):
+		var plant_resource = GrowingPlant.new()
+		var texture = load(frame_base + plant.get(\"frames_path\"))
+		var sprite_frames = SpriteFrames.new()
+		var frame_count = texture.get_size().x/frame_size.x
+
+		sprite_frames.add_animation(\"default\")
+
+		for i in range(frame_count):
+			var frame_texture = AtlasTexture.new()
+
+			frame_texture.atlas = texture
+			frame_texture.region = Rect2(
+				Vector2(i * frame_size.x, 0),
+				frame_size
+			)
+
+			sprite_frames.add_frame(\"default\", frame_texture, frame_count-i)
+			sprite_frames.set_animation_loop(\"default\", false)
+
+		plant_resource.grow_frames = sprite_frames
+		plant_resource.required_energy = plant.get(\"required_energy\", 100)
+		
+		var out_name = plant.get(\"name\", \"NO_NAME\")
+		var full_output_path = \"{base}/{name}.tres\".format({
+			\"base\": meta.get(\"output_folder\", \"res://garbage\"),
+			\"name\": out_name
+		})
+		ResourceSaver.save(full_output_path, plant_resource)
+
+func create_seed_resource(definition_path: String):
+	var dir = Directory.new()
+	var cache := []
+	var definition = File.new()
+	definition.open(definition_path, File.READ)
+	var data = definition.get_as_text()
+	definition.close()
+	var parse_result = JSON.parse(data)
+	if parse_result.error == OK:
+		data = parse_result.result
+	else:
+		print(\"error parsing seed json\")
+		get_tree().quit(1)
+
+	var meta = data.get(\"meta\", {})
+	
+	for s in data.get(\"resources\", []):
+		var seed_item = Item.new()
+
+		seed_item.item_name = s[\"name\"]
+		seed_item.value = s.get(\"value\", 0)
+		seed_item.plant = load(meta.get(\"plants_folder\", \"res://\") + s.get(\"plant_path\"))
+		
+		var rect = s.get(\"texture_rect\")
+		if rect:
+			seed_item.texture = AtlasTexture.new()
+			seed_item.texture.atlas = load(s.get(\"texture_path\"))
+			seed_item.texture.region = Rect2(
+				rect[\"x\"],
+				rect[\"y\"],
+				rect[\"width\"],
+				rect[\"height\"]
+			)
+		else:
+			seed_item.texture = load(s.get(\"texture_path\"))
+
+		var full_output_path = \"{base}/{name}.tres\".format({
+			\"base\": meta.get(\"output_folder\", \"res://garbage\"),
+			\"name\": seed_item.item_name
+		})
+
+		ResourceSaver.save(full_output_path, seed_item)
+
+func read_items(path):
+	var file = File.new()
+	file.open(path, File.READ)
+	print(file.get_as_text())
+	file.close()
+	
+func generate_plants(path, file_name: String):
+	var dir = Directory.new()
+	var cache := []
+	print(\"Will write to \" + file_name)
+	if dir.open(path) == OK:
+		dir.list_dir_begin()
+		var filename = dir.get_next()
+		while (filename != \"\"):
+			var resource = load(path + \"/\" + filename) as GrowingPlant
+			
+			if !resource:
+				filename = dir.get_next()
+				continue
+			
+			var item := {
+				\"frames_path\": resource.grow_frames,
+				\"required_energy\": resource.required_energy,
+				\"finished_plant_path\": resource.finished_plant.resource_path if resource.finished_plant else \"\"
+			}
+
+			cache.append(item)
+			filename = dir.get_next()
+		var out_file = File.new()
+		out_file.open(file_name, File.WRITE)
+		out_file.store_string(JSON.print(cache, \"\\t\"))
+		out_file.close()
+		print(\"Wrote out plants to \" + path)
+	else:
+		print(\"Couldn't open \" + path)
 
 func generate_items(path, file_name: String):
 	var dir = Directory.new()
@@ -43,8 +183,6 @@ func generate_items(path, file_name: String):
 		var filename = dir.get_next()
 		while (filename != \"\"):
 			var resource = load(path + \"/\" + filename) as Item
-			
-			print(filename)
 			
 			if !resource:
 				filename = dir.get_next()
@@ -58,7 +196,12 @@ func generate_items(path, file_name: String):
 			
 			if resource.texture is AtlasTexture:
 				item[\"texture_path\"] = resource.texture.atlas.resource_path
-				item[\"texture_rect\"] = resource.texture.region
+				item[\"texture_rect\"] = {
+					\"x\": resource.texture.region.position.x,
+					\"y\": resource.texture.region.position.y,
+					\"height\": resource.texture.region.size.y,
+					\"width\": resource.texture.region.size.x,
+				}
 			else:
 				item[\"texture_path\"] = resource.texture.resource_path
 

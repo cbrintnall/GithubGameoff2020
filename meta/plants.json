@@ -1,0 +1,97 @@
+{
+	"meta": {
+		"output_folder": "res://meta/resources/plants/",
+		"frames_base": "res://assets/textures/farm/plants/",
+		"frame_count": 5,
+		"frame_size": {
+			"x": 16,
+			"y": 16
+		}
+	},
+	"resources": [
+		{
+			"name": "apple",
+			"frames_path": "apple_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "cinammon",
+			"frames_path": "cinammon_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "coffee",
+			"frames_path": "coffee_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "corn",
+			"frames_path": "corn_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "eggplant",
+			"frames_path": "eggplant_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "grape",
+			"frames_path": "grape_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "green_bean",
+			"frames_path": "green_bean_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "honeydew",
+			"frames_path": "honeydew_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "melon",
+			"frames_path": "melon_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "pineapple",
+			"frames_path": "pineapple_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "tomato",
+			"frames_path": "tomato_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": "res://scenes/items/tomato.tres"
+		},
+		{
+			"name": "rose",
+			"frames_path": "rose_growing.png",
+			"required_energy": 100,
+			"finished_plant_path": ""
+		},
+		{
+			"name": "strawberry",
+			"frames_path": "starberry_growing.png",
+			"required_energy": 300,
+			"finished_plant_path": "res://scenes/items/watermelon.tres"
+		},
+		{
+			"name": "turnip",
+			"frames_path": "",
+			"required_energy": 500,
+			"finished_plant_path": ""	
+		}
+	]
+}
