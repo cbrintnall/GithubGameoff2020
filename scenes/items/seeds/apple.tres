@@ -4,7 +4,6 @@
 [ext_resource path="res://assets/textures/farm/plants/apple_growing.png" type="Texture" id=2]
 [ext_resource path="res://scenes/items/plants/apple.tres" type="Resource" id=3]
 
-
 [sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 2 )
 region = Rect2( 64, 0, 16, 16 )

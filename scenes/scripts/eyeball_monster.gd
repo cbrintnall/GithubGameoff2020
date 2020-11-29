@@ -1,5 +1,6 @@
 extends KinematicBody2D
 
+export(Vector2) var attack_offset := Vector2(-30, 0)
 export(float) var damage := 0
 export(float) var speed := 2.0
 export(NodePath) onready var animation = get_node(animation) as AnimatedSprite
@@ -34,6 +35,12 @@ func _on_day():
 
 func _on_attack_timeout():
 	animation.play("attack")
+
+	#TODO: remove, absolute last minute hack
+	if name == "EyeballMonster":
+		animation.flip_h = global_position.direction_to(_moon.global_position).x < 0
+
+	#gross
 	var frame_count = animation.frames.get_frame_count("attack")
 	for i in frame_count:
 		if i >= (frame_count/2):
@@ -45,28 +52,30 @@ func _on_attack_timeout():
 func _physics_process(delta):
 	if _moving:
 		_do_move(delta)
-		
-	if _next_point == internal_path.size() and !_attack_timer:
+	elif _next_point == internal_path.size()-1 and !_attack_timer:
 		_attack_timer = Timer.new()
 		_attack_timer.wait_time = 3.5
 		_attack_timer.autostart = true
 		_attack_timer.one_shot = false
 		_attack_timer.connect("timeout", self, "_on_attack_timeout")
 		add_child(_attack_timer)
+		_on_attack_timeout()
 
 func _do_move(delta):
 	if !internal_path:
 		return
 
-	var target_point = internal_path[_next_point]
+	#TODO: remove, absolute last minute hack
+	var is_target_for_hack = (_next_point==(internal_path.size()-2) and name == "EyeballMonster")
+	var target_point = internal_path[_next_point] + (-attack_offset if is_target_for_hack else Vector2.ZERO)
 	
 	_direction = (target_point - global_position).normalized()
 	animation.flip_h = _direction.x < 0
 	
-	if global_position.distance_to(target_point) < 1:
+	if global_position.distance_to(target_point) < 3.0:
 		_next_point = _next_point + 1
 
-		if _next_point == internal_path.size():
+		if _next_point == internal_path.size()-1:
 			_moving = false
 		else:
 			target_point = internal_path[_next_point]

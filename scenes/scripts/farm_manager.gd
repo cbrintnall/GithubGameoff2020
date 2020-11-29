@@ -11,10 +11,10 @@ onready var day_canvas = get_node("DayCycle/CanvasModulate")
 onready var transition_tween = get_node("DayCycle/Tween")
 onready var rock_increase_tween = get_node("CanvasLayer/Tween")
 onready var lunar_rock_audio = get_node("CanvasLayer/LunarRockGained")
-onready var ui_base = get_node("CanvasLayer/VBoxContainer")
-onready var time_label = get_node("CanvasLayer/VBoxContainer/NinePatchRect2/MarginContainer/Label")
-onready var clock_base = get_node("CanvasLayer/VBoxContainer/NinePatchRect2")
-onready var lunar_rock_label = get_node("CanvasLayer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer/Label")
+onready var ui_base = get_node("CanvasLayer/MarginContainer")
+onready var time_label = get_node("CanvasLayer/MarginContainer/HBoxContainer/Label")
+onready var clock_base = get_node("CanvasLayer/MarginContainer")
+onready var lunar_rock_label = get_node("CanvasLayer/MarginContainer/HBoxContainer/HBoxContainer/Label")
 onready var moonlight = get_node("MoonLight")
 
 export(int) var moonlight_min_x_offset = -500
@@ -61,41 +61,13 @@ func to_text(amt):
 
 	lunar_rock_label.text = str(true_amt)
 
-func _sync_lunar_rock_to_label(by := 0):
-	if by:
-		rock_increase_tween.interpolate_method(
-			self,
-			"to_text",
-			current_lunar_rocks-by,
-			current_lunar_rocks,
-			tween_duration,
-			Tween.TRANS_EXPO,
-			Tween.EASE_IN
-		)
-		rock_increase_tween.interpolate_method(
-			lunar_rock_audio,
-			"set_pitch_scale",
-			.75,
-			1.5,
-			tween_duration,
-			Tween.TRANS_EXPO,
-			Tween.EASE_IN
-		)
-		rock_increase_tween.start()
-		yield(rock_increase_tween,"tween_all_completed")
-		lunar_rock_audio.set_pitch_scale(.75)
-	else:
-		lunar_rock_label.text = str(current_lunar_rocks)
-
 func add_lunar_rocks(amt: int):
 	current_lunar_rocks += amt
-	
-	_sync_lunar_rock_to_label(amt)
+	lunar_rock_label.text = str(current_lunar_rocks)
 	
 func remove_lunar_rocks(amt: int):
 	current_lunar_rocks = int(clamp(current_lunar_rocks-amt, 0, INF))
-	
-	_sync_lunar_rock_to_label()
+	lunar_rock_label.text = str(current_lunar_rocks)
 	
 func _set_to_appropriate_time():
 	if is_day():
@@ -129,7 +101,6 @@ func _ready():
 	ui_base.visible = true
 	
 	_set_to_appropriate_time()
-	_sync_lunar_rock_to_label()
 	
 	# we set it to -1 in editor to hide it, this makes sure it's always there :)
 	get_node("CanvasLayer").layer = 1
@@ -138,6 +109,8 @@ func _ready():
 	
 	prefs.register_command("coins", funcref(self, "_on_coins"))
 	prefs.register_command("time", funcref(self, "_on_time"))
+	
+	lunar_rock_label.text = str(current_lunar_rocks)
 
 func _on_time(args):
 	match args:

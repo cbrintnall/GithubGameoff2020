@@ -24,6 +24,7 @@ var plant_done: bool
 var current_energy: float
 var current_progress = 0.0
 
+var _exploder := preload("res://scenes/scripts/item_exploder.gd")
 var _fading_out := false
 
 func _ready():
@@ -131,7 +132,14 @@ func _enable_seed_menu():
 	seed_chooser.enable()
 
 func _do_harvest():
-	game_manager.get_player().inventory.add_item(growing_plant.finished_plant)
+	var items_explosion := _exploder.new()
+	get_tree().root.add_child(items_explosion)
+	
+	items_explosion.z_index = z_index + 1
+	items_explosion.global_position = global_position
+	items_explosion.set_items([ growing_plant.finished_plant ])
+	items_explosion.explode()
+	
 	growing_plant = null
 	growing_sprite.visible = false
 	energy_particles.color = Color.white

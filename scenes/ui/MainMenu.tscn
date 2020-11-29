@@ -23,6 +23,54 @@ func _ready():
 	play_button.connect(\"button_down\", tree, \"change_scene\", [ \"res://scenes/farm.tscn\" ])
 	quit_button.connect(\"button_down\", tree, \"quit\")
 	options_button.connect(\"button_down\", prefs_base, \"set_visible\", [ true ])
+	
+	if len(OS.get_cmdline_args()) > 0:
+		handle_commands(OS.get_cmdline_args())
+	
+func handle_commands(args: Array):
+	match args:
+		[ \"generate\", \"items\", var path, var file_name ]:
+			generate_items(path, file_name)
+			
+	get_tree().quit(0)
+
+func generate_items(path, file_name: String):
+	var dir = Directory.new()
+	var cache := []
+	print(\"Will write to \" + file_name)
+	if dir.open(path) == OK:
+		dir.list_dir_begin()
+		var filename = dir.get_next()
+		while (filename != \"\"):
+			var resource = load(path + \"/\" + filename) as Item
+			
+			print(filename)
+			
+			if !resource:
+				filename = dir.get_next()
+				continue
+			
+			var item := {
+				\"name\": resource.item_name,
+				\"value\": resource.value,
+				\"plant_path\": resource.resource_path
+			}
+			
+			if resource.texture is AtlasTexture:
+				item[\"texture_path\"] = resource.texture.atlas.resource_path
+				item[\"texture_rect\"] = resource.texture.region
+			else:
+				item[\"texture_path\"] = resource.texture.resource_path
+
+			cache.append(item)
+			filename = dir.get_next()
+		var out_file = File.new()
+		out_file.open(file_name, File.WRITE)
+		out_file.store_string(JSON.print(cache, \"\\t\"))
+		out_file.close()
+		print(\"Wrote out seeds to \" + path)
+	else:
+		print(\"Couldn't open \" + path)
 
 func _tween_buttons():
 	var all_buttons = [

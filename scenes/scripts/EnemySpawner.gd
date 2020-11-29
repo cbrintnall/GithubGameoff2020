@@ -18,10 +18,16 @@ func set_wave(wave: Dictionary):
 	_current_wave = wave
 
 func start_wave():
+	_spawn_timer.start()
+	
 	for enemy in _current_wave:
 		for count in range(0, _current_wave[enemy]):
 			_spawn_enemy(enemy)
-			_spawn_timer.start()
+			
+			# break if the spawn is interrupted
+			if _spawn_timer.is_stopped():
+				break
+
 			yield(_spawn_timer, "timeout")
 
 	emit_signal("wave_finished", _current_wave)
@@ -29,7 +35,14 @@ func start_wave():
 
 func _ready():
 	var farm_manager = get_node("/root/GameManager").get_farm_manager()
+	
+	# stop the timer when day comes
+	farm_manager.connect("day", _spawn_timer, "stop")
+	
 	_spawn_timer.wait_time = spawn_rate
+
+func _on_day():
+	pass
 
 func _spawn_enemy(enemy: PackedScene):
 	var new_enemy = enemy.instance()

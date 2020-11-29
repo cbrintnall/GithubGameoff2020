@@ -1,8 +1,10 @@
-[gd_scene load_steps=15 format=2]
+[gd_scene load_steps=23 format=2]
 
 [ext_resource path="res://scenes/scripts/moon.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/moon_fragment.png" type="Texture" id=2]
 [ext_resource path="res://assets/textures/farm/light/beam.png" type="Texture" id=3]
+[ext_resource path="res://assets/textures/fx/SmallStar_64x64.png" type="Texture" id=4]
+[ext_resource path="res://assets/audio/sfx/moon_hum.wav" type="AudioStream" id=5]
 
 [sub_resource type="CircleShape2D" id=1]
 radius = 10.2098
@@ -58,6 +60,44 @@ noise = SubResource( 9 )
 [sub_resource type="ShaderMaterial" id=11]
 shader = SubResource( 8 )
 shader_param/NOISE_PATTERN = SubResource( 10 )
+
+[sub_resource type="CanvasItemMaterial" id=12]
+blend_mode = 1
+particles_animation = true
+particles_anim_h_frames = 60
+particles_anim_v_frames = 1
+particles_anim_loop = true
+
+[sub_resource type="Gradient" id=13]
+offsets = PoolRealArray( 0, 0.562963, 0.97037 )
+colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0.0610684, 1, 1, 1, 0 )
+
+[sub_resource type="GradientTexture" id=14]
+gradient = SubResource( 13 )
+
+[sub_resource type="Curve" id=15]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.0454545 ), -4.2065, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=16]
+curve = SubResource( 15 )
+
+[sub_resource type="ParticlesMaterial" id=17]
+trail_divisor = 3
+emission_shape = 1
+emission_sphere_radius = 17.66
+flag_align_y = true
+flag_disable_z = true
+gravity = Vector3( 0, 0, 0 )
+angular_velocity = 107.58
+angular_velocity_random = 1.0
+orbit_velocity = 0.0
+orbit_velocity_random = 1.0
+radial_accel = 22.99
+scale = 0.15
+scale_random = 0.25
+scale_curve = SubResource( 16 )
+color_ramp = SubResource( 14 )
+anim_speed = 1.0
 
 [node name="moon" type="Sprite"]
 texture = ExtResource( 2 )
@@ -133,6 +173,7 @@ __meta__ = {
 [node name="Moonlight" type="Node2D" parent="."]
 
 [node name="BeamLight" type="Sprite" parent="Moonlight"]
+visible = false
 modulate = Color( 1, 1, 1, 0.705882 )
 material = SubResource( 11 )
 z_index = 998
@@ -140,3 +181,15 @@ z_as_relative = false
 texture = ExtResource( 3 )
 
 [node name="Tween" type="Tween" parent="Moonlight"]
+
+[node name="Particles2D" type="Particles2D" parent="Moonlight"]
+material = SubResource( 12 )
+z_index = 1001
+process_material = SubResource( 17 )
+texture = ExtResource( 4 )
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="Moonlight"]
+stream = ExtResource( 5 )
+volume_db = -80.0
+max_distance = 50.0
+bus = "Sound Effects"

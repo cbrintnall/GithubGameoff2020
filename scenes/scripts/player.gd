@@ -54,6 +54,8 @@ func _ready():
 	
 	input_handler.connect("input_mode_changed", self, "_on_input_mode_changed")
 	_controller_action_area = input_handler.input_mode == Constants.InputMode.CONTROLLER
+	
+	inventory.add_item(preload("res://scenes/items/seeds/tomato.tres"), 50)
 
 func _on_input_mode_changed(mode):
 	_controller_action_area = mode == Constants.InputMode.CONTROLLER

@@ -10,6 +10,7 @@ region = Rect2( 460, 270, 70, 80 )
 [sub_resource type="GDScript" id=2]
 script/source = "extends Sprite
 
+export(bool) var fades := true
 export(Color) var fade_color
 
 onready var animation = get_node(\"AnimationPlayer\")
@@ -24,12 +25,13 @@ func _ready():
 	
 	bumped_area.connect(\"body_entered\", self, \"_curried_shake\")
 	
-	animation.play()
-	
 func _curried_shake(_ignored_body):
 	animation.play(\"shake\")
 	
 func _on_body_enter(body):
+	if !fades:
+		return
+
 	fade_tween.interpolate_property(
 		self,
 		\"modulate\",
@@ -43,6 +45,9 @@ func _on_body_enter(body):
 	fade_tween.start()
 	
 func _on_body_leave(body):
+	if !fades:
+		return
+
 	fade_tween.interpolate_property(
 		self,
 		\"modulate\",
@@ -59,14 +64,13 @@ func _on_body_leave(body):
 [sub_resource type="RectangleShape2D" id=3]
 extents = Vector2( 27.1819, 25.3102 )
 
-[sub_resource type="CircleShape2D" id=6]
+[sub_resource type="CircleShape2D" id=4]
 radius = 9.0
 
-[sub_resource type="CircleShape2D" id=4]
+[sub_resource type="CircleShape2D" id=5]
 radius = 7.78563
 
-[sub_resource type="Animation" id=5]
-resource_name = "shake"
+[sub_resource type="Animation" id=6]
 length = 0.8
 tracks/0/type = "value"
 tracks/0/path = NodePath(".:rotation_degrees")
@@ -81,20 +85,20 @@ tracks/0/keys = {
 "values": [ 0.0, 1.0, 0.0, -1.0, 0.0 ]
 }
 
-[sub_resource type="Curve" id=13]
+[sub_resource type="Curve" id=7]
 min_value = -360.0
 max_value = 360.0
 _data = [ Vector2( 0, 1 ), 0.0, 772.046, 0, 0, Vector2( 0.740506, 117.818 ), 0.0, 0.0, 0, 0, Vector2( 1, 108 ), 0.0, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=14]
-curve = SubResource( 13 )
+[sub_resource type="CurveTexture" id=8]
+curve = SubResource( 7 )
 
-[sub_resource type="Gradient" id=15]
+[sub_resource type="Gradient" id=9]
 offsets = PoolRealArray( 0.318519, 0.622222 )
 colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
 
-[sub_resource type="GradientTexture" id=16]
-gradient = SubResource( 15 )
+[sub_resource type="GradientTexture" id=10]
+gradient = SubResource( 9 )
 
 [sub_resource type="Curve" id=11]
 max_value = 100.0
@@ -103,22 +107,23 @@ _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.968354, 100 ), 27.3593, 0.
 [sub_resource type="CurveTexture" id=12]
 curve = SubResource( 11 )
 
-[sub_resource type="ParticlesMaterial" id=8]
+[sub_resource type="ParticlesMaterial" id=13]
 emission_shape = 2
 emission_box_extents = Vector3( 16, 1, 1 )
 flag_disable_z = true
 flatness = 1.0
 gravity = Vector3( 0, 20, 0 )
 angular_velocity_random = 0.25
-angular_velocity_curve = SubResource( 14 )
+angular_velocity_curve = SubResource( 8 )
 orbit_velocity = 0.0
 orbit_velocity_random = 0.0
 radial_accel = 5.0
 radial_accel_random = 0.38
 damping_curve = SubResource( 12 )
-color_ramp = SubResource( 16 )
+color_ramp = SubResource( 10 )
 
 [node name="Tree" type="Sprite"]
+rotation = 0.00872665
 texture = SubResource( 1 )
 offset = Vector2( 0, -24 )
 script = SubResource( 2 )
@@ -140,16 +145,16 @@ collision_mask = 65537
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="BumpedArea"]
 position = Vector2( -0.0270663, 4.18835 )
-shape = SubResource( 6 )
+shape = SubResource( 4 )
 
 [node name="StaticBody2D" type="KinematicBody2D" parent="."]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
 position = Vector2( 0, 4.23655 )
-shape = SubResource( 4 )
+shape = SubResource( 5 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/shake = SubResource( 5 )
+anims/shake = SubResource( 6 )
 
 [node name="Particles2D" type="Particles2D" parent="."]
 visible = false
@@ -158,5 +163,5 @@ z_index = -1
 emitting = false
 amount = 1
 lifetime = 3.0
-process_material = SubResource( 8 )
+process_material = SubResource( 13 )
 texture = ExtResource( 2 )

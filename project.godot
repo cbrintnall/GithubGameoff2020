@@ -74,6 +74,10 @@ window/size/width=1280
 window/size/height=720
 window/stretch/aspect="expand"
 
+[editor]
+
+main_run_args="generate items res://scenes/items/seeds/ res://meta/seeds.json"
+
 [importer_defaults]
 
 texture={

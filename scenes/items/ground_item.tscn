@@ -1,0 +1,299 @@
+[gd_scene load_steps=16 format=2]
+
+[ext_resource path="res://assets/audio/sfx/items/pickup.wav" type="AudioStream" id=1]
+[ext_resource path="res://assets/textures/player/walk_cloud.png" type="Texture" id=2]
+[ext_resource path="res://assets/textures/farm/seeds/tomato.png" type="Texture" id=3]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends RigidBody2D
+
+export (float) var required_distance := 20.0
+
+onready var animator = get_node(\"AnimationPlayer\")
+onready var fade_tween = get_node(\"Tween\")
+onready var pickup_particles = get_node(\"Particles2D\")
+onready var audio = get_node(\"AudioStreamPlayer2D\")
+onready var player_area = get_node(\"Area2D\")
+onready var sprite = get_node(\"Sprite\")
+onready var collider_shape = get_node(\"CollisionShape2D\")
+
+var _started := false
+var _min_move_speed := 100.0
+var _max_distance := 0.0
+var _move_speed := 1.5
+var _picked_up := false
+var _quantity: int
+var _item: Item
+var _player: KinematicBody2D
+var _last_velocity := -Vector2.ONE
+
+func set_quantity(amount: int):
+	_quantity = amount
+
+func set_item(item: Item):
+	_item = item
+	
+	if !is_inside_tree():
+		yield(self, \"ready\")
+		
+	var size
+
+	if item.texture is AtlasTexture:
+		sprite.texture = AtlasTexture.new()
+		sprite.texture.atlas = item.texture.atlas
+		sprite.texture.region = item.texture.region
+		size = sprite.texture.region.size/2
+	else:
+		sprite.texture = item.texture
+		size = sprite.texture.get_size()/2
+
+	collider_shape.shape = RectangleShape2D.new()
+	collider_shape.shape.extents = size
+	pickup_particles.process_material.emission_box_extents = Vector3(size.x, size.y, 0.0)
+
+func _ready():
+	player_area.connect(\"body_entered\", self, \"_on_player_enter\")
+	player_area.connect(\"body_exited\", self, \"_on_player_exit\")
+	
+	animator.play(\"default\")
+
+func _on_player_enter(body):
+	_player = body
+	_max_distance = global_position.distance_to(_player.global_position)
+	animator.play(\"default\")
+
+func _on_player_exit(body):
+	_player = null
+	animator.play(\"float\")
+
+func _give_item():
+	if _player and _player.inventory:
+		_player.inventory.add_item(_item, _quantity)
+		print(\"added\")
+
+func _do_pickup():
+	_picked_up = true
+
+	# _give_item is called in the pickup animation
+	animator.play(\"pickup\")
+	yield(animator,\"animation_finished\")
+
+	queue_free()
+
+func _physics_process(delta):
+	if _last_velocity == Vector2.ZERO and linear_velocity != _last_velocity:
+		_started = true
+	
+	_last_velocity = linear_velocity
+		
+	if _started and linear_velocity.round() == Vector2.ZERO and animator.current_animation != \"float\":
+		animator.play(\"float\")
+	
+	if !_picked_up and _player:
+		var dir = global_position.direction_to(_player.global_position)
+		var dist = global_position.distance_to(_player.global_position)
+		
+		if dist < required_distance:
+			_do_pickup()
+		
+		var speed = clamp(_move_speed * pow(abs(dist - _max_distance), 3), _min_move_speed, INF)
+
+		add_central_force(dir * speed)
+"
+
+[sub_resource type="CircleShape2D" id=2]
+radius = 41.0557
+
+[sub_resource type="Gradient" id=3]
+offsets = PoolRealArray( 0.666667, 1 )
+colors = PoolColorArray( 1, 1, 1, 0.537255, 1, 1, 1, 0 )
+
+[sub_resource type="GradientTexture" id=4]
+gradient = SubResource( 3 )
+
+[sub_resource type="Curve" id=5]
+max_value = 100.0
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.151899, 99.0909 ), 1350.18, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=6]
+curve = SubResource( 5 )
+
+[sub_resource type="Curve" id=7]
+_data = [ Vector2( 0, 0 ), 0.0, 0.0, 0, 0, Vector2( 0.746835, 0.527273 ), 0.0, 0.0, 0, 0, Vector2( 0.993671, 0.0181818 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=8]
+curve = SubResource( 7 )
+
+[sub_resource type="ParticlesMaterial" id=9]
+emission_shape = 2
+emission_box_extents = Vector3( 11.848, 3, 1 )
+flag_disable_z = true
+direction = Vector3( 0, 0, 0 )
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+angular_velocity = 81.13
+angular_velocity_random = 0.13
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+tangential_accel = 30.0
+tangential_accel_random = 0.38
+damping_curve = SubResource( 6 )
+angle = 720.0
+angle_random = 1.0
+scale = 0.25
+scale_random = 0.5
+scale_curve = SubResource( 8 )
+color_ramp = SubResource( 4 )
+hue_variation_random = 1.0
+
+[sub_resource type="Animation" id=11]
+resource_name = "default"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:offset")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ) ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("Particles2D:emitting")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ false ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Sprite:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ) ]
+}
+
+[sub_resource type="Animation" id=10]
+resource_name = "float"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:offset")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5, 1 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ), Vector2( 0, -5 ), Vector2( 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=12]
+resource_name = "pickup"
+length = 0.2
+tracks/0/type = "value"
+tracks/0/path = NodePath("Particles2D:emitting")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ true ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("AudioStreamPlayer2D:playing")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ true ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("Sprite:scale")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0, 0.1 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 0,
+"values": [ Vector2( 1, 1 ), Vector2( 1e-05, 1e-05 ) ]
+}
+tracks/3/type = "method"
+tracks/3/path = NodePath(".")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0.1 ),
+"transitions": PoolRealArray( 1 ),
+"values": [ {
+"args": [  ],
+"method": "_give_item"
+} ]
+}
+
+[node name="RigidBody2D" type="RigidBody2D"]
+collision_layer = 0
+mass = 8.44286
+gravity_scale = 0.0
+linear_damp = 16.343
+angular_damp = 100.0
+script = SubResource( 1 )
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 3 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+
+[node name="Area2D" type="Area2D" parent="."]
+visible = false
+collision_layer = 0
+collision_mask = 65536
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource( 2 )
+
+[node name="AudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 1 )
+bus = "Sound Effects"
+
+[node name="Particles2D" type="Particles2D" parent="."]
+emitting = false
+amount = 15
+one_shot = true
+speed_scale = 2.5
+explosiveness = 1.0
+local_coords = false
+process_material = SubResource( 9 )
+texture = ExtResource( 2 )
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/default = SubResource( 11 )
+anims/float = SubResource( 10 )
+anims/pickup = SubResource( 12 )

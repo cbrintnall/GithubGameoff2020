@@ -5,10 +5,10 @@
 [ext_resource path="res://scenes/scripts/effect_aoe_tower.gd" type="Script" id=3]
 [ext_resource path="res://assets/textures/farm/towers/mushroom_tower_shake.png" type="Texture" id=5]
 
-[sub_resource type="RectangleShape2D" id=1]
+[sub_resource type="RectangleShape2D" id=9]
 extents = Vector2( 3.11715, 1.50274 )
 
-[sub_resource type="Animation" id=2]
+[sub_resource type="Animation" id=10]
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite:texture")
 tracks/0/interp = 1
@@ -70,7 +70,7 @@ tracks/4/keys = {
 "values": [ 0.0 ]
 }
 
-[sub_resource type="Animation" id=3]
+[sub_resource type="Animation" id=11]
 length = 1.2
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite:texture")
@@ -133,33 +133,33 @@ tracks/4/keys = {
 "values": [ 100.0, 0.0 ]
 }
 
-[sub_resource type="RectangleShape2D" id=4]
+[sub_resource type="RectangleShape2D" id=12]
 extents = Vector2( 1, 1 )
 
-[sub_resource type="CircleShape2D" id=5]
+[sub_resource type="CircleShape2D" id=13]
 radius = 45.0
 
-[sub_resource type="Gradient" id=6]
-offsets = PoolRealArray( 0.674074, 0.977778 )
-colors = PoolColorArray( 0, 0.584314, 0.0627451, 0.537255, 0, 0.584314, 0.0627451, 0 )
+[sub_resource type="Gradient" id=3]
+offsets = PoolRealArray( 0.666667, 1 )
+colors = PoolColorArray( 1, 1, 1, 0.537255, 1, 1, 1, 0 )
 
-[sub_resource type="GradientTexture" id=7]
-gradient = SubResource( 6 )
+[sub_resource type="GradientTexture" id=4]
+gradient = SubResource( 3 )
 
-[sub_resource type="Curve" id=8]
+[sub_resource type="Curve" id=5]
 max_value = 100.0
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.151899, 99.0909 ), 1350.18, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=9]
-curve = SubResource( 8 )
+[sub_resource type="CurveTexture" id=6]
+curve = SubResource( 5 )
 
-[sub_resource type="Curve" id=10]
+[sub_resource type="Curve" id=7]
 _data = [ Vector2( 0, 0 ), 0.0, 0.0, 0, 0, Vector2( 0.746835, 0.527273 ), 0.0, 0.0, 0, 0, Vector2( 0.993671, 0.0181818 ), 0.0, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=11]
-curve = SubResource( 10 )
+[sub_resource type="CurveTexture" id=8]
+curve = SubResource( 7 )
 
-[sub_resource type="ParticlesMaterial" id=12]
+[sub_resource type="ParticlesMaterial" id=14]
 emission_shape = 2
 emission_box_extents = Vector3( 11.848, 3, 1 )
 flag_align_y = true
@@ -173,11 +173,11 @@ orbit_velocity = 0.0
 orbit_velocity_random = 0.0
 tangential_accel = 30.0
 tangential_accel_random = 0.38
-damping_curve = SubResource( 9 )
+damping_curve = SubResource( 6 )
 angle = 720.0
 angle_random = 1.0
-scale_curve = SubResource( 11 )
-color_ramp = SubResource( 7 )
+scale_curve = SubResource( 8 )
+color_ramp = SubResource( 4 )
 hue_variation = 0.25
 hue_variation_random = 1.0
 
@@ -197,11 +197,11 @@ animation = NodePath("AnimationPlayer")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 0, 1.21919 )
 z_index = 1
-shape = SubResource( 1 )
+shape = SubResource( 9 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/default = SubResource( 2 )
-anims/fire = SubResource( 3 )
+anims/default = SubResource( 10 )
+anims/fire = SubResource( 11 )
 
 [node name="Sprite" type="Sprite" parent="."]
 position = Vector2( 0, 2.94314 )
@@ -217,16 +217,16 @@ position = Vector2( 0, -8.72053 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NoPlaceArea"]
 position = Vector2( 0, 10.0668 )
-shape = SubResource( 4 )
+shape = SubResource( 12 )
 
 [node name="VisionArea" type="Area2D" parent="."]
 scale = Vector2( 0.75, 0.75 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea"]
-shape = SubResource( 5 )
+shape = SubResource( 13 )
 
 [node name="Particles2D" type="Particles2D" parent="."]
 position = Vector2( 0, -15.264 )
 amount = 30
-process_material = SubResource( 12 )
+process_material = SubResource( 14 )
 texture = ExtResource( 1 )

@@ -24,11 +24,13 @@ func add_item(item: Item, amt := 1):
 	items[item] += amt
 	
 	emit_signal("item_added", item)
-	game_manager.event_manager.new_message("Received {amt} {item}{post}".format({
-		"amt": amt, 
-		"item": item.item_name,
-		"post": "s" if amt > 1 else ""
-	}))
+	
+	if game_manager.event_manager:
+		game_manager.event_manager.new_message("Received {amt} {item}{post}".format({
+			"amt": amt, 
+			"item": item.item_name,
+			"post": "s" if amt > 1 else ""
+		}))
 	
 func remove_item(item: Item, amt := 1):
 	if !(item in items):

@@ -1,4 +1,4 @@
-[gd_scene load_steps=52 format=2]
+[gd_scene load_steps=51 format=2]
 
 [ext_resource path="res://assets/tilesets/farm.tres" type="TileSet" id=1]
 [ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=2]
@@ -21,7 +21,6 @@
 [ext_resource path="res://assets/audio/next.wav" type="AudioStream" id=20]
 [ext_resource path="res://assets/textures/icons/lunar_rock.png" type="Texture" id=21]
 [ext_resource path="res://assets/audio/music/fight/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 07 Confrontation.ogg" type="AudioStream" id=22]
-[ext_resource path="res://assets/audio/lunar_rock_gained.wav" type="AudioStream" id=23]
 [ext_resource path="res://assets/textures/farm/decorations/atlas.png" type="Texture" id=24]
 [ext_resource path="res://scenes/enemies/eyeball.tscn" type="PackedScene" id=25]
 [ext_resource path="res://scenes/decorations/Rock.tscn" type="PackedScene" id=26]
@@ -142,13 +141,13 @@ _data = {
 "points": PoolVector2Array( 0, 0, 0, 0, -0.151031, -0.305054, 0, 0, 0, 0, -80.8685, 0.586853, 0, 0, 0, 0, -82.0577, 30.4657, 0, 0, 0, 0, -161.437, 32.6955, 0, 0, 0, 0, -160.694, 158.9, 0, 0, 0, 0, -83.2885, 160.635, 0, 0, 0, 0, -81.2411, 223.316, 0, 0, 0, 0, -225.187, 224.104, 0, 0, 0, 0, -315.114, 231.191 )
 }
 
-[sub_resource type="AtlasTexture" id=4]
-atlas = ExtResource( 30 )
-region = Rect2( 0, 96, 48, 32 )
-
 [sub_resource type="DynamicFont" id=5]
 size = 28
 font_data = ExtResource( 12 )
+
+[sub_resource type="AtlasTexture" id=4]
+atlas = ExtResource( 30 )
+region = Rect2( 0, 96, 48, 32 )
 
 [sub_resource type="AtlasTexture" id=6]
 atlas = ExtResource( 30 )
@@ -163,7 +162,6 @@ onready var sfx_player = get_node(\"AudioStreamPlayer2\")
 onready var transition_tween = get_node(\"MusicTween\")
 
 export(float) var base_db = -6
-export(AudioStreamSample) var night_comes_sound := preload(\"res://assets/audio/348862__newagesoup__big-reverb-warhorn.wav\")
 
 export(Array, AudioStream) var day_music := [
 	preload(\"res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 2) - 03 Record Player.ogg\"),
@@ -198,9 +196,6 @@ func _sync_music():
 	player.play()
 
 func _on_night():
-	sfx_player.stream = night_comes_sound
-	sfx_player.play()
-	
 	_transition_music()
 	
 func _on_day():
@@ -580,6 +575,65 @@ transition_time = 1.0
 
 [node name="CanvasLayer" type="CanvasLayer" parent="FarmManager"]
 
+[node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer"]
+anchor_right = 0.134
+anchor_bottom = 0.069
+margin_right = -0.520004
+margin_bottom = 0.319996
+custom_constants/margin_top = 12
+custom_constants/margin_left = 12
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="HBoxContainer" type="VBoxContainer" parent="FarmManager/CanvasLayer/MarginContainer"]
+margin_left = 12.0
+margin_top = 12.0
+margin_right = 171.0
+margin_bottom = 58.0
+
+[node name="Label" type="Label" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer"]
+margin_right = 72.0
+margin_bottom = 28.0
+size_flags_horizontal = 0
+theme = ExtResource( 17 )
+custom_fonts/font = SubResource( 5 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "00:00"
+align = 1
+valign = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer"]
+margin_top = 32.0
+margin_right = 62.0
+margin_bottom = 46.0
+size_flags_horizontal = 0
+size_flags_vertical = 4
+alignment = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="TextureRect" type="TextureRect" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer/HBoxContainer"]
+margin_right = 10.0
+margin_bottom = 14.0
+texture = ExtResource( 21 )
+stretch_mode = 6
+
+[node name="Label" type="Label" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer/HBoxContainer"]
+margin_left = 14.0
+margin_right = 62.0
+margin_bottom = 14.0
+theme = ExtResource( 17 )
+text = "123124"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="FarmManager/CanvasLayer"]
+margin_right = 40.0
+margin_bottom = 40.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [node name="VBoxContainer" type="VBoxContainer" parent="FarmManager/CanvasLayer"]
 visible = false
 anchor_right = 0.129
@@ -594,23 +648,9 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="NinePatchRect2" type="NinePatchRect" parent="FarmManager/CanvasLayer/VBoxContainer"]
+[node name="NinePatchRect2" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer"]
 margin_right = 165.0
 margin_bottom = 100.0
-size_flags_vertical = 3
-texture = SubResource( 4 )
-patch_margin_left = 6
-patch_margin_top = 6
-patch_margin_right = 6
-patch_margin_bottom = 5
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect2"]
-anchor_right = 1.0
-anchor_bottom = 1.0
-size_flags_horizontal = 3
 size_flags_vertical = 3
 custom_constants/margin_right = 6
 custom_constants/margin_top = 6
@@ -620,25 +660,20 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Label" type="Label" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect2/MarginContainer"]
+[node name="TextureRect" type="TextureRect" parent="FarmManager/CanvasLayer/VBoxContainer/NinePatchRect2"]
 margin_left = 6.0
-margin_top = 36.0
+margin_top = 6.0
 margin_right = 159.0
-margin_bottom = 64.0
-size_flags_horizontal = 3
-size_flags_vertical = 6
-theme = ExtResource( 17 )
-custom_fonts/font = SubResource( 5 )
-custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
-text = "00:00"
-align = 1
-valign = 1
+margin_bottom = 94.0
+texture = SubResource( 4 )
+expand = true
 
 [node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer"]
+margin_left = 47.0
 margin_top = 95.0
-margin_right = 70.0
+margin_right = 117.0
 margin_bottom = 117.0
-size_flags_horizontal = 0
+size_flags_horizontal = 4
 
 [node name="NinePatchRect3" type="NinePatchRect" parent="FarmManager/CanvasLayer/VBoxContainer/MarginContainer"]
 margin_right = 70.0
@@ -653,8 +688,8 @@ __meta__ = {
 }
 
 [node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer/MarginContainer"]
-margin_right = 70.0
-margin_bottom = 22.0
+margin_right = 8.0
+margin_bottom = 8.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 custom_constants/margin_right = 4
@@ -662,37 +697,7 @@ custom_constants/margin_top = 4
 custom_constants/margin_left = 4
 custom_constants/margin_bottom = 4
 
-[node name="HBoxContainer" type="HBoxContainer" parent="FarmManager/CanvasLayer/VBoxContainer/MarginContainer/MarginContainer"]
-margin_left = 4.0
-margin_top = 4.0
-margin_right = 66.0
-margin_bottom = 18.0
-size_flags_horizontal = 4
-size_flags_vertical = 4
-alignment = 1
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
-[node name="TextureRect" type="TextureRect" parent="FarmManager/CanvasLayer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer"]
-margin_right = 10.0
-margin_bottom = 14.0
-texture = ExtResource( 21 )
-stretch_mode = 6
-
-[node name="Label" type="Label" parent="FarmManager/CanvasLayer/VBoxContainer/MarginContainer/MarginContainer/HBoxContainer"]
-margin_left = 14.0
-margin_right = 62.0
-margin_bottom = 14.0
-theme = ExtResource( 17 )
-custom_colors/font_color = Color( 0.917647, 0.580392, 0.278431, 1 )
-custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
-text = "123124"
-
 [node name="Tween" type="Tween" parent="FarmManager/CanvasLayer"]
-
-[node name="LunarRockGained" type="AudioStreamPlayer" parent="FarmManager/CanvasLayer"]
-stream = ExtResource( 23 )
 
 [node name="DayCycle" type="Node2D" parent="FarmManager"]
 
@@ -770,7 +775,7 @@ cell_size = Vector2( 16, 16 )
 collision_layer = 131072
 collision_mask = 131072
 format = 1
-tile_data = PoolIntArray( -851954, -1073741817, 0, -786426, -1610612730, 0, -786425, 1610612743, 0, -786424, 7, 0, -786423, -1610612731, 0, -786422, 1610612743, 0, -786421, -1073741819, 0, -786420, 7, 0, -786419, 1610612743, 0, -786418, -1073741818, 0, -720890, 5, 0, -655354, 6, 0, -655353, -1610612731, 0, -655352, 7, 0, -655351, -1610612731, 0, -655350, -1610612731, 0, -655349, 7, 0, -655348, 1610612743, 0, -655347, -1610612731, 0, -655346, 1610612742, 0, -655338, -1610612730, 0, -655337, 1610612743, 0, -655336, 1610612743, 0, -655335, 1610612743, 0, -655334, 1610612743, 0, -655333, 1610612743, 0, -589810, 1610612741, 0, -589802, -1073741817, 0, -524282, -1610612730, 0, -524281, 1610612743, 0, -524280, 7, 0, -524279, 1610612743, 0, -524278, 1610612743, 0, -524277, 7, 0, -524276, 1610612743, 0, -524275, 1610612743, 0, -524274, -1073741818, 0, -524271, -1610612730, 0, -524270, 1610612743, 0, -524269, -1610612731, 0, -524268, 1610612743, 0, -524267, -1073741819, 0, -524266, -1073741818, 0, -458746, -1610612729, 0, -458735, -1610612729, 0, -393210, 1610612741, 0, -393199, 1610612741, 0, -327674, -1610612729, 0, -327663, -1610612729, 0, -262138, 1610612741, 0, -262127, -1610612729, 0, -196602, 5, 0, -196591, 5, 0, -131066, 1610612741, 0, -131055, 1610612741, 0, -1, 1610612740, 0, -65536, -1073741821, 0, -65535, -1073741821, 0, -65534, -1073741821, 0, -65533, -1073741821, 0, -65532, -1073741821, 0, -65531, -1073741821, 0, -65530, -1610612729, 0, -65529, -1073741821, 0, -65528, -1073741821, 0, -65527, -1073741821, 0, -65526, -1073741821, 0, -65525, -1073741821, 0, -65524, -1073741821, 0, -65523, -1073741820, 0, -65519, -1610612729, 0, 65535, 1610612739, 0, 13, 3, 0, 17, 6, 0, 18, -1073741819, 0, 19, 1610612743, 0, 20, 7, 0, 21, -1073741819, 0, 22, 1610612742, 0, 131071, 1610612739, 0, 65549, 3, 0, 65558, 5, 0, 196607, 1610612739, 0, 131085, 3, 0, 131094, -1610612729, 0, 262143, 1610612739, 0, 196621, 3, 0, 196630, 5, 0, 327670, 1610612743, 0, 327671, -1610612731, 0, 327672, 7, 0, 327673, -1610612731, 0, 327674, 1610612743, 0, 327675, 7, 0, 327676, -1073741819, 0, 327677, -1610612731, 0, 327678, 1610612743, 0, 327679, -1073741819, 0, 262157, -1610612731, 0, 262158, 7, 0, 262159, -1610612731, 0, 262160, 1610612743, 0, 262161, 7, 0, 262162, 1610612743, 0, 262163, -1610612731, 0, 262164, 7, 0, 262165, 1610612743, 0, 262166, -1073741818, 0, 393215, 1610612739, 0, 327693, 3, 0, 458751, 1610612739, 0, 393229, 3, 0, 524287, 1610612739, 0, 458765, 3, 0, 589823, 1610612739, 0, 524301, 3, 0, 655359, -1610612732, 0, 589824, -1610612733, 0, 589825, -1610612733, 0, 589826, -1610612733, 0, 589827, -1610612733, 0, 589828, -1610612733, 0, 589829, -1610612733, 0, 589830, -1073741817, 0, 589831, -1610612733, 0, 589832, -1610612733, 0, 589833, -1610612733, 0, 589834, -1610612733, 0, 589835, -1610612733, 0, 589836, -1610612733, 0, 589837, 4, 0, 655366, 5, 0, 786426, -1610612730, 0, 786427, 7, 0, 786428, 7, 0, 786429, 7, 0, 786430, 7, 0, 786431, 7, 0, 720896, 7, 0, 720897, 7, 0, 720898, 7, 0, 720899, 7, 0, 720900, 7, 0, 720901, 7, 0, 720902, -1073741818, 0, 851962, -1610612729, 0, 917498, -1610612729, 0, 983034, -1610612729, 0, 1048570, -1610612729, 0, 1114106, -1610612729, 0, 1179642, -1610612729, 0 )
+tile_data = PoolIntArray( -851954, -1073741817, 0, -786426, -1610612730, 0, -786425, 1610612743, 0, -786424, 7, 0, -786423, -1610612731, 0, -786422, 1610612743, 0, -786421, -1073741819, 0, -786420, 7, 0, -786419, 1610612743, 0, -786418, -1073741818, 0, -720890, 5, 0, -655354, 6, 0, -655353, -1610612731, 0, -655352, 7, 0, -655351, -1610612731, 0, -655350, -1610612731, 0, -655349, 7, 0, -655348, 1610612743, 0, -655347, -1610612731, 0, -655346, 1610612742, 0, -655338, -1610612730, 0, -655337, 1610612743, 0, -655336, 1610612743, 0, -655335, 1610612743, 0, -655334, 1610612743, 0, -655333, 1610612743, 0, -589810, 1610612741, 0, -589802, -1073741817, 0, -524282, -1610612730, 0, -524281, 1610612743, 0, -524280, 7, 0, -524279, 1610612743, 0, -524278, 1610612743, 0, -524277, 7, 0, -524276, 1610612743, 0, -524275, 1610612743, 0, -524274, -1073741818, 0, -524271, -1610612730, 0, -524270, 1610612743, 0, -524269, -1610612731, 0, -524268, 1610612743, 0, -524267, -1073741819, 0, -524266, -1073741818, 0, -458746, -1610612729, 0, -458735, -1610612729, 0, -393210, 1610612741, 0, -393199, 1610612741, 0, -327674, -1610612729, 0, -327663, -1610612729, 0, -262138, 1610612741, 0, -262127, -1610612729, 0, -196602, 5, 0, -196591, 5, 0, -131066, 1610612741, 0, -131055, 1610612741, 0, -1, 1610612740, 0, -65536, -1073741821, 0, -65535, -1073741821, 0, -65534, -1073741821, 0, -65533, -1073741821, 0, -65532, -1073741821, 0, -65531, -1073741821, 0, -65530, -1610612729, 0, -65529, -1073741821, 0, -65528, -1073741821, 0, -65527, -1073741821, 0, -65526, -1073741821, 0, -65525, -1073741821, 0, -65524, -1073741821, 0, -65523, -1073741820, 0, -65519, -1610612729, 0, 65535, 1610612739, 0, 13, 3, 0, 17, 6, 0, 18, -1073741819, 0, 19, 1610612743, 0, 20, 7, 0, 21, -1073741819, 0, 22, 1610612742, 0, 131071, 1610612739, 0, 65549, 3, 0, 65558, 5, 0, 196607, 1610612739, 0, 131085, 3, 0, 131094, -1610612729, 0, 262143, 1610612739, 0, 196621, 3, 0, 196630, 5, 0, 327670, 1610612743, 0, 327671, -1610612731, 0, 327672, 7, 0, 327673, -1610612731, 0, 327674, 1610612743, 0, 327675, 7, 0, 327676, -1073741819, 0, 327677, -1610612731, 0, 327678, 1610612743, 0, 327679, -1073741819, 0, 262157, -1610612731, 0, 262158, 7, 0, 262159, -1610612731, 0, 262160, 1610612743, 0, 262161, 7, 0, 262162, 1610612743, 0, 262163, -1610612731, 0, 262164, 7, 0, 262165, 1610612743, 0, 262166, -1073741818, 0, 393215, 1610612739, 0, 327693, 3, 0, 458751, 1610612739, 0, 393229, 3, 0, 524287, 1610612739, 0, 458765, 3, 0, 589823, 1610612739, 0, 524301, 3, 0, 655359, -1610612732, 0, 589824, -1610612733, 0, 589825, -1610612733, 0, 589826, -1610612733, 0, 589827, -1610612733, 0, 589828, -1610612733, 0, 589829, -1610612733, 0, 589830, -1073741817, 0, 589831, -1610612733, 0, 589832, -1610612733, 0, 589833, -1610612733, 0, 589834, -1610612733, 0, 589835, -1610612733, 0, 589836, -1610612733, 0, 589837, 4, 0, 655366, 5, 0, 786426, -1610612730, 0, 786427, 7, 0, 786428, -1073741819, 0, 786429, -1610612731, 0, 786430, 7, 0, 786431, 7, 0, 720896, -1610612731, 0, 720897, 7, 0, 720898, 7, 0, 720899, -1073741819, 0, 720900, 7, 0, 720901, -1610612731, 0, 720902, -1073741818, 0, 851962, -1610612729, 0, 917498, -1610612729, 0, 983034, -1610612729, 0, 1048570, -1610612729, 0, 1114106, -1610612729, 0, 1179642, -1610612729, 0 )
 
 [node name="OuterLimits" type="TileMap" parent="."]
 tile_set = SubResource( 8 )
@@ -784,6 +789,14 @@ cell_size = Vector2( 16, 16 )
 cell_y_sort = true
 format = 1
 tile_data = PoolIntArray( -786413, 12, 0, -786411, 11, 0, -720878, 12, 0, -720877, 12, 0, -720876, 12, 0, -720875, 11, 0, -589826, 12, 0, -589825, 12, 0, -655360, 12, 0, -655342, 11, 0, -655341, 11, 0, -524291, 12, 0, -524290, 12, 0, -589824, 12, 0, -589811, 12, 0, -589806, 12, 0, -458755, 12, 0, -458754, 12, 0, -458753, 12, 0, -458731, 12, 0, -458730, 12, 0, -393207, 12, 0, -393200, 12, 0, -393195, 12, 0, -327672, 12, 0, -327671, 12, 0, -327665, 12, 0, -327664, 11, 0, -327660, 11, 0, -196616, 12, 0, -262129, 12, 0, -262128, 12, 0, -262125, 11, 0, -262124, 12, 0, -262123, 12, 0, -131080, 11, 0, -131079, 12, 0, -196589, 11, 0, -131059, 11, 0, -131058, 11, 0, -131054, 11, 0, -7, 12, 0, -6, 12, 0, -5, 12, 0, -65522, 11, 0, -65518, 11, 0, -65517, 11, 0, 65529, 11, 0, 65530, 12, 0, 65531, 12, 0, 65532, 12, 0, 19, 11, 0, 20, 12, 0, 21, 12, 0, 22, 12, 0, 131065, 12, 0, 131066, 12, 0, 65556, 12, 0, 65557, 12, 0, 393214, 12, 0, 458743, 11, 0, 458745, 12, 0, 393236, 12, 0, 524279, 11, 0, 524280, 11, 0, 524281, 11, 0, 524282, 12, 0, 458770, 12, 0, 589816, 11, 0, 589817, 12, 0, 524304, 11, 0, 524305, 12, 0, 524306, 11, 0, 589840, 12, 0, 589841, 12, 0, 589842, 12, 0, 589843, 12, 0, 655376, 11, 0, 655377, 12, 0, 851967, 12, 0, 786435, 12, 0, 786452, 12, 0, 917502, 12, 0, 917503, 12, 0, 851968, 11, 0, 851971, 12, 0, 983038, 12, 0, 983039, 11, 0, 917504, 12, 0, 917517, 12, 0, 1048567, 11, 0, 1048568, 11, 0, 1048574, 12, 0, 1114103, 11, 0, 1114104, 12, 0, 1114105, 12, 0, 1114106, 12, 0, 1048580, 12, 0, 1048581, 12, 0 )
+
+[node name="OuterBounds" type="TileMap" parent="."]
+tile_set = ExtResource( 1 )
+cell_size = Vector2( 16, 16 )
+collision_layer = 65536
+collision_mask = 65536
+format = 1
+tile_data = PoolIntArray( -786442, 8, 0, -786441, 8, 0, -786440, 8, 0, -786439, 8, 0, -786438, 8, 0, -786437, 8, 0, -786436, 8, 0, -786435, 8, 0, -786434, 8, 0, -786433, 8, 0, -851968, 8, 0, -851967, 8, 0, -851966, 8, 0, -851965, 8, 0, -851964, 8, 0, -851963, 8, 0, -851962, 8, 0, -851961, 8, 0, -851960, 8, 0, -851959, 8, 0, -851958, 8, 0, -851957, 8, 0, -851956, 8, 0, -851955, 8, 0, -851954, 8, 0, -851953, 8, 0, -851952, 8, 0, -851951, 8, 0, -851950, 8, 0, -851949, 8, 0, -851948, 8, 0, -851947, 8, 0, -851946, 8, 0, -851945, 8, 0, -851944, 8, 0, -720906, 8, 0, -786408, 8, 0, -655370, 8, 0, -720872, 8, 0, -589834, 8, 0, -655336, 8, 0, -524298, 8, 0, -589800, 8, 0, -458762, 8, 0, -524264, 8, 0, -393226, 8, 0, -458728, 8, 0, -327690, 8, 0, -393192, 8, 0, -262154, 8, 0, -327656, 8, 0, -196618, 8, 0, -262120, 8, 0, -131082, 8, 0, -196584, 8, 0, -65546, 8, 0, -131048, 8, 0, -10, 8, 0, -65512, 8, 0, 65526, 8, 0, 24, 8, 0, 131062, 8, 0, 65560, 8, 0, 196598, 8, 0, 131096, 8, 0, 262134, 8, 0, 196632, 8, 0, 327670, 8, 0, 262168, 8, 0, 393206, 8, 0, 327704, 8, 0, 458742, 8, 0, 393240, 8, 0, 524278, 8, 0, 458776, 8, 0, 589814, 8, 0, 524312, 8, 0, 655350, 8, 0, 589848, 8, 0, 720886, 8, 0, 655384, 8, 0, 786422, 8, 0, 720920, 8, 0, 851958, 8, 0, 786456, 8, 0, 917494, 8, 0, 851992, 8, 0, 983030, 8, 0, 917528, 8, 0, 1048566, 8, 0, 983064, 8, 0, 1114102, 8, 0, 1048600, 8, 0, 1179638, 8, 0, 1179639, 8, 0, 1179640, 8, 0, 1179641, 8, 0, 1179642, 8, 0, 1179643, 8, 0, 1179644, 8, 0, 1179645, 8, 0, 1179646, 8, 0, 1179647, 8, 0, 1114112, 8, 0, 1114113, 8, 0, 1114114, 8, 0, 1114115, 8, 0, 1114116, 8, 0, 1114117, 8, 0, 1114118, 8, 0, 1114119, 8, 0, 1114120, 8, 0, 1114121, 8, 0, 1114122, 8, 0, 1114123, 8, 0, 1114124, 8, 0, 1114125, 8, 0, 1114126, 8, 0, 1114127, 8, 0, 1114128, 8, 0, 1114129, 8, 0, 1114130, 8, 0, 1114131, 8, 0, 1114132, 8, 0, 1114133, 8, 0, 1114134, 8, 0, 1114135, 8, 0, 1114136, 8, 0 )
 
 [node name="NoTowerZone" type="Area2D" parent="."]
 position = Vector2( 104.534, 63.7115 )
@@ -937,34 +950,45 @@ ground_manager = NodePath("../../GroundManager")
 
 [node name="Tree" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( -122.01, -186.949 )
+fades = false
 
 [node name="Tree2" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( -81.3518, -186.949 )
+fades = false
 
 [node name="Tree3" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( -44.9358, -186.949 )
+fades = false
 
 [node name="Tree4" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( -6.62714, -186.949 )
+fades = false
 
 [node name="Tree5" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( 252.167, -186.949 )
+fades = false
 
 [node name="Tree6" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( 292.826, -186.949 )
+fades = false
 
 [node name="Tree7" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( 329.242, -186.949 )
+fades = false
 
 [node name="Tree9" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( 34.7878, -186.949 )
+fades = false
 
 [node name="Tree10" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( 75.4464, -186.949 )
+fades = false
 
 [node name="Tree11" parent="TreeBorder" instance=ExtResource( 7 )]
 visible = false
 position = Vector2( 111.862, -186.949 )
+fades = false
 
 [node name="Tree8" parent="TreeBorder" instance=ExtResource( 7 )]
 position = Vector2( 367.55, -186.949 )
+fades = false
