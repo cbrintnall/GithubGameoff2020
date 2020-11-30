@@ -16,6 +16,7 @@ var max_points = 30
 var current_count = 0
 var _points_queue := []
 var _sampler := PoissonDiscSampling.new()
+var _exploder := preload("res://scenes/scripts/item_exploder.gd")
 
 func _ready():
 	get_node("Timer").connect("timeout", self, "_on_timer")
@@ -52,9 +53,7 @@ func _on_resource_destroyed(destroyed):
 		if rand_range(0, 101) <= loot[i]:
 			gained_items.append(i)
 	
-	print(gained_items)
-	
-	var loot_explosion = Exploder.new()
+	var loot_explosion = _exploder.new()
 	
 	get_tree().root.add_child(loot_explosion)
 	

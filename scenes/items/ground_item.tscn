@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=2]
+[gd_scene load_steps=16 format=2]
 
 [ext_resource path="res://assets/audio/sfx/items/pickup.wav" type="AudioStream" id=1]
 [ext_resource path="res://assets/textures/player/walk_cloud.png" type="Texture" id=2]
@@ -56,13 +56,8 @@ func _ready():
 	player_area.connect(\"body_exited\", self, \"_on_player_exit\")
 	
 	animator.play(\"default\")
-	
-	get_node(\"Timer\").connect(\"timeout\", self, \"queue_free\")
 
 func _on_player_enter(body):
-	if !(body is KinematicBody2D):
-		return
-
 	_player = body
 	_max_distance = global_position.distance_to(_player.global_position)
 	animator.play(\"default\")
@@ -74,6 +69,7 @@ func _on_player_exit(body):
 func _give_item():
 	if _player and _player.inventory:
 		_player.inventory.add_item(_item, _quantity)
+		print(\"added\")
 
 func _do_pickup():
 	_picked_up = true
@@ -151,6 +147,22 @@ color_ramp = SubResource( 4 )
 hue_variation_random = 1.0
 
 [sub_resource type="Animation" id=10]
+resource_name = "float"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath("Sprite:offset")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.5, 1 ),
+"transitions": PoolRealArray( 1, 1, 1 ),
+"update": 0,
+"values": [ Vector2( 0, 0 ), Vector2( 0, -5 ), Vector2( 0, 0 ) ]
+}
+
+[sub_resource type="Animation" id=11]
 resource_name = "default"
 loop = true
 tracks/0/type = "value"
@@ -188,21 +200,6 @@ tracks/2/keys = {
 "transitions": PoolRealArray( 1 ),
 "update": 0,
 "values": [ Vector2( 1, 1 ) ]
-}
-
-[sub_resource type="Animation" id=11]
-loop = true
-tracks/0/type = "value"
-tracks/0/path = NodePath("Sprite:offset")
-tracks/0/interp = 2
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 0.5, 1 ),
-"transitions": PoolRealArray( 1, 1, 1 ),
-"update": 0,
-"values": [ Vector2( 0, 0 ), Vector2( 0, -5 ), Vector2( 0, 0 ) ]
 }
 
 [sub_resource type="Animation" id=12]
@@ -259,24 +256,6 @@ tracks/3/keys = {
 } ]
 }
 
-[sub_resource type="Gradient" id=14]
-offsets = PoolRealArray( 0, 0.727273, 1 )
-colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0 )
-
-[sub_resource type="GradientTexture" id=15]
-gradient = SubResource( 14 )
-
-[sub_resource type="ParticlesMaterial" id=13]
-emission_shape = 1
-emission_sphere_radius = 3.0
-flag_disable_z = true
-gravity = Vector3( 0, 0, 0 )
-orbit_velocity = 0.0
-orbit_velocity_random = 0.0
-scale = 0.0
-scale_random = 0.5
-color_ramp = SubResource( 15 )
-
 [node name="RigidBody2D" type="RigidBody2D"]
 collision_layer = 0
 mass = 8.44286
@@ -286,6 +265,7 @@ angular_damp = 100.0
 script = SubResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
+z_index = 4096
 texture = ExtResource( 3 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
@@ -321,7 +301,6 @@ anims/pickup = SubResource( 12 )
 
 [node name="Particles2D2" type="Particles2D" parent="."]
 local_coords = false
-process_material = SubResource( 13 )
 
 [node name="Timer" type="Timer" parent="."]
 wait_time = 30.0

@@ -1,32 +1,38 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://assets/textures/ui/main_menu_background.png" type="Texture" id=1]
 [ext_resource path="res://themes/main.tres" type="Theme" id=2]
 [ext_resource path="res://scenes/managers/player_prefs.tscn" type="PackedScene" id=3]
+[ext_resource path="res://assets/ui/GUI.png" type="Texture" id=4]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends CanvasLayer
 
 onready var buttons_tween = get_node(\"Tween\")
-onready var play_button = get_node(\"MarginContainer2/VBoxContainer/PlayButton\")
-onready var options_button = get_node(\"MarginContainer2/VBoxContainer/OptionsButton\")
-onready var quit_button = get_node(\"MarginContainer2/VBoxContainer/QuitButton\")
+onready var play_button = get_node(\"MarginContainer2/VBoxContainer/PlayButton/TextureButton\")
+onready var options_button = get_node(\"MarginContainer2/VBoxContainer/OptionsButton/TextureButton\")
+onready var quit_button = get_node(\"MarginContainer2/VBoxContainer/QuitButton/TextureButton\")
+onready var buttons_base = get_node(\"MarginContainer2/VBoxContainer\")
+onready var play_button_base = get_node(\"MarginContainer2/VBoxContainer/PlayButton\")
+onready var options_button_base = get_node(\"MarginContainer2/VBoxContainer/OptionsButton\")
+onready var quit_button_base = get_node(\"MarginContainer2/VBoxContainer/QuitButton\")
 
 var _game_scene = preload(\"res://scenes/farm.tscn\")
 
 func _ready():
-	_tween_buttons()
+#	_tween_buttons()
 	
 	var tree = get_tree()
 	var prefs_base = get_node(\"PlayerPrefs\")
 	
 	play_button.connect(\"button_down\", tree, \"change_scene\", [ \"res://scenes/farm.tscn\" ])
 	quit_button.connect(\"button_down\", tree, \"quit\")
-	options_button.connect(\"button_down\", prefs_base, \"set_visible\", [ true ])
+	options_button.connect(\"button_down\", get_node(\"PlayerPrefs/PlayerPreferences/MarginContainer\"), \"set_visible\", [ true ])
 
 	prefs_base.register_command(\"generate\", funcref(self, \"_on_generate\"))
 	
 	var args = OS.get_cmdline_args()
+
 	if len(args) > 0:
 		_on_generate(Array(args).slice(1, len(args)-1))
 
@@ -53,16 +59,66 @@ func _on_generate(args: Array):
 
 func _tween_buttons():
 	var all_buttons = [
-		play_button,
-		options_button,
-		quit_button
+		play_button_base,
+		options_button_base,
+		quit_button_base
 	]
 
-	for button in all_buttons:
-		button.rect_position = Vector2(
-			button.rect_position.x + button.rect_size.x,
-			button.rect_position.y
-		)
+	for i in range(all_buttons.size()):
+		var button = all_buttons[i]
+
+		button.connect(\"mouse_enter\", self, \"_on_mouse_enter\", [ button ])
+		button.connect(\"mouse_exit\", self, \"_on_mouse_exit\", [ button ])
+	
+#		button.visible = false
+#		buttons_tween.interpolate_property(
+#			button,
+#			\"rect_position\",
+#			Vector2(
+#				button.rect_position.x + button.rect_size.x,
+#				button.rect_position.y
+#			),
+#			button.rect_global_position,
+#			1.0,
+#			Tween.TRANS_BOUNCE,
+#			Tween.EASE_OUT,
+#			0.25 * (i+1)
+#		)
+
+	buttons_tween.connect(\"tween_started\", self, \"_make_visible\")
+	buttons_tween.start()
+	
+	yield(buttons_tween,\"tween_all_completed\")
+	
+	buttons_base.queue_sort()
+
+func _on_button_enter(button):
+	buttons_tween.interpolate_property(
+		button,
+		\"rect_scale\",
+		Vector2.ONE,
+		Vector2.ONE * 2.0,
+		.1,
+		Tween.TRANS_CUBIC,
+		Tween.EASE_OUT
+	)
+	buttons_tween.start()
+	
+func _on_button_exit(button):
+	button.rect_scale = Vector2.ONE
+#	buttons_tween.interpolate_property(
+#		button,
+#		\"rect_position\",
+#		button.rect_position,
+#		button.rect_position - (Vector2.LEFT * 30.0),
+#		.1,
+#		Tween.TRANS_CUBIC,
+#		Tween.EASE_OUT
+#	)
+#	buttons_tween.start()
+
+func _make_visible(button, second):
+	button.visible = true
 "
 
 [sub_resource type="GDScript" id=2]
@@ -193,6 +249,14 @@ func _normalize_path(path: String):
 	return path.replace(\" \", \"_\").to_lower()
 "
 
+[sub_resource type="AtlasTexture" id=3]
+atlas = ExtResource( 4 )
+region = Rect2( 145, 81, 46, 14 )
+
+[sub_resource type="AtlasTexture" id=4]
+atlas = ExtResource( 4 )
+region = Rect2( 145, 98, 46, 13 )
+
 [node name="MainMenu" type="CanvasLayer"]
 script = SubResource( 1 )
 
@@ -213,43 +277,172 @@ texture = ExtResource( 1 )
 expand = true
 
 [node name="MarginContainer2" type="MarginContainer" parent="."]
-anchor_left = 0.776
+anchor_left = 0.75
 anchor_right = 1.0
 anchor_bottom = 1.0
 margin_left = -0.280029
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 0.5, 0.5 )
+size_flags_vertical = 3
 custom_constants/margin_right = 12
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer2"]
-margin_right = 275.0
+margin_right = 308.0
 margin_bottom = 720.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
 alignment = 1
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="PlayButton" type="Button" parent="MarginContainer2/VBoxContainer"]
-margin_top = 326.0
-margin_right = 275.0
-margin_bottom = 346.0
+[node name="PlayButton" type="MarginContainer" parent="MarginContainer2/VBoxContainer"]
+margin_top = 269.0
+margin_right = 308.0
+margin_bottom = 327.0
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 0.5, 0.5 )
+mouse_filter = 1
+size_flags_horizontal = 3
+custom_constants/margin_right = 6
+custom_constants/margin_top = 6
+custom_constants/margin_left = 6
+custom_constants/margin_bottom = 6
+
+[node name="TextureButton" type="TextureButton" parent="MarginContainer2/VBoxContainer/PlayButton"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 302.0
+margin_bottom = 52.0
+grow_horizontal = 2
+grow_vertical = 2
+rect_pivot_offset = Vector2( 0.5, 0.5 )
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+texture_normal = SubResource( 3 )
+texture_pressed = SubResource( 4 )
+texture_hover = SubResource( 4 )
+expand = true
+stretch_mode = 5
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer2/VBoxContainer/PlayButton"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 302.0
+margin_bottom = 52.0
+mouse_filter = 2
+custom_constants/margin_right = 16
+custom_constants/margin_top = 16
+custom_constants/margin_left = 16
+custom_constants/margin_bottom = 16
+
+[node name="Label" type="Label" parent="MarginContainer2/VBoxContainer/PlayButton/MarginContainer"]
+margin_left = 16.0
+margin_top = 16.0
+margin_right = 280.0
+margin_bottom = 30.0
 theme = ExtResource( 2 )
 text = "Play"
+align = 1
+valign = 1
 
-[node name="OptionsButton" type="Button" parent="MarginContainer2/VBoxContainer"]
-margin_top = 350.0
-margin_right = 275.0
-margin_bottom = 370.0
+[node name="OptionsButton" type="MarginContainer" parent="MarginContainer2/VBoxContainer"]
+margin_top = 331.0
+margin_right = 308.0
+margin_bottom = 389.0
+mouse_filter = 1
+size_flags_horizontal = 3
+custom_constants/margin_right = 6
+custom_constants/margin_top = 6
+custom_constants/margin_left = 6
+custom_constants/margin_bottom = 6
+
+[node name="TextureButton" type="TextureButton" parent="MarginContainer2/VBoxContainer/OptionsButton"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 302.0
+margin_bottom = 52.0
+rect_pivot_offset = Vector2( 0.5, 0.5 )
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+texture_normal = SubResource( 3 )
+texture_pressed = SubResource( 4 )
+texture_hover = SubResource( 4 )
+expand = true
+stretch_mode = 5
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer2/VBoxContainer/OptionsButton"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 302.0
+margin_bottom = 52.0
+mouse_filter = 2
+custom_constants/margin_right = 16
+custom_constants/margin_top = 16
+custom_constants/margin_left = 16
+custom_constants/margin_bottom = 16
+
+[node name="Label" type="Label" parent="MarginContainer2/VBoxContainer/OptionsButton/MarginContainer"]
+margin_left = 16.0
+margin_top = 16.0
+margin_right = 280.0
+margin_bottom = 30.0
 theme = ExtResource( 2 )
 text = "Options"
+align = 1
+valign = 1
 
-[node name="QuitButton" type="Button" parent="MarginContainer2/VBoxContainer"]
-margin_top = 374.0
-margin_right = 275.0
-margin_bottom = 394.0
+[node name="QuitButton" type="MarginContainer" parent="MarginContainer2/VBoxContainer"]
+margin_top = 393.0
+margin_right = 308.0
+margin_bottom = 451.0
+mouse_filter = 1
+size_flags_horizontal = 3
+custom_constants/margin_right = 6
+custom_constants/margin_top = 6
+custom_constants/margin_left = 6
+custom_constants/margin_bottom = 6
+
+[node name="TextureButton" type="TextureButton" parent="MarginContainer2/VBoxContainer/QuitButton"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 302.0
+margin_bottom = 52.0
+rect_pivot_offset = Vector2( 0.5, 0.5 )
+mouse_filter = 1
+mouse_default_cursor_shape = 2
+texture_normal = SubResource( 3 )
+texture_pressed = SubResource( 4 )
+texture_hover = SubResource( 4 )
+expand = true
+stretch_mode = 5
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer2/VBoxContainer/QuitButton"]
+margin_left = 6.0
+margin_top = 6.0
+margin_right = 302.0
+margin_bottom = 52.0
+mouse_filter = 2
+custom_constants/margin_right = 16
+custom_constants/margin_top = 16
+custom_constants/margin_left = 16
+custom_constants/margin_bottom = 16
+
+[node name="Label" type="Label" parent="MarginContainer2/VBoxContainer/QuitButton/MarginContainer"]
+margin_left = 16.0
+margin_top = 16.0
+margin_right = 280.0
+margin_bottom = 30.0
 theme = ExtResource( 2 )
 text = "Quit"
+align = 1
+valign = 1
 
 [node name="Tween" type="Tween" parent="."]
 

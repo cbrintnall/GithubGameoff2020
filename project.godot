@@ -19,11 +19,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://scenes/scripts/EnemySpawner.gd"
 }, {
-"base": "Node2D",
-"class": "Exploder",
-"language": "GDScript",
-"path": "res://scenes/scripts/item_exploder.gd"
-}, {
 "base": "Resource",
 "class": "GroundResource",
 "language": "GDScript",
@@ -57,7 +52,6 @@ _global_script_classes=[ {
 _global_script_class_icons={
 "Constants": "",
 "EnemySpawner": "",
-"Exploder": "",
 "GroundResource": "",
 "GrowingPlant": "",
 "Item": "",
