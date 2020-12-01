@@ -55,6 +55,15 @@ func set_max_energy(amount: int):
 func _ready():
 	beam_light.visible = false
 	beam_particles.emitting = false
+	
+	var screen_size = OS.get_screen_size()
+	var texture_size = beam_light.texture.get_size()
+	
+	beam_light.scale.y = (screen_size.y/2) / texture_size.y
+	beam_light.global_position = Vector2(
+		beam_light.global_position.x, 
+		beam_light.global_position.y-(screen_size.y/2)
+	)
 
 	timer.connect("timeout", self, "_pulse")
 	game_manager.get_farm_manager().connect("night", self, "_on_night")
@@ -135,11 +144,12 @@ func _handle_energy_increase():
 func _on_night():
 	var screen_size = OS.get_screen_size()
 	var duration := 1.0
+	var texture_size = beam_light.texture.get_size()
 
 	beam_audio.play()
 	beam_light.visible = true
-	beam_light.scale.y = (screen_size.y/2) / beam_light.texture.get_size().y
-	beam_light.global_position = Vector2(beam_light.global_position.x, beam_light.global_position.y-screen_size.y/2)
+	
+	print(beam_light.global_position)
 	
 	beam_tween.interpolate_property(
 		beam_light,

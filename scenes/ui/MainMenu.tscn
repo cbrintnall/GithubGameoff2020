@@ -264,27 +264,27 @@ region = Rect2( 145, 81, 46, 14 )
 atlas = ExtResource( 4 )
 region = Rect2( 145, 98, 46, 13 )
 
-[sub_resource type="Gradient" id=8]
+[sub_resource type="Gradient" id=5]
 offsets = PoolRealArray( 0.0194805, 0.324675, 0.88961, 0.99026 )
 colors = PoolColorArray( 0.682353, 0, 0, 1, 0.890625, 0.388344, 0.0869751, 1, 1, 0.960784, 0.0352941, 1, 1, 1, 1, 0 )
 
-[sub_resource type="GradientTexture" id=9]
-gradient = SubResource( 8 )
+[sub_resource type="GradientTexture" id=6]
+gradient = SubResource( 5 )
 
-[sub_resource type="Curve" id=10]
+[sub_resource type="Curve" id=7]
 max_value = 100.0
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.809668, 100 ), -55.1667, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=11]
-curve = SubResource( 10 )
+[sub_resource type="CurveTexture" id=8]
+curve = SubResource( 7 )
 
-[sub_resource type="Curve" id=6]
+[sub_resource type="Curve" id=9]
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), -3.27075, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=7]
-curve = SubResource( 6 )
+[sub_resource type="CurveTexture" id=10]
+curve = SubResource( 9 )
 
-[sub_resource type="ParticlesMaterial" id=5]
+[sub_resource type="ParticlesMaterial" id=11]
 emission_shape = 2
 emission_box_extents = Vector3( 16, 1, 1 )
 flag_disable_z = true
@@ -298,35 +298,35 @@ orbit_velocity_random = 0.0
 linear_accel = 2.0
 linear_accel_random = 1.0
 radial_accel = 9.25
-damping_curve = SubResource( 11 )
+damping_curve = SubResource( 8 )
 scale = 4.0
 scale_random = 1.0
-scale_curve = SubResource( 7 )
-color_ramp = SubResource( 9 )
+scale_curve = SubResource( 10 )
+color_ramp = SubResource( 6 )
 hue_variation = 0.1
 hue_variation_random = 1.0
 
-[sub_resource type="Gradient" id=17]
+[sub_resource type="Gradient" id=12]
 offsets = PoolRealArray( 0.217532, 0.785714, 1 )
 colors = PoolColorArray( 0, 0.572549, 0.701961, 1, 0.179688, 1, 0.942322, 1, 1, 1, 1, 0 )
 
-[sub_resource type="GradientTexture" id=18]
-gradient = SubResource( 17 )
+[sub_resource type="GradientTexture" id=13]
+gradient = SubResource( 12 )
 
-[sub_resource type="Curve" id=13]
+[sub_resource type="Curve" id=14]
 max_value = 100.0
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 100 ), 494.35, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=14]
-curve = SubResource( 13 )
+[sub_resource type="CurveTexture" id=15]
+curve = SubResource( 14 )
 
-[sub_resource type="Curve" id=15]
+[sub_resource type="Curve" id=16]
 _data = [ Vector2( 0, 0 ), 0.0, 0.0, 0, 0, Vector2( 1, 1 ), 0.0, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=16]
-curve = SubResource( 15 )
+[sub_resource type="CurveTexture" id=17]
+curve = SubResource( 16 )
 
-[sub_resource type="ParticlesMaterial" id=12]
+[sub_resource type="ParticlesMaterial" id=18]
 emission_shape = 2
 emission_box_extents = Vector3( 40, 10, 1 )
 flag_disable_z = true
@@ -342,12 +342,12 @@ linear_accel_random = 1.0
 radial_accel = 30.0
 radial_accel_random = 1.0
 damping_random = 1.0
-damping_curve = SubResource( 14 )
+damping_curve = SubResource( 15 )
 angle = -720.0
 scale = 3.0
 scale_random = 1.0
-scale_curve = SubResource( 16 )
-color_ramp = SubResource( 18 )
+scale_curve = SubResource( 17 )
+color_ramp = SubResource( 13 )
 hue_variation = 0.01
 
 [node name="MainMenu" type="CanvasLayer"]
@@ -549,15 +549,6 @@ valign = 1
 
 [node name="PlayerPrefs" parent="." instance=ExtResource( 3 )]
 
-[node name="MarginContainer" parent="PlayerPrefs/PlayerPreferences" index="0"]
-visible = false
-
-[node name="PanelContainer" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer" index="0"]
-margin_left = 633.0
-margin_top = 353.0
-margin_right = 647.0
-margin_bottom = 367.0
-
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 5 )
 
@@ -574,12 +565,12 @@ visible = false
 position = Vector2( 275, 427.222 )
 z_index = 2
 amount = 150
-process_material = SubResource( 5 )
+process_material = SubResource( 11 )
 
 [node name="WaterfallBase" type="Particles2D" parent="Decorations"]
 position = Vector2( 658.983, 706.987 )
 z_index = 2
 amount = 500
-process_material = SubResource( 12 )
+process_material = SubResource( 18 )
 
 [editable path="PlayerPrefs"]

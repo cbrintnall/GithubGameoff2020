@@ -135,6 +135,8 @@ animations = [ {
 } ]
 
 [node name="TrashMonster" type="KinematicBody2D"]
+collision_layer = 262144
+collision_mask = 0
 script = ExtResource( 4 )
 attack_offset = Vector2( 0, 0 )
 max_health = 200.0

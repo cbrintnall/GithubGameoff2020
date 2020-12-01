@@ -34,19 +34,28 @@
 [ext_resource path="res://scenes/scripts/eyeball_monster.gd" type="Script" id=32]
 [ext_resource path="res://assets/textures/ui/main_menu_background.png" type="Texture" id=33]
 
-[sub_resource type="GDScript" id=68]
+[sub_resource type="GDScript" id=1]
 script/source = "extends CanvasLayer
 
-const high_score_path = \"scores.json\"
+const high_score_path := \"user://scores.json\"
+const main_menu_scene := \"res://scenes/ui/MainMenu.tscn\"
 
-onready var base_label = get_node(\"CanvasLayer/MarginContainer2/CenterContainer/VBoxContainer/EndingTitle\")
-onready var scores_base = get_node(\"CanvasLayer/MarginContainer2/CenterContainer/VBoxContainer\")
+onready var tween = get_node(\"CanvasLayer/Tween\")
+onready var continue_txt = get_node(\"CanvasLayer/MarginContainer2/VBoxContainer/MarginContainer/Continue\")
+onready var base_label = get_node(\"CanvasLayer/MarginContainer2/VBoxContainer/VBoxContainer/EndingTitle\")
+onready var scores_base = get_node(\"CanvasLayer/MarginContainer2/VBoxContainer/VBoxContainer\")
 onready var game_manager = get_node(\"/root/GameManager\")
-onready var made_it_text = get_node(\"CanvasLayer/MarginContainer2/CenterContainer/VBoxContainer/MadeIt\")
+onready var made_it_text = get_node(\"CanvasLayer/MarginContainer2/VBoxContainer/VBoxContainer/MadeIt\")
 onready var bases = [
 	get_node(\"Background/MarginContainer\"),
 	get_node(\"CanvasLayer/MarginContainer2\")
 ]
+
+var over := false
+
+func _ready():
+	for base in bases:
+		base.visible = false
 
 func _get_highscore() -> Array:
 	var score_file = File.new()
@@ -54,7 +63,7 @@ func _get_highscore() -> Array:
 	
 	if exists:
 		var scores = score_file.get_as_text()
-		
+		score_file.close()
 		if scores:
 			var parsed = JSON.parse(scores)
 			if parsed.result == OK:
@@ -62,19 +71,33 @@ func _get_highscore() -> Array:
 			else:
 				return []
 	else:
+		score_file.close()
 		return []
 		
 	return []
 	
-func _write_score(scores: Array):
-	pass
+func _write_scores(scores: Array):
+	var score_file = File.new()
+	
+	score_file.open(high_score_path, File.WRITE)
+	score_file.store_string(JSON.print(scores, \"  \", true))
+	score_file.close()
 
 func _input(event):
 	if event is InputEventKey and event.scancode == KEY_ENTER and event.pressed and len(bases) > 0 and bases[0].visible:
-		get_tree().change_scene(\"res://scenes/ui/MainMenu.tscn\")
+		get_tree().change_scene(main_menu_scene)
 
-func begin_end(days):
+func begin_end(days, to_free: Array):
+	if over:
+		return
+
+	over = true
+
 	made_it_text.text = made_it_text.text.format({\"days\": str(days)})
+	
+	for node in to_free:
+		if node:
+			node.queue_free()
 	
 	for base in bases:
 		base.visible = true
@@ -84,34 +107,62 @@ func begin_end(days):
 	get_old_scores.append(days)
 	get_old_scores.sort()
 	
+	_write_scores(get_old_scores)
+	
 	var top := []
 	
 	for i in range(min(5, len(get_old_scores))):
-		top.append(
-			get_old_scores.pop_front()
+		var score = get_old_scores.pop_front()
+		
+		if score:
+			top.append(score)
+
+	# when adding scores back in, uncomment this
+#	for score in top:
+#		var new_label = base_label.duplicate()
+#		new_label.text = \"{days} days\".format({\"days\": int(score)})
+#		scores_base.add_child(new_label)
+
+#	if len(top) == 0:
+#		var new_label = base_label.duplicate()
+#		new_label.text = \"None!\"
+#		scores_base.add_child(new_label)
+	
+	var tree = get_tree()
+	var start_position = continue_txt.rect_global_position
+	var height = Vector2.UP * 30.0
+	
+	while is_inside_tree():
+		tween.interpolate_property(
+			continue_txt,
+			\"rect_global_position\",
+			start_position,
+			start_position + height,
+			.5,
+			Tween.TRANS_CUBIC,
+			Tween.EASE_IN
 		)
-
-	for score in top:
-		var new_label = base_label.duplicate()
-
-		new_label.text = \"{days} days\".format({\"days\": int(score)})
-		
-		scores_base.add_child(new_label)
-
-	if len(top) == 0:
-		var new_label = base_label.duplicate()
-
-		new_label.text = \"None!\"
-		
-		scores_base.add_child(new_label)
+		tween.start()
+		yield(tween,\"tween_all_completed\")
+		tween.interpolate_property(
+			continue_txt,
+			\"rect_global_position\",
+			start_position + height,
+			start_position,
+			.5,
+			Tween.TRANS_CUBIC,
+			Tween.EASE_IN
+		)
+		tween.start()
+		yield(tween,\"tween_all_completed\")
 "
 
-[sub_resource type="DynamicFont" id=1]
+[sub_resource type="DynamicFont" id=2]
 size = 21
 outline_color = Color( 0, 0, 0, 1 )
 font_data = ExtResource( 12 )
 
-[sub_resource type="GDScript" id=2]
+[sub_resource type="GDScript" id=3]
 script/source = "extends Node2D
 
 export(String) var wave_file_path
@@ -186,12 +237,18 @@ func generate_wave(day: int = farm_manager.day, offset := 1):
 	return chosen_waves
 
 func spawn_wave(waves):
+	var cheap_set := {}
+	
 	for wave in waves:
 		var spawner = wave[\"spawner\"]
 		
 		spawner.set_wave(wave[\"wave\"])
 		spawner.start_wave()
 		
+		cheap_set[spawner] = false
+	
+	# use a dictionary to remove duplicates
+	for spawner in cheap_set.keys():
 		var message = \"Enemies coming from the {direction}\".format({\"direction\": spawner.name.to_lower()})
 		game_manager.get_event_manager().new_message(message, Constants.EventLevel.WARNING)
 
@@ -211,190 +268,190 @@ func _sort_waves_by_difficulty(a, b):
 	return a[\"difficulty\"] > b[\"difficulty\"]
 "
 
-[sub_resource type="Curve2D" id=3]
+[sub_resource type="Curve2D" id=4]
 _data = {
 "points": PoolVector2Array( 0, 0, 0, 0, -0.151031, -0.305054, 0, 0, 0, 0, -80.8685, 0.586853, 0, 0, 0, 0, -82.0577, 30.4657, 0, 0, 0, 0, -161.437, 32.6955, 0, 0, 0, 0, -160.694, 158.9, 0, 0, 0, 0, -83.2885, 160.635, 0, 0, 0, 0, -81.2411, 223.316, 0, 0, 0, 0, -225.187, 224.104, 0, 0, 0, 0, -315.114, 231.191 )
 }
 
-[sub_resource type="Curve2D" id=23]
+[sub_resource type="Curve2D" id=5]
 _data = {
-"points": PoolVector2Array( 0, 0, 0, 0, -0.121521, -0.660492, 0, 0, 0, 0, -1.24524, 15.4463, 0, 0, 0, 0, -127.103, 16.57, 0, 0, 0, 0, -127.103, 46.9108, 0, 0, 0, 0, -3.86728, 48.7836, 0, 0, 0, 0, -1.99438, 77.2515, 0, 0, 0, 0, -126.953, 83.7455, 0, 0, 0, 0, -128.313, 243.96 )
+"points": PoolVector2Array( 0, 0, 0, 0, -0.121521, -0.660492, 0, 0, 0, 0, -2.55524, 13.3737, 0, 0, 0, 0, -127.432, 17.4992, 0, 0, 0, 0, -127.103, 46.9108, 0, 0, 0, 0, -3.86728, 48.7836, 0, 0, 0, 0, -1.99438, 77.2515, 0, 0, 0, 0, -126.953, 83.7455, 0, 0, 0, 0, -128.313, 243.96 )
 }
 
-[sub_resource type="AtlasTexture" id=55]
+[sub_resource type="AtlasTexture" id=6]
 atlas = ExtResource( 31 )
 region = Rect2( 0, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=56]
+[sub_resource type="AtlasTexture" id=7]
 atlas = ExtResource( 31 )
 region = Rect2( 128, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=57]
+[sub_resource type="AtlasTexture" id=8]
 atlas = ExtResource( 31 )
 region = Rect2( 256, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=58]
+[sub_resource type="AtlasTexture" id=9]
 atlas = ExtResource( 31 )
 region = Rect2( 384, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=59]
+[sub_resource type="AtlasTexture" id=10]
 atlas = ExtResource( 31 )
 region = Rect2( 512, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=60]
+[sub_resource type="AtlasTexture" id=11]
 atlas = ExtResource( 31 )
 region = Rect2( 640, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=61]
+[sub_resource type="AtlasTexture" id=12]
 atlas = ExtResource( 31 )
 region = Rect2( 768, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=62]
+[sub_resource type="AtlasTexture" id=13]
 atlas = ExtResource( 31 )
 region = Rect2( 896, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=14]
+atlas = ExtResource( 23 )
+region = Rect2( 0, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=15]
+atlas = ExtResource( 23 )
+region = Rect2( 128, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=16]
+atlas = ExtResource( 23 )
+region = Rect2( 256, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=17]
+atlas = ExtResource( 23 )
+region = Rect2( 384, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=18]
+atlas = ExtResource( 23 )
+region = Rect2( 512, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=19]
+atlas = ExtResource( 23 )
+region = Rect2( 640, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=20]
+atlas = ExtResource( 23 )
+region = Rect2( 768, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=21]
+atlas = ExtResource( 23 )
+region = Rect2( 896, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=22]
+atlas = ExtResource( 23 )
+region = Rect2( 1024, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=23]
+atlas = ExtResource( 23 )
+region = Rect2( 1152, 0, 128, 48 )
+
+[sub_resource type="AtlasTexture" id=24]
+atlas = ExtResource( 23 )
+region = Rect2( 1280, 0, 128, 48 )
 
 [sub_resource type="AtlasTexture" id=25]
 atlas = ExtResource( 23 )
-region = Rect2( 0, 0, 128, 48 )
+region = Rect2( 1408, 0, 128, 48 )
 
 [sub_resource type="AtlasTexture" id=26]
 atlas = ExtResource( 23 )
-region = Rect2( 128, 0, 128, 48 )
+region = Rect2( 1536, 0, 128, 48 )
 
 [sub_resource type="AtlasTexture" id=27]
 atlas = ExtResource( 23 )
-region = Rect2( 256, 0, 128, 48 )
+region = Rect2( 1664, 0, 128, 48 )
 
 [sub_resource type="AtlasTexture" id=28]
 atlas = ExtResource( 23 )
-region = Rect2( 384, 0, 128, 48 )
+region = Rect2( 1792, 0, 128, 48 )
 
 [sub_resource type="AtlasTexture" id=29]
 atlas = ExtResource( 23 )
-region = Rect2( 512, 0, 128, 48 )
+region = Rect2( 1920, 0, 128, 48 )
 
 [sub_resource type="AtlasTexture" id=30]
 atlas = ExtResource( 23 )
-region = Rect2( 640, 0, 128, 48 )
+region = Rect2( 2048, 0, 128, 48 )
 
 [sub_resource type="AtlasTexture" id=31]
 atlas = ExtResource( 23 )
-region = Rect2( 768, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=32]
-atlas = ExtResource( 23 )
-region = Rect2( 896, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=33]
-atlas = ExtResource( 23 )
-region = Rect2( 1024, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=34]
-atlas = ExtResource( 23 )
-region = Rect2( 1152, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=35]
-atlas = ExtResource( 23 )
-region = Rect2( 1280, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=36]
-atlas = ExtResource( 23 )
-region = Rect2( 1408, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=37]
-atlas = ExtResource( 23 )
-region = Rect2( 1536, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=38]
-atlas = ExtResource( 23 )
-region = Rect2( 1664, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=39]
-atlas = ExtResource( 23 )
-region = Rect2( 1792, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=40]
-atlas = ExtResource( 23 )
-region = Rect2( 1920, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=41]
-atlas = ExtResource( 23 )
-region = Rect2( 2048, 0, 128, 48 )
-
-[sub_resource type="AtlasTexture" id=42]
-atlas = ExtResource( 23 )
 region = Rect2( 2176, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=43]
+[sub_resource type="AtlasTexture" id=32]
 atlas = ExtResource( 19 )
 region = Rect2( 0, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=44]
+[sub_resource type="AtlasTexture" id=33]
 atlas = ExtResource( 19 )
 region = Rect2( 128, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=45]
+[sub_resource type="AtlasTexture" id=34]
 atlas = ExtResource( 19 )
 region = Rect2( 256, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=46]
+[sub_resource type="AtlasTexture" id=35]
 atlas = ExtResource( 19 )
 region = Rect2( 384, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=47]
+[sub_resource type="AtlasTexture" id=36]
 atlas = ExtResource( 19 )
 region = Rect2( 512, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=48]
+[sub_resource type="AtlasTexture" id=37]
 atlas = ExtResource( 19 )
 region = Rect2( 640, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=49]
+[sub_resource type="AtlasTexture" id=38]
 atlas = ExtResource( 19 )
 region = Rect2( 768, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=50]
+[sub_resource type="AtlasTexture" id=39]
 atlas = ExtResource( 19 )
 region = Rect2( 896, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=51]
+[sub_resource type="AtlasTexture" id=40]
 atlas = ExtResource( 19 )
 region = Rect2( 1024, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=52]
+[sub_resource type="AtlasTexture" id=41]
 atlas = ExtResource( 19 )
 region = Rect2( 1152, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=53]
+[sub_resource type="AtlasTexture" id=42]
 atlas = ExtResource( 19 )
 region = Rect2( 1280, 0, 128, 48 )
 
-[sub_resource type="AtlasTexture" id=54]
+[sub_resource type="AtlasTexture" id=43]
 atlas = ExtResource( 19 )
 region = Rect2( 1408, 0, 128, 48 )
 
-[sub_resource type="SpriteFrames" id=63]
+[sub_resource type="SpriteFrames" id=44]
 animations = [ {
-"frames": [ SubResource( 55 ), SubResource( 56 ), SubResource( 57 ), SubResource( 58 ), SubResource( 59 ), SubResource( 60 ), SubResource( 61 ), SubResource( 62 ) ],
+"frames": [ SubResource( 6 ), SubResource( 7 ), SubResource( 8 ), SubResource( 9 ), SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
 "loop": true,
 "name": "walk",
 "speed": 10.0
 }, {
-"frames": [ SubResource( 25 ), SubResource( 26 ), SubResource( 27 ), SubResource( 28 ), SubResource( 29 ), SubResource( 30 ), SubResource( 31 ), SubResource( 32 ), SubResource( 33 ), SubResource( 34 ), SubResource( 35 ), SubResource( 36 ), SubResource( 37 ), SubResource( 38 ), SubResource( 39 ), SubResource( 40 ), SubResource( 41 ), SubResource( 42 ) ],
+"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ), SubResource( 18 ), SubResource( 19 ), SubResource( 20 ), SubResource( 21 ), SubResource( 22 ), SubResource( 23 ), SubResource( 24 ), SubResource( 25 ), SubResource( 26 ), SubResource( 27 ), SubResource( 28 ), SubResource( 29 ), SubResource( 30 ), SubResource( 31 ) ],
 "loop": true,
 "name": "attack",
 "speed": 12.0
 }, {
-"frames": [ SubResource( 43 ), SubResource( 44 ), SubResource( 45 ), SubResource( 46 ), SubResource( 47 ), SubResource( 48 ), SubResource( 49 ), SubResource( 50 ), SubResource( 51 ), SubResource( 52 ), SubResource( 53 ), SubResource( 54 ) ],
+"frames": [ SubResource( 32 ), SubResource( 33 ), SubResource( 34 ), SubResource( 35 ), SubResource( 36 ), SubResource( 37 ), SubResource( 38 ), SubResource( 39 ), SubResource( 40 ), SubResource( 41 ), SubResource( 42 ), SubResource( 43 ) ],
 "loop": true,
 "name": "die",
 "speed": 12.0
 } ]
 
-[sub_resource type="CircleShape2D" id=24]
+[sub_resource type="CircleShape2D" id=45]
 radius = 2.99621
 
-[sub_resource type="PackedScene" id=64]
+[sub_resource type="PackedScene" id=46]
 _bundled = {
 "conn_count": 0,
 "conns": PoolIntArray(  ),
@@ -403,28 +460,28 @@ _bundled = {
 "node_count": 4,
 "node_paths": [  ],
 "nodes": PoolIntArray( -1, -1, 7, 0, -1, 6, 1, 0, 2, 1, 3, 2, 4, 3, 5, 4, 6, 5, 0, 0, 0, 8, 8, -1, 5, 9, 6, 6, 7, 10, 8, 11, 2, 12, 9, 0, 0, 0, 13, 13, -1, 3, 14, 10, 15, 11, 16, 12, 0, 0, 0, 17, 17, -1, 0, 0 ),
-"variants": [ 262144, ExtResource( 32 ), true, 1.0, 30.0, NodePath("AnimatedSprite"), SubResource( 63 ), "walk", 7, Vector2( 32, 0 ), Vector2( -1.08456, 7.75875 ), -1.309, SubResource( 24 ) ],
+"variants": [ 262144, ExtResource( 32 ), true, 1.0, 30.0, NodePath("AnimatedSprite"), SubResource( 44 ), "walk", 7, Vector2( 32, 0 ), Vector2( -1.08456, 7.75875 ), -1.309, SubResource( 45 ) ],
 "version": 2
 }
 
-[sub_resource type="Curve2D" id=65]
+[sub_resource type="Curve2D" id=47]
 _data = {
 "points": PoolVector2Array( 0, 0, 0, 0, 0.248413, 0.295341, 0, 0, 0, 0, 206.062, 1.72731 )
 }
 
-[sub_resource type="DynamicFont" id=4]
+[sub_resource type="DynamicFont" id=48]
 size = 28
 font_data = ExtResource( 12 )
 
-[sub_resource type="AtlasTexture" id=5]
+[sub_resource type="AtlasTexture" id=49]
 atlas = ExtResource( 30 )
 region = Rect2( 0, 96, 48, 32 )
 
-[sub_resource type="AtlasTexture" id=6]
+[sub_resource type="AtlasTexture" id=50]
 atlas = ExtResource( 30 )
 region = Rect2( 145, 65, 46, 14 )
 
-[sub_resource type="GDScript" id=7]
+[sub_resource type="GDScript" id=51]
 script/source = "extends Node2D
 
 onready var game_manager = get_node(\"/root/GameManager\")
@@ -507,7 +564,7 @@ func _ready():
 	player.connect(\"finished\", self, \"_sync_music\")
 "
 
-[sub_resource type="TileSet" id=8]
+[sub_resource type="TileSet" id=52]
 0/name = "atlas.png 0"
 0/texture = ExtResource( 24 )
 0/tex_offset = Vector2( 0, 0 )
@@ -691,71 +748,71 @@ func _ready():
 12/shapes = [  ]
 12/z_index = 0
 
-[sub_resource type="RectangleShape2D" id=9]
+[sub_resource type="RectangleShape2D" id=53]
 extents = Vector2( 104.464, 72.2403 )
 
-[sub_resource type="AtlasTexture" id=10]
+[sub_resource type="AtlasTexture" id=54]
 atlas = ExtResource( 10 )
 region = Rect2( 96, 0, 32, 20 )
 
-[sub_resource type="AtlasTexture" id=11]
+[sub_resource type="AtlasTexture" id=55]
 atlas = ExtResource( 10 )
 region = Rect2( 64, 0, 32, 20 )
 
-[sub_resource type="AtlasTexture" id=12]
+[sub_resource type="AtlasTexture" id=56]
 atlas = ExtResource( 10 )
 region = Rect2( 32, 0, 32, 20 )
 
-[sub_resource type="AtlasTexture" id=13]
+[sub_resource type="AtlasTexture" id=57]
 atlas = ExtResource( 10 )
 region = Rect2( 0, 0, 32, 20 )
 
-[sub_resource type="AtlasTexture" id=14]
+[sub_resource type="AtlasTexture" id=58]
 atlas = ExtResource( 10 )
 region = Rect2( 0, 0, 32, 20 )
 
-[sub_resource type="AtlasTexture" id=15]
+[sub_resource type="AtlasTexture" id=59]
 atlas = ExtResource( 10 )
 region = Rect2( 32, 0, 32, 20 )
 
-[sub_resource type="AtlasTexture" id=16]
+[sub_resource type="AtlasTexture" id=60]
 atlas = ExtResource( 10 )
 region = Rect2( 64, 0, 32, 20 )
 
-[sub_resource type="AtlasTexture" id=17]
+[sub_resource type="AtlasTexture" id=61]
 atlas = ExtResource( 10 )
 region = Rect2( 96, 0, 32, 20 )
 
-[sub_resource type="SpriteFrames" id=18]
+[sub_resource type="SpriteFrames" id=62]
 animations = [ {
 "frames": [ ExtResource( 3 ) ],
 "loop": true,
 "name": "default",
 "speed": 7.0
 }, {
-"frames": [ SubResource( 10 ), SubResource( 11 ), SubResource( 12 ), SubResource( 13 ) ],
+"frames": [ SubResource( 54 ), SubResource( 55 ), SubResource( 56 ), SubResource( 57 ) ],
 "loop": false,
 "name": "close",
 "speed": 8.0
 }, {
-"frames": [ SubResource( 14 ), SubResource( 15 ), SubResource( 16 ), SubResource( 17 ) ],
+"frames": [ SubResource( 58 ), SubResource( 59 ), SubResource( 60 ), SubResource( 61 ) ],
 "loop": false,
 "name": "open",
 "speed": 8.0
 } ]
 
-[sub_resource type="RectangleShape2D" id=19]
+[sub_resource type="RectangleShape2D" id=63]
 extents = Vector2( 16.0672, 7.28363 )
 
-[sub_resource type="Curve" id=20]
+[sub_resource type="Curve" id=64]
 min_value = -360.0
 max_value = 360.0
 _data = [ Vector2( 0, 360 ), 0.0, 71.1818, 0, 0, Vector2( 1, 1 ), -2200.58, 0.0, 0, 0 ]
 
-[sub_resource type="Curve" id=21]
+[sub_resource type="Curve" id=65]
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.836364 ), 0.0, 0.0, 0, 0 ]
 
-[sub_resource type="Gradient" id=22]
+[sub_resource type="Gradient" id=66]
 offsets = PoolRealArray( 0.662577, 1 )
 colors = PoolColorArray( 0.996078, 0.611765, 0.00784314, 1, 0.996078, 0.611765, 0.00784314, 0 )
 
@@ -764,7 +821,7 @@ script = ExtResource( 16 )
 largest_tilemap = NodePath("OuterLimits")
 
 [node name="GameOverScreen" type="CanvasLayer" parent="."]
-script = SubResource( 68 )
+script = SubResource( 1 )
 
 [node name="Background" type="CanvasLayer" parent="GameOverScreen"]
 
@@ -772,7 +829,6 @@ script = SubResource( 68 )
 color = Color( 0, 0, 0, 1 )
 
 [node name="MarginContainer" type="MarginContainer" parent="GameOverScreen/Background"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
@@ -790,48 +846,74 @@ expand = true
 [node name="CanvasLayer" type="CanvasLayer" parent="GameOverScreen"]
 
 [node name="MarginContainer2" type="MarginContainer" parent="GameOverScreen/CanvasLayer"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="CenterContainer" type="CenterContainer" parent="GameOverScreen/CanvasLayer/MarginContainer2"]
+[node name="VBoxContainer" type="VBoxContainer" parent="GameOverScreen/CanvasLayer/MarginContainer2"]
 margin_right = 1280.0
 margin_bottom = 720.0
+size_flags_vertical = 3
+alignment = 1
 
-[node name="VBoxContainer" type="VBoxContainer" parent="GameOverScreen/CanvasLayer/MarginContainer2/CenterContainer"]
-margin_left = 520.0
-margin_top = 335.0
-margin_right = 760.0
-margin_bottom = 385.0
+[node name="VBoxContainer" type="VBoxContainer" parent="GameOverScreen/CanvasLayer/MarginContainer2/VBoxContainer"]
+margin_right = 1280.0
+margin_bottom = 358.0
+size_flags_vertical = 3
+alignment = 2
 
-[node name="EndingTitle" type="Label" parent="GameOverScreen/CanvasLayer/MarginContainer2/CenterContainer/VBoxContainer"]
-margin_right = 240.0
-margin_bottom = 14.0
+[node name="EndingTitle" type="Label" parent="GameOverScreen/CanvasLayer/MarginContainer2/VBoxContainer/VBoxContainer"]
+margin_top = 326.0
+margin_right = 1280.0
+margin_bottom = 340.0
 theme = ExtResource( 17 )
 text = "The fragment has been destroyed."
 align = 1
 valign = 1
 
-[node name="MadeIt" type="Label" parent="GameOverScreen/CanvasLayer/MarginContainer2/CenterContainer/VBoxContainer"]
-margin_top = 18.0
-margin_right = 240.0
-margin_bottom = 32.0
+[node name="MadeIt" type="Label" parent="GameOverScreen/CanvasLayer/MarginContainer2/VBoxContainer/VBoxContainer"]
+margin_top = 344.0
+margin_right = 1280.0
+margin_bottom = 358.0
 theme = ExtResource( 17 )
 custom_colors/font_color = Color( 1, 0.623529, 0.623529, 1 )
 text = "You made it: {days} days"
 align = 1
 valign = 1
 
-[node name="Scores" type="Label" parent="GameOverScreen/CanvasLayer/MarginContainer2/CenterContainer/VBoxContainer"]
-margin_top = 36.0
-margin_right = 240.0
-margin_bottom = 50.0
+[node name="Scores" type="Label" parent="GameOverScreen/CanvasLayer/MarginContainer2/VBoxContainer/VBoxContainer"]
+visible = false
+margin_top = 344.0
+margin_right = 1280.0
+margin_bottom = 358.0
 theme = ExtResource( 17 )
 text = "Top previous scores:"
 align = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="GameOverScreen/CanvasLayer/MarginContainer2/VBoxContainer"]
+margin_top = 682.0
+margin_right = 1280.0
+margin_bottom = 720.0
+size_flags_vertical = 10
+custom_constants/margin_right = 12
+custom_constants/margin_top = 12
+custom_constants/margin_left = 12
+custom_constants/margin_bottom = 12
+
+[node name="Continue" type="Label" parent="GameOverScreen/CanvasLayer/MarginContainer2/VBoxContainer/MarginContainer"]
+margin_left = 12.0
+margin_top = 12.0
+margin_right = 1268.0
+margin_bottom = 26.0
+size_flags_vertical = 7
+theme = ExtResource( 17 )
+text = "Press enter to continue."
+align = 1
+valign = 2
+
+[node name="Tween" type="Tween" parent="GameOverScreen/CanvasLayer"]
 
 [node name="EventManager" type="CanvasLayer" parent="."]
 script = ExtResource( 13 )
@@ -868,7 +950,7 @@ margin_right = 90.0
 margin_bottom = 600.0
 grow_horizontal = 0
 grow_vertical = 0
-custom_fonts/font = SubResource( 1 )
+custom_fonts/font = SubResource( 2 )
 text = "+1 grass"
 align = 2
 
@@ -877,19 +959,20 @@ align = 2
 [node name="PlayerPrefs" parent="." instance=ExtResource( 11 )]
 
 [node name="SpawnManager" type="Node2D" parent="."]
-script = SubResource( 2 )
+z_index = 2
+script = SubResource( 3 )
 wave_file_path = "res://meta/waves.json"
 
 [node name="East" parent="SpawnManager" instance=ExtResource( 27 )]
 position = Vector2( 441.563, -152.511 )
-curve = SubResource( 3 )
+curve = SubResource( 4 )
 difficulty_modifier = 1
 world_layering = NodePath("../../WorldLayering")
 enemy = ExtResource( 25 )
 
 [node name="North" parent="SpawnManager" instance=ExtResource( 27 )]
 position = Vector2( 231.967, -200.359 )
-curve = SubResource( 23 )
+curve = SubResource( 5 )
 difficulty_modifier = 2
 world_layering = NodePath("../../WorldLayering")
 enemy = ExtResource( 25 )
@@ -898,11 +981,11 @@ enemy = ExtResource( 25 )
 position = Vector2( -87.01, 288 )
 difficulty_modifier = 3
 world_layering = NodePath("../../WorldLayering")
-enemy = SubResource( 64 )
+enemy = SubResource( 46 )
 
 [node name="West" parent="SpawnManager" instance=ExtResource( 27 )]
 position = Vector2( -153.326, 70.506 )
-curve = SubResource( 65 )
+curve = SubResource( 47 )
 difficulty_modifier = 4
 world_layering = NodePath("../../WorldLayering")
 enemy = ExtResource( 25 )
@@ -933,23 +1016,35 @@ __meta__ = {
 margin_left = 12.0
 margin_top = 12.0
 margin_right = 171.0
-margin_bottom = 58.0
+margin_bottom = 90.0
 
 [node name="Label" type="Label" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer"]
 margin_right = 72.0
 margin_bottom = 28.0
 size_flags_horizontal = 0
 theme = ExtResource( 17 )
-custom_fonts/font = SubResource( 4 )
+custom_fonts/font = SubResource( 48 )
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
 text = "00:00"
 align = 1
 valign = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer"]
+[node name="Day" type="Label" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer"]
 margin_top = 32.0
+margin_right = 84.0
+margin_bottom = 60.0
+size_flags_horizontal = 0
+theme = ExtResource( 17 )
+custom_fonts/font = SubResource( 48 )
+custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
+text = "Day: 0"
+align = 1
+valign = 1
+
+[node name="HBoxContainer" type="HBoxContainer" parent="FarmManager/CanvasLayer/MarginContainer/HBoxContainer"]
+margin_top = 64.0
 margin_right = 62.0
-margin_bottom = 46.0
+margin_bottom = 78.0
 size_flags_horizontal = 0
 size_flags_vertical = 4
 alignment = 1
@@ -1008,7 +1103,7 @@ margin_left = 6.0
 margin_top = 6.0
 margin_right = 159.0
 margin_bottom = 94.0
-texture = SubResource( 5 )
+texture = SubResource( 49 )
 expand = true
 
 [node name="MarginContainer" type="MarginContainer" parent="FarmManager/CanvasLayer/VBoxContainer"]
@@ -1021,7 +1116,7 @@ size_flags_horizontal = 4
 [node name="NinePatchRect3" type="NinePatchRect" parent="FarmManager/CanvasLayer/VBoxContainer/MarginContainer"]
 margin_right = 70.0
 margin_bottom = 22.0
-texture = SubResource( 6 )
+texture = SubResource( 50 )
 patch_margin_left = 2
 patch_margin_top = 2
 patch_margin_right = 2
@@ -1061,7 +1156,7 @@ energy = 0.45
 
 [node name="MusicManager" type="Node2D" parent="."]
 pause_mode = 2
-script = SubResource( 7 )
+script = SubResource( 51 )
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="MusicManager"]
 stream = ExtResource( 22 )
@@ -1121,13 +1216,13 @@ format = 1
 tile_data = PoolIntArray( -851954, -1073741817, 0, -786426, -1610612730, 0, -786425, 1610612743, 0, -786424, 7, 0, -786423, -1610612731, 0, -786422, 1610612743, 0, -786421, -1073741819, 0, -786420, 7, 0, -786419, 1610612743, 0, -786418, -1073741818, 0, -720890, 5, 0, -655354, 6, 0, -655353, -1610612731, 0, -655352, 7, 0, -655351, -1610612731, 0, -655350, -1610612731, 0, -655349, 7, 0, -655348, 1610612743, 0, -655347, -1610612731, 0, -655346, 1610612742, 0, -655338, -1610612730, 0, -655337, 1610612743, 0, -655336, 1610612743, 0, -655335, 1610612743, 0, -655334, 1610612743, 0, -655333, 1610612743, 0, -589810, 1610612741, 0, -589802, -1073741817, 0, -524282, -1610612730, 0, -524281, 1610612743, 0, -524280, 7, 0, -524279, 1610612743, 0, -524278, 1610612743, 0, -524277, 7, 0, -524276, 1610612743, 0, -524275, 1610612743, 0, -524274, -1073741818, 0, -524271, -1610612730, 0, -524270, 1610612743, 0, -524269, -1610612731, 0, -524268, 1610612743, 0, -524267, -1073741819, 0, -524266, -1073741818, 0, -458746, -1610612729, 0, -458735, -1610612729, 0, -393210, 1610612741, 0, -393199, 1610612741, 0, -327674, -1610612729, 0, -327663, -1610612729, 0, -262138, 1610612741, 0, -262127, -1610612729, 0, -196602, 5, 0, -196591, 5, 0, -131066, 1610612741, 0, -131055, 1610612741, 0, -1, 1610612740, 0, -65536, -1073741821, 0, -65535, -1073741821, 0, -65534, -1073741821, 0, -65533, -1073741821, 0, -65532, -1073741821, 0, -65531, -1073741821, 0, -65530, -1610612729, 0, -65529, -1073741821, 0, -65528, -1073741821, 0, -65527, -1073741821, 0, -65526, -1073741821, 0, -65525, -1073741821, 0, -65524, -1073741821, 0, -65523, -1073741820, 0, -65519, -1610612729, 0, 65535, 1610612739, 0, 13, 3, 0, 17, 6, 0, 18, -1073741819, 0, 19, 1610612743, 0, 20, 7, 0, 21, -1073741819, 0, 22, 1610612742, 0, 131071, 1610612739, 0, 65549, 3, 0, 65558, 5, 0, 196607, 1610612739, 0, 131085, 3, 0, 131094, -1610612729, 0, 262143, 1610612739, 0, 196621, 3, 0, 196630, 5, 0, 327670, 1610612743, 0, 327671, -1610612731, 0, 327672, 7, 0, 327673, -1610612731, 0, 327674, 1610612743, 0, 327675, 7, 0, 327676, -1073741819, 0, 327677, -1610612731, 0, 327678, 1610612743, 0, 327679, -1073741819, 0, 262157, -1610612731, 0, 262158, 7, 0, 262159, -1610612731, 0, 262160, 1610612743, 0, 262161, 7, 0, 262162, 1610612743, 0, 262163, -1610612731, 0, 262164, 7, 0, 262165, 1610612743, 0, 262166, -1073741818, 0, 393215, 1610612739, 0, 327693, 3, 0, 458751, 1610612739, 0, 393229, 3, 0, 524287, 1610612739, 0, 458765, 3, 0, 589823, 1610612739, 0, 524301, 3, 0, 655359, -1610612732, 0, 589824, -1610612733, 0, 589825, -1610612733, 0, 589826, -1610612733, 0, 589827, -1610612733, 0, 589828, -1610612733, 0, 589829, -1610612733, 0, 589830, -1073741817, 0, 589831, -1610612733, 0, 589832, -1610612733, 0, 589833, -1610612733, 0, 589834, -1610612733, 0, 589835, -1610612733, 0, 589836, -1610612733, 0, 589837, 4, 0, 655366, 5, 0, 786426, -1610612730, 0, 786427, 7, 0, 786428, -1073741819, 0, 786429, -1610612731, 0, 786430, 7, 0, 786431, 7, 0, 720896, -1610612731, 0, 720897, 7, 0, 720898, 7, 0, 720899, -1073741819, 0, 720900, 7, 0, 720901, -1610612731, 0, 720902, -1073741818, 0, 851962, -1610612729, 0, 917498, -1610612729, 0, 983034, -1610612729, 0, 1048570, -1610612729, 0, 1114106, -1610612729, 0, 1179642, -1610612729, 0 )
 
 [node name="OuterLimits" type="TileMap" parent="."]
-tile_set = SubResource( 8 )
+tile_set = SubResource( 52 )
 cell_size = Vector2( 16, 16 )
 format = 1
 tile_data = PoolIntArray( -720905, 3, 0, -720904, 3, 0, -720903, 3, 0, -720902, 3, 0, -720901, 3, 0, -720900, 3, 0, -720899, 3, 0, -720898, 3, 0, -720897, 3, 0, -786432, 3, 0, -786431, 3, 0, -786430, 3, 0, -786429, 3, 0, -786428, 3, 0, -786427, 3, 0, -786426, 3, 0, -786425, 3, 0, -786424, 3, 0, -786423, 3, 0, -786422, 3, 0, -786421, 3, 0, -786420, 3, 0, -786419, 3, 0, -786418, 3, 0, -786417, 3, 0, -786416, 3, 0, -786415, 3, 0, -786414, 3, 0, -786413, 3, 0, -786412, 3, 0, -786411, 3, 0, -786410, 3, 0, -786409, 3, 0, -655369, 3, 0, -655368, 3, 0, -655367, 3, 0, -655366, 3, 0, -655365, 3, 0, -655364, 3, 0, -655363, 3, 0, -655362, 3, 0, -655361, 3, 0, -720896, 3, 0, -720895, 3, 0, -720894, 3, 0, -720893, 3, 0, -720892, 3, 0, -720891, 3, 0, -720890, 3, 0, -720889, 3, 0, -720888, 3, 0, -720887, 3, 0, -720886, 3, 0, -720885, 3, 0, -720884, 3, 0, -720883, 3, 0, -720882, 3, 0, -720881, 3, 0, -720880, 3, 0, -720879, 3, 0, -720878, 3, 0, -720877, 3, 0, -720876, 3, 0, -720875, 3, 0, -720874, 3, 0, -720873, 3, 0, -589833, 3, 0, -589832, 3, 0, -589831, 3, 0, -589830, 3, 0, -589829, 3, 0, -589828, 3, 0, -589827, 3, 0, -589826, 3, 0, -589825, 3, 0, -655360, 3, 0, -655359, 3, 0, -655358, 3, 0, -655357, 3, 0, -655356, 3, 0, -655355, 3, 0, -655354, 3, 0, -655353, 3, 0, -655352, 3, 0, -655351, 3, 0, -655350, 3, 0, -655349, 3, 0, -655348, 3, 0, -655347, 3, 0, -655346, 3, 0, -655345, 3, 0, -655344, 3, 0, -655343, 3, 0, -655342, 3, 0, -655341, 3, 0, -655340, 3, 0, -655339, 3, 0, -655338, 3, 0, -655337, 3, 0, -524297, 3, 0, -524296, 3, 0, -524295, 3, 0, -524294, 3, 0, -524293, 3, 0, -524292, 3, 0, -524291, 3, 0, -524290, 3, 0, -524289, 3, 0, -589824, 3, 0, -589823, 3, 0, -589822, 3, 0, -589821, 3, 0, -589820, 3, 0, -589819, 3, 0, -589818, 3, 0, -589817, 3, 0, -589816, 3, 0, -589815, 3, 0, -589814, 3, 0, -589813, 3, 0, -589812, 3, 0, -589811, 3, 0, -589810, 3, 0, -589809, 3, 0, -589808, 3, 0, -589807, 3, 0, -589806, 3, 0, -589805, 3, 0, -589804, 3, 0, -589803, 3, 0, -589802, 3, 0, -589801, 3, 0, -458761, 3, 0, -458760, 3, 0, -458759, 3, 0, -458758, 3, 0, -458757, 3, 0, -458756, 3, 0, -458755, 3, 0, -458754, 3, 0, -458753, 3, 0, -524288, 3, 0, -524287, 3, 0, -524286, 3, 0, -524285, 3, 0, -524284, 3, 0, -524283, 3, 0, -524282, 3, 0, -524281, 3, 0, -524280, 3, 0, -524279, 3, 0, -524278, 3, 0, -524277, 3, 0, -524276, 3, 0, -524275, 3, 0, -524274, 3, 0, -524273, 3, 0, -524272, 3, 0, -524271, 3, 0, -524270, 3, 0, -524269, 3, 0, -524268, 3, 0, -524267, 3, 0, -524266, 3, 0, -524265, 3, 0, -393225, 3, 0, -393224, 3, 0, -393223, 3, 0, -393222, 3, 0, -393221, 3, 0, -393220, 3, 0, -393219, 3, 0, -393218, 3, 0, -393217, 3, 0, -458752, 3, 0, -458751, 3, 0, -458750, 3, 0, -458749, 3, 0, -458748, 3, 0, -458747, 3, 0, -458746, 3, 0, -458745, 3, 0, -458744, 3, 0, -458743, 3, 0, -458742, 3, 0, -458741, 3, 0, -458740, 3, 0, -458739, 3, 0, -458738, 3, 0, -458737, 3, 0, -458736, 3, 0, -458735, 3, 0, -458734, 3, 0, -458733, 3, 0, -458732, 3, 0, -458731, 3, 0, -458730, 3, 0, -458729, 3, 0, -327689, 3, 0, -327688, 3, 0, -327687, 3, 0, -327686, 3, 0, -327685, 3, 0, -327684, 3, 0, -327683, 3, 0, -327682, 3, 0, -327681, 3, 0, -393216, 3, 0, -393215, 3, 0, -393214, 3, 0, -393213, 3, 0, -393212, 3, 0, -393211, 3, 0, -393210, 3, 0, -393209, 3, 0, -393208, 3, 0, -393207, 3, 0, -393206, 3, 0, -393205, 3, 0, -393204, 3, 0, -393203, 3, 0, -393202, 3, 0, -393201, 3, 0, -393200, 3, 0, -393199, 3, 0, -393198, 3, 0, -393197, 3, 0, -393196, 3, 0, -393195, 3, 0, -393194, 3, 0, -393193, 3, 0, -262153, 3, 0, -262152, 3, 0, -262151, 3, 0, -262150, 3, 0, -262149, 3, 0, -262148, 3, 0, -262147, 3, 0, -262146, 3, 0, -262145, 3, 0, -327680, 3, 0, -327679, 3, 0, -327678, 3, 0, -327677, 3, 0, -327676, 3, 0, -327675, 3, 0, -327674, 3, 0, -327673, 3, 0, -327672, 3, 0, -327671, 3, 0, -327670, 3, 0, -327669, 3, 0, -327668, 3, 0, -327667, 3, 0, -327666, 3, 0, -327665, 3, 0, -327664, 3, 0, -327663, 3, 0, -327662, 3, 0, -327661, 3, 0, -327660, 3, 0, -327659, 3, 0, -327658, 3, 0, -327657, 3, 0, -196617, 3, 0, -196616, 3, 0, -196615, 3, 0, -196614, 3, 0, -196613, 3, 0, -196612, 3, 0, -196611, 3, 0, -196610, 3, 0, -196609, 3, 0, -262144, 3, 0, -262143, 3, 0, -262142, 3, 0, -262141, 3, 0, -262140, 3, 0, -262139, 3, 0, -262138, 3, 0, -262137, 3, 0, -262136, 3, 0, -262135, 3, 0, -262134, 3, 0, -262133, 3, 0, -262132, 3, 0, -262131, 3, 0, -262130, 3, 0, -262129, 3, 0, -262128, 3, 0, -262127, 3, 0, -262126, 3, 0, -262125, 3, 0, -262124, 3, 0, -262123, 3, 0, -262122, 3, 0, -262121, 3, 0, -131081, 3, 0, -131080, 3, 0, -131079, 3, 0, -131078, 3, 0, -131077, 3, 0, -131076, 3, 0, -131075, 3, 0, -131074, 3, 0, -131073, 3, 0, -196608, 3, 0, -196607, 3, 0, -196606, 3, 0, -196605, 3, 0, -196604, 3, 0, -196603, 3, 0, -196602, 3, 0, -196601, 3, 0, -196600, 3, 0, -196599, 3, 0, -196598, 3, 0, -196597, 3, 0, -196596, 3, 0, -196595, 3, 0, -196594, 3, 0, -196593, 3, 0, -196592, 3, 0, -196591, 3, 0, -196590, 3, 0, -196589, 3, 0, -196588, 3, 0, -196587, 3, 0, -196586, 3, 0, -196585, 3, 0, -65545, 3, 0, -65544, 3, 0, -65543, 3, 0, -65542, 3, 0, -65541, 3, 0, -65540, 3, 0, -65539, 3, 0, -65538, 3, 0, -65537, 3, 0, -131072, 3, 0, -131071, 3, 0, -131070, 3, 0, -131069, 3, 0, -131068, 3, 0, -131067, 3, 0, -131066, 3, 0, -131065, 3, 0, -131064, 3, 0, -131063, 3, 0, -131062, 3, 0, -131061, 3, 0, -131060, 3, 0, -131059, 3, 0, -131058, 3, 0, -131057, 3, 0, -131056, 3, 0, -131055, 3, 0, -131054, 3, 0, -131053, 3, 0, -131052, 3, 0, -131051, 3, 0, -131050, 3, 0, -131049, 3, 0, -9, 3, 0, -8, 3, 0, -7, 3, 0, -6, 3, 0, -5, 3, 0, -4, 3, 0, -3, 3, 0, -2, 3, 0, -1, 3, 0, -65536, 3, 0, -65535, 3, 0, -65534, 3, 0, -65533, 3, 0, -65532, 3, 0, -65531, 3, 0, -65530, 3, 0, -65529, 3, 0, -65528, 3, 0, -65527, 3, 0, -65526, 3, 0, -65525, 3, 0, -65524, 3, 0, -65523, 3, 0, -65522, 3, 0, -65521, 3, 0, -65520, 3, 0, -65519, 3, 0, -65518, 3, 0, -65517, 3, 0, -65516, 3, 0, -65515, 3, 0, -65514, 3, 0, -65513, 3, 0, 65527, 3, 0, 65528, 3, 0, 65529, 3, 0, 65530, 3, 0, 65531, 3, 0, 65532, 3, 0, 65533, 3, 0, 65534, 3, 0, 65535, 3, 0, 13, 3, 0, 14, 3, 0, 15, 3, 0, 16, 3, 0, 17, 3, 0, 18, 3, 0, 19, 3, 0, 20, 3, 0, 21, 3, 0, 22, 3, 0, 23, 3, 0, 131063, 3, 0, 131064, 3, 0, 131065, 3, 0, 131066, 3, 0, 131067, 3, 0, 131068, 3, 0, 131069, 3, 0, 131070, 3, 0, 131071, 3, 0, 65549, 3, 0, 65550, 3, 0, 65551, 3, 0, 65552, 3, 0, 65553, 3, 0, 65554, 3, 0, 65555, 3, 0, 65556, 3, 0, 65557, 3, 0, 65558, 3, 0, 65559, 3, 0, 196599, 3, 0, 196600, 3, 0, 196601, 3, 0, 196602, 3, 0, 196603, 3, 0, 196604, 3, 0, 196605, 3, 0, 196606, 3, 0, 196607, 3, 0, 131085, 3, 0, 131086, 3, 0, 131087, 3, 0, 131088, 3, 0, 131089, 3, 0, 131090, 3, 0, 131091, 3, 0, 131092, 3, 0, 131093, 3, 0, 131094, 3, 0, 131095, 3, 0, 262135, 3, 0, 262136, 3, 0, 262137, 3, 0, 262138, 3, 0, 262139, 3, 0, 262140, 3, 0, 262141, 3, 0, 262142, 3, 0, 262143, 3, 0, 196621, 3, 0, 196622, 3, 0, 196623, 3, 0, 196624, 3, 0, 196625, 3, 0, 196626, 3, 0, 196627, 3, 0, 196628, 3, 0, 196629, 3, 0, 196630, 3, 0, 196631, 3, 0, 327671, 3, 0, 327672, 3, 0, 327673, 3, 0, 327674, 3, 0, 327675, 3, 0, 327676, 3, 0, 327677, 3, 0, 327678, 3, 0, 327679, 3, 0, 262157, 3, 0, 262158, 3, 0, 262159, 3, 0, 262160, 3, 0, 262161, 3, 0, 262162, 3, 0, 262163, 3, 0, 262164, 3, 0, 262165, 3, 0, 262166, 3, 0, 262167, 3, 0, 393207, 3, 0, 393208, 3, 0, 393209, 3, 0, 393210, 3, 0, 393211, 3, 0, 393212, 3, 0, 393213, 3, 0, 393214, 3, 0, 393215, 3, 0, 327693, 3, 0, 327694, 3, 0, 327695, 3, 0, 327696, 3, 0, 327697, 3, 0, 327698, 3, 0, 327699, 3, 0, 327700, 3, 0, 327701, 3, 0, 327702, 3, 0, 327703, 3, 0, 458743, 3, 0, 458744, 3, 0, 458745, 3, 0, 458746, 3, 0, 458747, 3, 0, 458748, 3, 0, 458749, 3, 0, 458750, 3, 0, 458751, 3, 0, 393229, 3, 0, 393230, 3, 0, 393231, 3, 0, 393232, 3, 0, 393233, 3, 0, 393234, 3, 0, 393235, 3, 0, 393236, 3, 0, 393237, 3, 0, 393238, 3, 0, 393239, 3, 0, 524279, 3, 0, 524280, 3, 0, 524281, 3, 0, 524282, 3, 0, 524283, 3, 0, 524284, 3, 0, 524285, 3, 0, 524286, 3, 0, 524287, 3, 0, 458765, 3, 0, 458766, 3, 0, 458767, 3, 0, 458768, 3, 0, 458769, 3, 0, 458770, 3, 0, 458771, 3, 0, 458772, 3, 0, 458773, 3, 0, 458774, 3, 0, 458775, 3, 0, 589815, 3, 0, 589816, 3, 0, 589817, 3, 0, 589818, 3, 0, 589819, 3, 0, 589820, 3, 0, 589821, 3, 0, 589822, 3, 0, 589823, 3, 0, 524301, 3, 0, 524302, 3, 0, 524303, 3, 0, 524304, 3, 0, 524305, 3, 0, 524306, 3, 0, 524307, 3, 0, 524308, 3, 0, 524309, 3, 0, 524310, 3, 0, 524311, 3, 0, 655351, 3, 0, 655352, 3, 0, 655353, 3, 0, 655354, 3, 0, 655355, 3, 0, 655356, 3, 0, 655357, 3, 0, 655358, 3, 0, 655359, 3, 0, 589824, 3, 0, 589825, 3, 0, 589826, 3, 0, 589827, 3, 0, 589828, 3, 0, 589829, 3, 0, 589830, 3, 0, 589831, 3, 0, 589832, 3, 0, 589833, 3, 0, 589834, 3, 0, 589835, 3, 0, 589836, 3, 0, 589837, 3, 0, 589838, 3, 0, 589839, 3, 0, 589840, 3, 0, 589841, 3, 0, 589842, 3, 0, 589843, 3, 0, 589844, 3, 0, 589845, 3, 0, 589846, 3, 0, 589847, 3, 0, 720887, 3, 0, 720888, 3, 0, 720889, 3, 0, 720890, 3, 0, 720891, 3, 0, 720892, 3, 0, 720893, 3, 0, 720894, 3, 0, 720895, 3, 0, 655360, 3, 0, 655361, 3, 0, 655362, 3, 0, 655363, 3, 0, 655364, 3, 0, 655365, 3, 0, 655366, 3, 0, 655367, 3, 0, 655368, 3, 0, 655369, 3, 0, 655370, 3, 0, 655371, 3, 0, 655372, 3, 0, 655373, 3, 0, 655374, 3, 0, 655375, 3, 0, 655376, 3, 0, 655377, 3, 0, 655378, 3, 0, 655379, 3, 0, 655380, 3, 0, 655381, 3, 0, 655382, 3, 0, 655383, 3, 0, 786423, 3, 0, 786424, 3, 0, 786425, 3, 0, 786426, 3, 0, 786427, 3, 0, 786428, 3, 0, 786429, 3, 0, 786430, 3, 0, 786431, 3, 0, 720896, 3, 0, 720897, 3, 0, 720898, 3, 0, 720899, 3, 0, 720900, 3, 0, 720901, 3, 0, 720902, 3, 0, 720903, 3, 0, 720904, 3, 0, 720905, 3, 0, 720906, 3, 0, 720907, 3, 0, 720908, 3, 0, 720909, 3, 0, 720910, 3, 0, 720911, 3, 0, 720912, 3, 0, 720913, 3, 0, 720914, 3, 0, 720915, 3, 0, 720916, 3, 0, 720917, 3, 0, 720918, 3, 0, 720919, 3, 0, 851959, 3, 0, 851960, 3, 0, 851961, 3, 0, 851962, 3, 0, 851963, 3, 0, 851964, 3, 0, 851965, 3, 0, 851966, 3, 0, 851967, 3, 0, 786432, 3, 0, 786433, 3, 0, 786434, 3, 0, 786435, 3, 0, 786436, 3, 0, 786437, 3, 0, 786438, 3, 0, 786439, 3, 0, 786440, 3, 0, 786441, 3, 0, 786442, 3, 0, 786443, 3, 0, 786444, 3, 0, 786445, 3, 0, 786446, 3, 0, 786447, 3, 0, 786448, 3, 0, 786449, 3, 0, 786450, 3, 0, 786451, 3, 0, 786452, 3, 0, 786453, 3, 0, 786454, 3, 0, 786455, 3, 0, 917495, 3, 0, 917496, 3, 0, 917497, 3, 0, 917498, 3, 0, 917499, 3, 0, 917500, 3, 0, 917501, 3, 0, 917502, 3, 0, 917503, 3, 0, 851968, 3, 0, 851969, 3, 0, 851970, 3, 0, 851971, 3, 0, 851972, 3, 0, 851973, 3, 0, 851974, 3, 0, 851975, 3, 0, 851976, 3, 0, 851977, 3, 0, 851978, 3, 0, 851979, 3, 0, 851980, 3, 0, 851981, 3, 0, 851982, 3, 0, 851983, 3, 0, 851984, 3, 0, 851985, 3, 0, 851986, 3, 0, 851987, 3, 0, 851988, 3, 0, 851989, 3, 0, 851990, 3, 0, 851991, 3, 0, 983031, 3, 0, 983032, 3, 0, 983033, 3, 0, 983034, 3, 0, 983035, 3, 0, 983036, 3, 0, 983037, 3, 0, 983038, 3, 0, 983039, 3, 0, 917504, 3, 0, 917505, 3, 0, 917506, 3, 0, 917507, 3, 0, 917508, 3, 0, 917509, 3, 0, 917510, 3, 0, 917511, 3, 0, 917512, 3, 0, 917513, 3, 0, 917514, 3, 0, 917515, 3, 0, 917516, 3, 0, 917517, 3, 0, 917518, 3, 0, 917519, 3, 0, 917520, 3, 0, 917521, 3, 0, 917522, 3, 0, 917523, 3, 0, 917524, 3, 0, 917525, 3, 0, 917526, 3, 0, 917527, 3, 0, 1048567, 3, 0, 1048568, 3, 0, 1048569, 3, 0, 1048570, 3, 0, 1048571, 3, 0, 1048572, 3, 0, 1048573, 3, 0, 1048574, 3, 0, 1048575, 3, 0, 983040, 3, 0, 983041, 3, 0, 983042, 3, 0, 983043, 3, 0, 983044, 3, 0, 983045, 3, 0, 983046, 3, 0, 983047, 3, 0, 983048, 3, 0, 983049, 3, 0, 983050, 3, 0, 983051, 3, 0, 983052, 3, 0, 983053, 3, 0, 983054, 3, 0, 983055, 3, 0, 983056, 3, 0, 983057, 3, 0, 983058, 3, 0, 983059, 3, 0, 983060, 3, 0, 983061, 3, 0, 983062, 3, 0, 983063, 3, 0, 1114103, 3, 0, 1114104, 3, 0, 1114105, 3, 0, 1114106, 3, 0, 1114107, 3, 0, 1114108, 3, 0, 1114109, 3, 0, 1114110, 3, 0, 1114111, 3, 0, 1048576, 3, 0, 1048577, 3, 0, 1048578, 3, 0, 1048579, 3, 0, 1048580, 3, 0, 1048581, 3, 0, 1048582, 3, 0, 1048583, 3, 0, 1048584, 3, 0, 1048585, 3, 0, 1048586, 3, 0, 1048587, 3, 0, 1048588, 3, 0, 1048589, 3, 0, 1048590, 3, 0, 1048591, 3, 0, 1048592, 3, 0, 1048593, 3, 0, 1048594, 3, 0, 1048595, 3, 0, 1048596, 3, 0, 1048597, 3, 0, 1048598, 3, 0, 1048599, 3, 0 )
 
 [node name="Decorations" type="TileMap" parent="OuterLimits"]
-tile_set = SubResource( 8 )
+tile_set = SubResource( 52 )
 cell_size = Vector2( 16, 16 )
 cell_y_sort = true
 format = 1
@@ -1148,7 +1243,7 @@ collision_mask = 131072
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NoTowerZone"]
 position = Vector2( 0.707916, 8.2589 )
-shape = SubResource( 9 )
+shape = SubResource( 53 )
 
 [node name="WorldLayering" type="YSort" parent="."]
 z_index = 1
@@ -1254,18 +1349,18 @@ __meta__ = {
 }
 
 [node name="AnimatedSprite" type="AnimatedSprite" parent="WorldLayering/ShippingChest"]
-frames = SubResource( 18 )
+frames = SubResource( 62 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="WorldLayering/ShippingChest"]
 position = Vector2( 0, 2.67572 )
-shape = SubResource( 19 )
+shape = SubResource( 63 )
 
 [node name="CPUParticles2D" type="CPUParticles2D" parent="WorldLayering/ShippingChest"]
 z_index = -1
 amount = 50
 emission_shape = 2
 emission_rect_extents = Vector2( 12, 1 )
-angular_velocity_curve = SubResource( 20 )
+angular_velocity_curve = SubResource( 64 )
 radial_accel = 10.1
 radial_accel_random = 1.0
 tangential_accel = 15.0
@@ -1276,8 +1371,8 @@ angle = 720.0
 angle_random = 1.0
 scale_amount = 3.0
 scale_amount_random = 1.0
-scale_amount_curve = SubResource( 21 )
-color_ramp = SubResource( 22 )
+scale_amount_curve = SubResource( 65 )
+color_ramp = SubResource( 66 )
 hue_variation = 0.04
 hue_variation_random = 1.0
 

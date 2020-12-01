@@ -21,6 +21,9 @@ func start_wave():
 	_spawn_timer.start()
 	
 	for enemy in _current_wave:
+		if !_current_wave.has(enemy):
+			continue
+
 		for count in range(0, _current_wave[enemy]):
 			_spawn_enemy(enemy)
 			
@@ -29,15 +32,21 @@ func start_wave():
 				break
 
 			yield(_spawn_timer, "timeout")
+			
+			if !_current_wave:
+				break
 
 	emit_signal("wave_finished", _current_wave)
 	_current_wave = {}
 
 func _ready():
-	var farm_manager = get_node("/root/GameManager").get_farm_manager()
+	var game_manager = get_node("/root/GameManager")
+	var farm_manager = game_manager.get_farm_manager()
+	var moon = game_manager.get_moon()
 	
 	# stop the timer when day comes
 	farm_manager.connect("day", _spawn_timer, "stop")
+	moon.connect("broken", _spawn_timer, "stop")
 	
 	_spawn_timer.wait_time = spawn_rate
 

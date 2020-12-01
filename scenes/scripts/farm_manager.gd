@@ -6,6 +6,7 @@ signal shipment_time
 
 const tween_duration := 3.0
 
+onready var day_label = get_node("CanvasLayer/MarginContainer/HBoxContainer/Day")
 onready var timer = get_node("DayCycle/Timer")
 onready var day_canvas = get_node("DayCycle/CanvasModulate")
 onready var transition_tween = get_node("DayCycle/Tween")
@@ -59,6 +60,11 @@ func remove_lunar_rocks(amt: int):
 	current_lunar_rocks = int(clamp(current_lunar_rocks-amt, 0, INF))
 	lunar_rock_label.text = str(current_lunar_rocks)
 	
+func set_day(to: int):
+	day = to
+	
+	day_label.text = "Day: " + str(to)
+	
 func _set_to_appropriate_time():
 	if is_day():
 		_transition_day()
@@ -67,6 +73,7 @@ func _set_to_appropriate_time():
 	
 func _transition_day():
 	_transition_to_color(day_color)
+	set_day(day + 1)
 	emit_signal("day")
 	
 func _transition_night():
@@ -115,7 +122,7 @@ func _on_time(args):
 			hours = day_breakpoint-1
 			minutes = 59
 		["set", "day", "to", var to_day]:
-			day = int(to_day)
+			set_day(int(to_day))
 		["scale", var second]:
 			(timer as Timer).wait_time = float(second)
 
@@ -139,7 +146,6 @@ func _on_timeout():
 		
 		if hours > 23:
 			hours = 0
-			day += 1
 		
 		if hours == day_breakpoint:
 			_transition_day()

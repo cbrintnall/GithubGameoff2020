@@ -8,11 +8,17 @@ onready var event_manager = get_node("EventManager")
 var _camera: Camera2D
 
 func _ready():
+	var to_free_on_exit := [
+		get_player(),
+		get_farm_manager(),
+		get_node("SpawnManager")
+	]
+	
 	get_moon().connect(
 		"broken", 
 		end_screen, 
 		"begin_end", 
-		[ get_farm_manager().day ]
+		[ get_farm_manager().day, to_free_on_exit ]
 	)
 
 func set_current_camera(camera: Camera2D):
