@@ -1,5 +1,6 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
+[ext_resource path="res://assets/audio/sfx/ui/button_hover.wav" type="AudioStream" id=1]
 [ext_resource path="res://themes/main.tres" type="Theme" id=2]
 [ext_resource path="res://assets/ui/GUI.png" type="Texture" id=3]
 [ext_resource path="res://scenes/scripts/player_prefs.gd" type="Script" id=4]
@@ -7,7 +8,6 @@
 [sub_resource type="GDScript" id=1]
 script/source = "extends CanvasLayer
 
-onready var game_manager = get_node(\"/root/GameManager\")
 onready var input = get_node(\"CenterContainer/MarginContainer/PanelContainer/LineEdit\")
 onready var input_base = get_node(\"CenterContainer\")
 
@@ -55,6 +55,7 @@ signal settings_initialized
 
 const PREFS_LOCATION = \"user://player.prefs\"
 
+onready var on_hover = get_node(\"AudioStreamPlayer\")
 onready var volume_options_base = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/VolumeOptions\")
 onready var resolution = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/Resolution\")
 onready var prefs_base = get_node(\"MarginContainer\")
@@ -96,15 +97,18 @@ func _ready():
 	var resume = get_node(\"MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/ResumeButton\")
 	
 	resume.connect(\"button_down\", prefs_base, \"set_visible\", [ false ])
+	resume.connect(\"mouse_entered\", on_hover, \"play\")
 	new_button(\"Quit\", self, \"_quit_game\")
 	
 	var popup = resolution.get_popup()
 	
 	for i in range(0, len(_resolution_options)):
 		popup.add_item(_resolution_options[i], i)
-		popup.connect(\"id_pressed\", self, \"_on_resolution_chosen\")
+
+	popup.connect(\"id_pressed\", self, \"_on_resolution_chosen\")
 	
 	fullscreen_toggle.pressed = prefs[\"fullscreen\"]
+	fullscreen_toggle.connect(\"mouse_entered\", on_hover, \"play\")
 	fullscreen_toggle.connect(\"toggled\", self, \"_on_fullscreen_changed\")
 	
 	_create_volume_options()
@@ -226,7 +230,7 @@ func _unhandled_input(event):
 		
 "
 
-[sub_resource type="GDScript" id=4]
+[sub_resource type="GDScript" id=3]
 script/source = "extends Node2D
 
 signal input_mode_changed(mode)
@@ -365,7 +369,7 @@ func _input(event):
 		_set_to_controller(event.device)
 "
 
-[sub_resource type="AtlasTexture" id=5]
+[sub_resource type="AtlasTexture" id=4]
 atlas = ExtResource( 3 )
 region = Rect2( 2, 34, 44, 44 )
 
@@ -377,6 +381,7 @@ script = ExtResource( 4 )
 script = SubResource( 1 )
 
 [node name="CenterContainer" type="CenterContainer" parent="DebugUi"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
@@ -385,15 +390,15 @@ __meta__ = {
 }
 
 [node name="MarginContainer" type="MarginContainer" parent="DebugUi/CenterContainer"]
-margin_left = 604.0
-margin_top = 341.0
-margin_right = 676.0
-margin_bottom = 379.0
+margin_left = 633.0
+margin_top = 353.0
+margin_right = 647.0
+margin_bottom = 367.0
 mouse_filter = 1
 
 [node name="PanelContainer" type="PanelContainer" parent="DebugUi/CenterContainer/MarginContainer"]
-margin_right = 72.0
-margin_bottom = 38.0
+margin_right = 14.0
+margin_bottom = 14.0
 mouse_filter = 1
 
 [node name="LineEdit" type="LineEdit" parent="DebugUi/CenterContainer/MarginContainer/PanelContainer"]
@@ -411,6 +416,7 @@ caret_blink = true
 script = SubResource( 2 )
 
 [node name="MarginContainer" type="MarginContainer" parent="PlayerPreferences"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 __meta__ = {
@@ -422,10 +428,10 @@ margin_right = 1280.0
 margin_bottom = 720.0
 
 [node name="PanelContainer" type="PanelContainer" parent="PlayerPreferences/MarginContainer/CenterContainer"]
-margin_left = 552.0
-margin_top = 275.0
-margin_right = 728.0
-margin_bottom = 445.0
+margin_left = 633.0
+margin_top = 353.0
+margin_right = 647.0
+margin_bottom = 367.0
 size_flags_horizontal = 0
 size_flags_vertical = 0
 
@@ -433,11 +439,11 @@ size_flags_vertical = 0
 margin_left = 7.0
 margin_top = 7.0
 margin_right = 169.0
-margin_bottom = 163.0
+margin_bottom = 155.0
 
 [node name="VBoxContainer" type="VBoxContainer" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer"]
 margin_right = 162.0
-margin_bottom = 156.0
+margin_bottom = 148.0
 
 [node name="ResumeButton" type="Button" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
 margin_right = 162.0
@@ -453,7 +459,8 @@ margin_bottom = 28.0
 [node name="VolumeOptions" type="VBoxContainer" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
 margin_top = 32.0
 margin_right = 162.0
-margin_bottom = 54.0
+margin_bottom = 46.0
+custom_constants/separation = 12
 
 [node name="VolumeLabel" type="Label" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/VolumeOptions"]
 margin_right = 162.0
@@ -467,20 +474,15 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="HSeparator" type="HSeparator" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer/VolumeOptions"]
-margin_top = 18.0
-margin_right = 162.0
-margin_bottom = 22.0
-
 [node name="HSeparator2" type="HSeparator" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
-margin_top = 58.0
+margin_top = 50.0
 margin_right = 162.0
-margin_bottom = 62.0
+margin_bottom = 54.0
 
 [node name="Video" type="Label" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
-margin_top = 66.0
+margin_top = 58.0
 margin_right = 162.0
-margin_bottom = 80.0
+margin_bottom = 72.0
 theme = ExtResource( 2 )
 custom_colors/font_color_shadow = Color( 0, 0, 0, 1 )
 text = "Video:"
@@ -488,31 +490,37 @@ align = 1
 valign = 1
 
 [node name="FullscreenToggle" type="CheckButton" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
-margin_top = 84.0
+margin_top = 76.0
 margin_right = 162.0
-margin_bottom = 124.0
+margin_bottom = 116.0
 theme = ExtResource( 2 )
 text = "Fullscreen:"
 
 [node name="Resolution" type="MenuButton" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
-margin_top = 128.0
+margin_top = 120.0
 margin_right = 162.0
-margin_bottom = 148.0
+margin_bottom = 140.0
 theme = ExtResource( 2 )
 text = "Resolution"
 flat = false
 
 [node name="HSeparator3" type="HSeparator" parent="PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer"]
-margin_top = 152.0
+margin_top = 144.0
 margin_right = 162.0
-margin_bottom = 156.0
+margin_bottom = 148.0
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="PlayerPreferences"]
+stream = ExtResource( 1 )
+bus = "Sound Effects"
 
 [node name="InputHandler" type="Node2D" parent="."]
-script = SubResource( 4 )
+pause_mode = 1
+script = SubResource( 3 )
 
 [node name="InputChangedNotification" type="CanvasLayer" parent="InputHandler"]
 
 [node name="MarginContainer" type="MarginContainer" parent="InputHandler/InputChangedNotification"]
+visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 1
@@ -538,7 +546,7 @@ margin_right = 192.0
 margin_bottom = 70.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-texture = SubResource( 5 )
+texture = SubResource( 4 )
 region_rect = Rect2( 0, 0, 44, 44 )
 patch_margin_left = 5
 patch_margin_top = 5

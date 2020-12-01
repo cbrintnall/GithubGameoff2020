@@ -2,9 +2,18 @@ extends Node2D
 
 export(NodePath) var largest_tilemap
 
+onready var end_screen = get_node("GameOverScreen")
 onready var event_manager = get_node("EventManager")
 
 var _camera: Camera2D
+
+func _ready():
+	get_moon().connect(
+		"broken", 
+		end_screen, 
+		"begin_end", 
+		[ get_farm_manager().day ]
+	)
 
 func set_current_camera(camera: Camera2D):
 	var map = get_node(largest_tilemap) as TileMap

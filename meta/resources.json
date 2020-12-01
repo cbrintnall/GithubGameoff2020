@@ -1,27 +1,25 @@
 {
-    "meta": {
-        "output_folder": "res://meta/resources/resources/"
-    },
-    "resources": [
-        {
-            "on_break_path": "res://assets/audio/grass_break.ogg",
-            "name": "Grass",
-            "normal_texture_path": "res://assets/textures/farm/grass.png",
-            "hovered_texture_path": "res://assets/textures/farm/grass_hovered.png",
-            "drop_table": {
-                "res://meta/resources/seeds/apple_seed.tres": 7,
-                "res://meta/resources/seeds/cinammon_seed.tres": 1,
-                "res://meta/resources/seeds/coffee_seed.tres": 5,
-                "res://meta/resources/seeds/corn_seed.tres": 3,
-                "res://meta/resources/seeds/grape_seed.tres": 3,
-                "res://meta/resources/seeds/green_bean_seed.tres": 1,
-                "res://meta/resources/seeds/honeydew_seed.tres": 2,
-                "res://meta/resources/seeds/melon_seed.tres": 4,
-                "res://meta/resources/seeds/tomato_seed.tres": 10,
-                "res://meta/resources/seeds/turnip_seed.tres": 1,
-                "res://meta/resources/seeds/watermelon_seed.tres": 2,
-                "res://scenes/items/grass.tres": 100
-            }
-        }
-    ]
+  "meta": {
+    "output_folder": "res://meta/resources/resources/"
+  },
+  "resources": [
+    {
+      "on_break_path": "res://assets/audio/grass_break.ogg",
+      "name": "Grass",
+      "normal_texture_path": "res://assets/textures/farm/grass.png",
+      "hovered_texture_path": "res://assets/textures/farm/grass_hovered.png",
+      "drop_table": {
+        "res://meta/resources/seeds/apple_seed.tres": 7,
+        "res://meta/resources/seeds/cinammon_seed.tres": 1,
+        "res://meta/resources/seeds/coffee_seed.tres": 5,
+        "res://meta/resources/seeds/corn_seed.tres": 3,
+        "res://meta/resources/seeds/grape_seed.tres": 3,
+        "res://meta/resources/seeds/green_bean_seed.tres": 1,
+        "res://meta/resources/seeds/honeydew_seed.tres": 2,
+        "res://meta/resources/seeds/melon_seed.tres": 4,
+        "res://meta/resources/seeds/tomato_seed.tres": 10,
+        "res://scenes/items/grass.tres": 100
+      }
+    }
+  ]
 }

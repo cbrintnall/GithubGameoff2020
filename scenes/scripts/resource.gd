@@ -46,7 +46,7 @@ func _ready():
 func on_action_hover():
 	if !grown:
 		yield(self, "finished_growing")
-		
+
 	sprite.texture = inner_resource.hovered_texture
 	# TODO: evaluate if we want to keep this
 #	label.visible = true

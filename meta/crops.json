@@ -1,63 +1,63 @@
 {
-    "meta": {
-		"texture_base": "res://assets/textures/farm/plants/",
-		"output_folder": "res://meta/resources/crops/"
+  "meta": {
+    "texture_base": "res://assets/textures/farm/plants/",
+    "output_folder": "res://meta/resources/crops/"
+  },
+  "resources": [
+    {
+      "name": "Apple",
+      "value": 30,
+      "texture_path": "apple.png"
     },
-    "resources": [
-		{
-			"name": "Apple",
-			"value": 30,
-			"texture_path": "apple.png"
-		},
-		{
-			"name": "Cinammon",
-			"value": 0,
-			"texture_path": "cinammon.png"
-		},
-		{
-			"name": "Coffee",
-			"value": 0,
-			"texture_path": "coffee.png"
-		},
-		{
-			"name": "Corn",
-			"value": 0,
-			"texture_path": "corn.png"
-		},
-		{
-			"name": "Grape",
-			"value": 0,
-			"texture_path": "grape.png"
-		},
-		{
-			"name": "Green Bean",
-			"value": 0,
-			"texture_path": "green_bean.png"
-		},
-		{
-			"name": "Honeydew",
-			"value": 0,
-			"texture_path": "honeydew.png"
-		},
-		{
-			"name": "Melon",
-			"value": 0,
-			"texture_path": "melon.png"
-		},
-		{
-			"name": "Tomato",
-			"value": 2,
-			"texture_path": "tomato.png"
-		},
-		{
-			"name": "Turnip",
-			"value": 0,
-			"texture_path": "turnip.png"
-		},
-		{
-			"name": "Watermelon",
-			"value": 4,
-			"texture_path": "watermelon_grown.png"
-		}
-    ]
+    {
+      "name": "Cinammon",
+      "value": 70,
+      "texture_path": "cinammon.png"
+    },
+    {
+      "name": "Coffee",
+      "value": 50,
+      "texture_path": "coffee.png"
+    },
+    {
+      "name": "Corn",
+      "value": 65,
+      "texture_path": "corn.png"
+    },
+    {
+      "name": "Grape",
+      "value": 60,
+      "texture_path": "grape.png"
+    },
+    {
+      "name": "Green Bean",
+      "value": 75,
+      "texture_path": "green_bean.png"
+    },
+    {
+      "name": "Honeydew",
+      "value": 100,
+      "texture_path": "honeydew.png"
+    },
+    {
+      "name": "Melon",
+      "value": 75,
+      "texture_path": "melon.png"
+    },
+    {
+      "name": "Tomato",
+      "value": 25,
+      "texture_path": "tomato_plant.png"
+    },
+    {
+      "name": "Turnip",
+      "value": 25,
+      "texture_path": "turnip.png"
+    },
+    {
+      "name": "Watermelon",
+      "value": 100,
+      "texture_path": "watermelon_grown.png"
+    }
+  ]
 }

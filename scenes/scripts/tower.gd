@@ -41,9 +41,11 @@ var charge_timer = Timer.new()
 var state: int = TowerState.UNCHARGED
 var targets := []
 
+var _tower_popup := preload("res://scenes/towers/lunar_pool/popup.tscn")
 var _line_wind_down_time = .5
 var _draw_vision := false
 var _ui_parent
+var _tower_ui
 
 func in_world() -> bool:
 	return state != TowerState.PURCHASING and state != TowerState.INVALID_PLACEMENT
@@ -77,7 +79,7 @@ func add_target(target):
 
 func use():
 	if in_world() and _ui_parent:
-		_ui_parent.visible = true
+		_tower_ui.visible = true
 
 func destroy_tower():
 	queue_free()
@@ -112,12 +114,18 @@ func _ready():
 	charge_timer.one_shot = true
 	
 	if ui_parent:
-		_ui_parent = get_node(ui_parent)
-		
-		_ui_parent.visible = false
-		_ui_parent.connect("remove_tower", self, "destroy_tower")
+		_initialize_ui()
 	
 	_set_state(TowerState.PURCHASING)
+
+func _initialize_ui():
+	_tower_ui = _tower_popup.instance()
+	_tower_ui.connect("remove_tower", self, "destroy_tower")
+	_tower_ui.visible = false
+	_tower_ui.set_bound_to(self)
+	
+	_ui_parent = get_node(ui_parent)
+	_ui_parent.add_child(_tower_ui)
 
 func _on_collision_exit(body):
 	_set_state(TowerState.PURCHASING)

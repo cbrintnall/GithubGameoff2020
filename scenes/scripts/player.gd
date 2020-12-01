@@ -14,6 +14,7 @@ export(Color) var invalid_selection_color = Color.red
 export(NodePath) onready var dirt_tilemap_path = get_node(dirt_tilemap_path)
 export(NodePath) onready var ground_manager = get_node(ground_manager)
 
+onready var lamp_light = get_node("Light2D")
 onready var tools_ui = get_node("ToolsUi")
 onready var game_manager = get_node("/root/GameManager")
 onready var event_manager = get_node("/root/GameManager/EventManager")
@@ -34,6 +35,7 @@ var last_hovered_tile: Vector2
 var last_areas := []
 var last_bodies := []
 
+var _base_light_offset: Vector2
 var _current_tower_scene: PackedScene
 var _current_tower_purchase
 var _controller_action_area := false
@@ -54,6 +56,7 @@ func _ready():
 	
 	input_handler.connect("input_mode_changed", self, "_on_input_mode_changed")
 	_controller_action_area = input_handler.input_mode == Constants.InputMode.CONTROLLER
+	_base_light_offset = Vector2.RIGHT * lamp_light.position.x
 
 func _on_input_mode_changed(mode):
 	_controller_action_area = mode == Constants.InputMode.CONTROLLER
@@ -87,8 +90,10 @@ func _handle_movement(delta):
 
 	if move_vec.x > 0:
 		animated_sprite.flip_h = false
+		lamp_light.position = _base_light_offset
 	elif move_vec.x < 0:
 		animated_sprite.flip_h = true
+		lamp_light.position = -_base_light_offset
 	
 	if _controller_action_area:
 		if move_vec != Vector2.ZERO:

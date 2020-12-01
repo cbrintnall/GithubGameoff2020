@@ -1,122 +1,122 @@
 {
-	"meta": {
-		"output_folder": "res://meta/resources/seeds/",
-		"plants_folder": "res://meta/resources/plants/"
-	},
-	"resources": [
-		{
-			"name": "Apple Seed",
-			"value": 0,
-			"plant_path": "apple.tres",
-			"texture_path": "res://assets/textures/farm/plants/apple_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Cinammon Seed",
-			"value": 0,
-			"plant_path": "cinammon.tres",
-			"texture_path": "res://assets/textures/farm/plants/cinammon.png"
-		},
-		{
-			"name": "Coffee Seed",
-			"value": 0,
-			"plant_path": "coffee.tres",
-			"texture_path": "res://assets/textures/farm/plants/coffee_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Corn Seed",
-			"value": 0,
-			"plant_path": "corn.tres",
-			"texture_path": "res://assets/textures/farm/plants/corn_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Grape Seed",
-			"value": 0,
-			"plant_path": "grape.tres",
-			"texture_path": "res://assets/textures/farm/plants/grape_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Green Bean Seed",
-			"value": 0,
-			"plant_path": "green_bean.tres",
-			"texture_path": "res://assets/textures/farm/plants/green_bean_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Honeydew Seed",
-			"value": 0,
-			"plant_path": "honeydew.tres",
-			"texture_path": "res://assets/textures/farm/plants/honeydew_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Melon Seed",
-			"value": 0,
-			"plant_path": "melon.tres",
-			"texture_path": "res://assets/textures/farm/plants/melon_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Tomato Seed",
-			"value": 2,
-			"plant_path": "tomato.tres",
-			"texture_path": "res://assets/textures/farm/seeds/tomato.png"
-		},
-		{
-			"name": "Turnip Seed",
-			"value": 0,
-			"plant_path": "turnip.tres",
-			"texture_path": "res://assets/textures/farm/plants/turnip_growing.png",
-			"texture_rect": {
-				"x": 64,
-				"y": 0,
-				"height": 16,
-				"width": 16
-			}
-		},
-		{
-			"name": "Watermelon Seed",
-			"value": 4,
-			"plant_path": "res://scenes/items/seeds/watermelon_seeds.tres",
-			"texture_path": "res://assets/textures/farm/seeds/watermelon.png"
-		}
-	]
+  "meta": {
+    "output_folder": "res://meta/resources/seeds/",
+    "plants_folder": "res://meta/resources/plants/"
+  },
+  "resources": [
+    {
+      "name": "Apple Seed",
+      "value": 0,
+      "plant_path": "apple.tres",
+      "texture_path": "res://assets/textures/farm/plants/apple_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Cinammon Seed",
+      "value": 0,
+      "plant_path": "cinammon.tres",
+      "texture_path": "res://assets/textures/farm/plants/cinammon.png"
+    },
+    {
+      "name": "Coffee Seed",
+      "value": 0,
+      "plant_path": "coffee.tres",
+      "texture_path": "res://assets/textures/farm/plants/coffee_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Corn Seed",
+      "value": 0,
+      "plant_path": "corn.tres",
+      "texture_path": "res://assets/textures/farm/plants/corn_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Grape Seed",
+      "value": 0,
+      "plant_path": "grape.tres",
+      "texture_path": "res://assets/textures/farm/plants/grape_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Green Bean Seed",
+      "value": 0,
+      "plant_path": "green_bean.tres",
+      "texture_path": "res://assets/textures/farm/plants/green_bean_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Honeydew Seed",
+      "value": 0,
+      "plant_path": "honeydew.tres",
+      "texture_path": "res://assets/textures/farm/plants/honeydew_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Melon Seed",
+      "value": 0,
+      "plant_path": "melon.tres",
+      "texture_path": "res://assets/textures/farm/plants/melon_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Tomato Seed",
+      "value": 2,
+      "plant_path": "tomato.tres",
+      "texture_path": "res://assets/textures/farm/seeds/tomato.png"
+    },
+    {
+      "name": "Turnip Seed",
+      "value": 0,
+      "plant_path": "turnip.tres",
+      "texture_path": "res://assets/textures/farm/plants/turnip_growing.png",
+      "texture_rect": {
+        "x": 64,
+        "y": 0,
+        "height": 16,
+        "width": 16
+      }
+    },
+    {
+      "name": "Watermelon Seed",
+      "value": 4,
+      "plant_path": "res://scenes/items/seeds/watermelon_seeds.tres",
+      "texture_path": "res://assets/textures/farm/seeds/watermelon.png"
+    }
+  ]
 }

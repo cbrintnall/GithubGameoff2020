@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=2]
+[gd_scene load_steps=21 format=2]
 
 [ext_resource path="res://assets/audio/sfx/items/pickup.wav" type="AudioStream" id=1]
 [ext_resource path="res://assets/textures/player/walk_cloud.png" type="Texture" id=2]
@@ -58,9 +58,10 @@ func _ready():
 	animator.play(\"default\")
 
 func _on_player_enter(body):
-	_player = body
-	_max_distance = global_position.distance_to(_player.global_position)
-	animator.play(\"default\")
+	if body is KinematicBody2D:
+		_player = body
+		_max_distance = global_position.distance_to(_player.global_position)
+		animator.play(\"default\")
 
 func _on_player_exit(body):
 	_player = null
@@ -69,7 +70,6 @@ func _on_player_exit(body):
 func _give_item():
 	if _player and _player.inventory:
 		_player.inventory.add_item(_item, _quantity)
-		print(\"added\")
 
 func _do_pickup():
 	_picked_up = true
@@ -256,6 +256,36 @@ tracks/3/keys = {
 } ]
 }
 
+[sub_resource type="Gradient" id=14]
+offsets = PoolRealArray( 0.714286, 0.993506 )
+colors = PoolColorArray( 0.862745, 0.862745, 0.862745, 1, 0.862745, 0.862745, 0.862745, 0 )
+
+[sub_resource type="GradientTexture" id=15]
+gradient = SubResource( 14 )
+
+[sub_resource type="Curve" id=16]
+max_value = 100.0
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.362538, 0 ), 270.818, 270.818, 0, 0, Vector2( 1, 95.4546 ), 234.04, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=17]
+curve = SubResource( 16 )
+
+[sub_resource type="ParticlesMaterial" id=13]
+emission_shape = 1
+emission_sphere_radius = 3.0
+flag_disable_z = true
+gravity = Vector3( 0, -10, 0 )
+orbit_velocity = 0.5
+orbit_velocity_random = 0.0
+radial_accel = 5.0
+radial_accel_random = 0.5
+damping_curve = SubResource( 17 )
+angle = 136.8
+angle_random = 1.0
+scale = 0.25
+scale_random = 0.5
+color_ramp = SubResource( 15 )
+
 [node name="RigidBody2D" type="RigidBody2D"]
 collision_layer = 0
 mass = 8.44286
@@ -300,7 +330,9 @@ anims/float = SubResource( 11 )
 anims/pickup = SubResource( 12 )
 
 [node name="Particles2D2" type="Particles2D" parent="."]
+amount = 10
 local_coords = false
+process_material = SubResource( 13 )
 
 [node name="Timer" type="Timer" parent="."]
 wait_time = 30.0

@@ -1,0 +1,137 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://assets/textures/ui/main_menu_background.png" type="Texture" id=1]
+[ext_resource path="res://assets/audio/sfx/ui/intro_text.wav" type="AudioStream" id=2]
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends CanvasLayer
+
+var intro_text = \"\"\"
+Everyone abandoned earth and went to the moon. You've been left behind to provide food, and hopefully survive.
+\"\"\"
+
+onready var fader = get_node(\"Text/CanvasModulate\")
+onready var audio = get_node(\"AudioStreamPlayer\")
+onready var tween = get_node(\"Tween\")
+onready var timer = get_node(\"Timer\")
+onready var label = get_node(\"Text/MarginContainer/VBoxContainer/Label\")
+
+var _current_letter := 0
+
+func _ready():
+	timer.connect(\"timeout\", self, \"_show_text\")
+		
+func _show_text():
+	_current_letter += 1
+	
+	if _current_letter < len(intro_text):
+		label.text = intro_text.substr(0, _current_letter)
+		timer.start()
+		
+		if intro_text[_current_letter] != \" \":
+			audio.play()
+		
+func _input(event):
+	if event is InputEventKey:
+		timer.stop()
+		label.text = intro_text
+		
+		tween.interpolate_property(
+			fader,
+			\"color\",
+			fader.color,
+			Color.black,
+			3.0,
+			Tween.TRANS_CUBIC,
+			Tween.EASE_IN
+		)
+		
+		tween.start()
+		
+		yield(tween,\"tween_all_completed\")
+		
+		get_tree().change_scene(\"res://scenes/farm.tscn\")
+"
+
+[sub_resource type="DynamicFontData" id=1]
+font_path = "res://assets/fonts/MinimalPixel v2.ttf"
+
+[sub_resource type="DynamicFont" id=2]
+size = 32
+font_data = SubResource( 1 )
+
+[node name="Intro" type="CanvasLayer"]
+script = SubResource( 3 )
+
+[node name="CanvasLayer" type="CanvasLayer" parent="."]
+
+[node name="TextureRect" type="TextureRect" parent="CanvasLayer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+texture = ExtResource( 1 )
+expand = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CanvasModulate" type="CanvasModulate" parent="CanvasLayer"]
+color = Color( 0, 0, 0, 1 )
+
+[node name="Text" type="CanvasLayer" parent="."]
+layer = 3
+
+[node name="MarginContainer" type="MarginContainer" parent="Text"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+custom_constants/margin_right = 32
+custom_constants/margin_top = 32
+custom_constants/margin_left = 32
+custom_constants/margin_bottom = 32
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="Text/MarginContainer"]
+margin_left = 32.0
+margin_top = 32.0
+margin_right = 1248.0
+margin_bottom = 688.0
+alignment = 1
+
+[node name="Label" type="Label" parent="Text/MarginContainer/VBoxContainer"]
+margin_right = 1216.0
+margin_bottom = 620.0
+size_flags_horizontal = 7
+size_flags_vertical = 7
+custom_fonts/font = SubResource( 2 )
+align = 1
+valign = 1
+autowrap = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Label2" type="Label" parent="Text/MarginContainer/VBoxContainer"]
+margin_top = 624.0
+margin_right = 1216.0
+margin_bottom = 656.0
+size_flags_vertical = 12
+custom_fonts/font = SubResource( 2 )
+text = "Press anything to continue."
+align = 1
+valign = 2
+autowrap = true
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="CanvasModulate" type="CanvasModulate" parent="Text"]
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="Timer" type="Timer" parent="."]
+wait_time = 0.1
+autostart = true
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 2 )

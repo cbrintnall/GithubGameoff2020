@@ -31,7 +31,7 @@ func purchase():
 	connect("new_target", self, "_on_new_target")
 	
 func _on_lost_target(target):
-	if target is Tower:
+	if target is Tower and _tower_beam_cache.has(target):
 		target.reset_damage_multiplier()
 		_tower_beam_cache[target].queue_free()
 		_tower_beam_cache.erase(target)

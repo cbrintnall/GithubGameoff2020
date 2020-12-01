@@ -7,4 +7,4 @@
 script = ExtResource( 1 )
 item_name = "Turnip"
 texture = ExtResource( 2 )
-value = 0.0
+value = 25.0

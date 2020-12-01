@@ -8,18 +8,16 @@
 [resource]
 script = ExtResource( 4 )
 drop_table = {
-Resource( "res://meta/resources/seeds/cinammon_seed.tres" ): 1.0,
-Resource( "res://meta/resources/seeds/green_bean_seed.tres" ): 1.0,
-Resource( "res://meta/resources/seeds/watermelon_seed.tres" ): 2.0,
 Resource( "res://meta/resources/seeds/corn_seed.tres" ): 3.0,
-Resource( "res://meta/resources/seeds/grape_seed.tres" ): 3.0,
 Resource( "res://meta/resources/seeds/tomato_seed.tres" ): 10.0,
 Resource( "res://meta/resources/seeds/coffee_seed.tres" ): 5.0,
-Resource( "res://meta/resources/seeds/honeydew_seed.tres" ): 2.0,
-Resource( "res://meta/resources/seeds/apple_seed.tres" ): 7.0,
-Resource( "res://meta/resources/seeds/turnip_seed.tres" ): 1.0,
 Resource( "res://meta/resources/seeds/melon_seed.tres" ): 4.0,
-Resource( "res://scenes/items/grass.tres" ): 100.0
+Resource( "res://meta/resources/seeds/grape_seed.tres" ): 3.0,
+Resource( "res://scenes/items/grass.tres" ): 100.0,
+Resource( "res://meta/resources/seeds/green_bean_seed.tres" ): 1.0,
+Resource( "res://meta/resources/seeds/honeydew_seed.tres" ): 2.0,
+Resource( "res://meta/resources/seeds/cinammon_seed.tres" ): 1.0,
+Resource( "res://meta/resources/seeds/apple_seed.tres" ): 7.0
 }
 on_break = ExtResource( 3 )
 ground_resource_name = "Grass"

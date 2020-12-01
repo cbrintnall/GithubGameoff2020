@@ -10,12 +10,10 @@ onready var timer = get_node("DayCycle/Timer")
 onready var day_canvas = get_node("DayCycle/CanvasModulate")
 onready var transition_tween = get_node("DayCycle/Tween")
 onready var rock_increase_tween = get_node("CanvasLayer/Tween")
-onready var lunar_rock_audio = get_node("CanvasLayer/LunarRockGained")
 onready var ui_base = get_node("CanvasLayer/MarginContainer")
 onready var time_label = get_node("CanvasLayer/MarginContainer/HBoxContainer/Label")
 onready var clock_base = get_node("CanvasLayer/MarginContainer")
 onready var lunar_rock_label = get_node("CanvasLayer/MarginContainer/HBoxContainer/HBoxContainer/Label")
-onready var moonlight = get_node("MoonLight")
 
 export(int) var moonlight_min_x_offset = -500
 export(int) var moonlight_max_x_offset = 500
@@ -35,13 +33,11 @@ var lunar_rock_amt := 0
 var current_lunar_rocks := 0
 
 var day: int
-# start the game at 7 AM!
-# TODO: change back to 7 am
 var hours := 7
 var minutes: int
 
 func is_day() -> bool:
-	return hours > day_breakpoint and hours < night_breakpoint
+	return hours >= day_breakpoint and hours < night_breakpoint
 
 func get_current_time():
 	return {
@@ -52,12 +48,6 @@ func get_current_time():
 
 func to_text(amt):
 	var true_amt := int(floor(amt))
-	
-	if (true_amt % lunar_rock_gain_sound_divisor) == 0:
-		if lunar_rock_audio.playing:
-			lunar_rock_audio.stop()
-
-		lunar_rock_audio.play()
 
 	lunar_rock_label.text = str(true_amt)
 
@@ -106,7 +96,7 @@ func _ready():
 	get_node("CanvasLayer").layer = 1
 	
 	var prefs = get_node("/root/GameManager").get_player_prefs()
-	
+
 	prefs.register_command("coins", funcref(self, "_on_coins"))
 	prefs.register_command("time", funcref(self, "_on_time"))
 	
@@ -124,6 +114,10 @@ func _on_time(args):
 		["set", "day"]:
 			hours = day_breakpoint-1
 			minutes = 59
+		["set", "day", "to", var to_day]:
+			day = int(to_day)
+		["scale", var second]:
+			(timer as Timer).wait_time = float(second)
 
 func _on_coins(args):
 	match args:
@@ -143,6 +137,10 @@ func _on_timeout():
 		minutes = 0
 		hours += 1
 		
+		if hours > 23:
+			hours = 0
+			day += 1
+		
 		if hours == day_breakpoint:
 			_transition_day()
 			
@@ -158,10 +156,6 @@ func _on_timeout():
 			night_unit_time = clamp(inverse_lerp(night_breakpoint, 24, hours), 0.0, 0.4)
 		if hours >= 0 and hours < day_breakpoint:
 			night_unit_time = clamp(inverse_lerp(0, day_breakpoint, hours), .4, 1.0)
-	
-	if hours > 23:
-		hours = 0
-		day += 1
 		
 	var time_hours = str(hours) if hours >= 10 else "0" + str(hours)
 	var time_minutes = str(minutes) if minutes >= 10 else "0" + str(minutes)

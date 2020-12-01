@@ -16,6 +16,11 @@ onready var fade_timer = get_node(\"Timer\")
 
 var fade_tween: Tween
 
+var _tower
+
+func set_bound_to(t):
+	_tower = t
+
 func _ready():
 	remove_button.connect(\"button_down\", self, \"_on_press_remove\")
 	remove_button.connect(\"mouse_entered\", self, \"_on_hover_button\")
@@ -31,6 +36,7 @@ func _on_hover_button():
 
 func _on_visibility_changed():
 	if visible:
+		modulate = Color.white
 		fade_timer.start()
 	else:
 		modulate = Color.white
@@ -52,7 +58,7 @@ func _do_fade(time := 3.0):
 	fade_tween.connect(\"tween_all_completed\", self, \"_on_fade_finish\")
 
 func _on_timeout():
-	_do_fade()
+	_do_fade(1.0)
 
 func _on_mouse_exit():
 	# since the mouse \"exits\" when we hover over a child, we check if the mouse
@@ -78,10 +84,12 @@ func _on_fade_finish():
 	if fade_tween:
 		fade_tween.queue_free()
 		fade_tween = null
-		visible = false
-		modulate = Color.white
+
+	visible = false
+	modulate = Color.white
 
 func _on_press_remove():
+	_tower.visible = false
 	yield(remove_tower_audio,\"finished\")
 	emit_signal(\"remove_tower\")
 "

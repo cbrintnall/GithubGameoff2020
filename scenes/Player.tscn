@@ -468,7 +468,7 @@ colors = PoolColorArray( 0.515625, 0.515625, 0.515625, 0.419608, 0, 0, 0, 0 )
 
 [node name="Player" type="KinematicBody2D"]
 position = Vector2( 0, 3 )
-collision_layer = 327681
+collision_layer = 65537
 script = ExtResource( 2 )
 speed = 1.0
 dirt_tilemap_path = NodePath("../../GameManager/DirtBase")
@@ -478,7 +478,6 @@ ground_manager = NodePath("../../GameManager/GroundManager")
 position = Vector2( 0, -0.0196867 )
 frames = SubResource( 20 )
 animation = "idle"
-frame = 1
 playing = true
 offset = Vector2( 0, -12 )
 
@@ -506,6 +505,7 @@ shape = SubResource( 24 )
 [node name="AnimatedSprite" type="AnimatedSprite" parent="ActionArea"]
 z_index = -1
 frames = SubResource( 27 )
+frame = 1
 playing = true
 
 [node name="Inventory" type="Node2D" parent="."]
@@ -643,7 +643,7 @@ color_ramp = SubResource( 30 )
 stream = ExtResource( 12 )
 
 [node name="Light2D" type="Light2D" parent="."]
-position = Vector2( 18.6875, -7.5 )
+position = Vector2( 18.687, 7 )
 texture = ExtResource( 15 )
 texture_scale = 0.13
 energy = 0.5

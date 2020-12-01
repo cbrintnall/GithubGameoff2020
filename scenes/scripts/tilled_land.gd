@@ -30,7 +30,6 @@ var _fading_out := false
 func _ready():
 	growing_sprite.playing = false
 	growing_sprite.visible = false
-	growing_sprite.connect("animation_finished", self, "_on_finish")
 
 	game_manager.get_node("GroundManager").connect("do_tick", self, "_on_ground_tick")
 
@@ -69,11 +68,6 @@ func _on_choose_seed(item):
 	
 	game_manager.event_manager.new_message("Planted " + item.item_name)
 
-func _on_finish():
-	growing_sprite.frame = growing_sprite.frames.get_frame_count("default")
-	growing_sprite.playing = false
-	plant_done = true
-
 func _energy_notification(incr: bool, amt: float):
 	var prefix = "+ " if incr else "- "
 	energy_notification_text.text = prefix + str(amt)
@@ -98,7 +92,7 @@ func _energy_notification(incr: bool, amt: float):
 func _on_ground_tick():
 	# dont care about ticks if nothing is growing on this plot!
 	# or if the plant has already finished growing :)
-	if !growing_plant || current_progress >= growing_plant.required_energy || current_energy <= 0.0:
+	if !growing_plant || current_progress >= growing_plant.required_energy || current_energy <= 0.0 || plant_done:
 		return
 	
 	current_energy = clamp(current_energy-decr_amt, 0, 100)
@@ -109,7 +103,7 @@ func _on_ground_tick():
 	# interpolate the frames over the lifetime growth of the plant
 	var frame_count = growing_sprite.frames.get_frame_count("default")
 	var ratio = current_progress/growing_plant.required_energy
-	var frame = floor(lerp(1, frame_count, ratio))
+	var frame = ceil(lerp(frame_count-1, 0, ratio))
 	
 	growing_sprite.frame = frame
 	
@@ -117,8 +111,12 @@ func _on_ground_tick():
 		_on_finished_growing()
 		
 func _on_finished_growing():
-	emit_signal("done_growing")
 	energy_particles.color = Color.limegreen
+	growing_sprite.frame = 0
+	growing_sprite.playing = false
+	plant_done = true
+
+	emit_signal("done_growing")
 
 func on_action_hover():
 	if !growing_plant and !_fading_out:
@@ -179,7 +177,8 @@ func set_growing(plant: GrowingPlant):
 	growing_plant = plant
 	growing_sprite.frames = plant.grow_frames
 	growing_sprite.visible = true
-	growing_sprite.frame = 0
+	# set to final frame, since our frames are all backwards lol
+	growing_sprite.frame = growing_sprite.frames.get_frame_count("default")-1
 	current_progress = 0.0
 	energy_particles.color = Color.aliceblue
 	player.stream = plant_sound

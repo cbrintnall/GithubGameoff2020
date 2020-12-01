@@ -47,12 +47,13 @@ color_ramp = SubResource( 7 )
 anim_speed = 1.0
 
 [node name="LunarPool" type="StaticBody2D"]
-collision_layer = 131073
-collision_mask = 131073
+collision_layer = 655361
+collision_mask = 655361
 script = ExtResource( 2 )
-value = 500.0
+value = 900.0
 damage_per_hit = 0.0
 icon_texture = SubResource( 1 )
+ui_parent = NodePath("UiBase")
 no_place_area = NodePath("NoPlaceArea")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("Visionarea")
@@ -92,3 +93,5 @@ position = Vector2( 0, -23.4229 )
 amount = 4
 process_material = SubResource( 8 )
 texture = ExtResource( 3 )
+
+[node name="UiBase" type="Node2D" parent="."]

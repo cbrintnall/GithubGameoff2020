@@ -5,10 +5,10 @@
 [ext_resource path="res://scenes/scripts/effect_aoe_tower.gd" type="Script" id=3]
 [ext_resource path="res://assets/textures/farm/towers/mushroom_tower_shake.png" type="Texture" id=5]
 
-[sub_resource type="RectangleShape2D" id=9]
+[sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 3.11715, 1.50274 )
 
-[sub_resource type="Animation" id=10]
+[sub_resource type="Animation" id=2]
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite:texture")
 tracks/0/interp = 1
@@ -70,7 +70,7 @@ tracks/4/keys = {
 "values": [ 0.0 ]
 }
 
-[sub_resource type="Animation" id=11]
+[sub_resource type="Animation" id=12]
 length = 1.2
 tracks/0/type = "value"
 tracks/0/path = NodePath("Sprite:texture")
@@ -133,33 +133,33 @@ tracks/4/keys = {
 "values": [ 100.0, 0.0 ]
 }
 
-[sub_resource type="RectangleShape2D" id=12]
+[sub_resource type="RectangleShape2D" id=13]
 extents = Vector2( 1, 1 )
 
-[sub_resource type="CircleShape2D" id=13]
+[sub_resource type="CircleShape2D" id=14]
 radius = 45.0
 
-[sub_resource type="Gradient" id=3]
+[sub_resource type="Gradient" id=15]
 offsets = PoolRealArray( 0.666667, 1 )
-colors = PoolColorArray( 1, 1, 1, 0.537255, 1, 1, 1, 0 )
+colors = PoolColorArray( 0.175018, 0.722656, 0, 0.537255, 1, 1, 1, 0 )
 
-[sub_resource type="GradientTexture" id=4]
-gradient = SubResource( 3 )
+[sub_resource type="GradientTexture" id=16]
+gradient = SubResource( 15 )
 
-[sub_resource type="Curve" id=5]
+[sub_resource type="Curve" id=8]
 max_value = 100.0
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.151899, 99.0909 ), 1350.18, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=6]
-curve = SubResource( 5 )
+[sub_resource type="CurveTexture" id=9]
+curve = SubResource( 8 )
 
-[sub_resource type="Curve" id=7]
+[sub_resource type="Curve" id=10]
 _data = [ Vector2( 0, 0 ), 0.0, 0.0, 0, 0, Vector2( 0.746835, 0.527273 ), 0.0, 0.0, 0, 0, Vector2( 0.993671, 0.0181818 ), 0.0, 0.0, 0, 0 ]
 
-[sub_resource type="CurveTexture" id=8]
-curve = SubResource( 7 )
+[sub_resource type="CurveTexture" id=11]
+curve = SubResource( 10 )
 
-[sub_resource type="ParticlesMaterial" id=14]
+[sub_resource type="ParticlesMaterial" id=17]
 emission_shape = 2
 emission_box_extents = Vector3( 11.848, 3, 1 )
 flag_align_y = true
@@ -173,22 +173,22 @@ orbit_velocity = 0.0
 orbit_velocity_random = 0.0
 tangential_accel = 30.0
 tangential_accel_random = 0.38
-damping_curve = SubResource( 6 )
+damping_curve = SubResource( 9 )
 angle = 720.0
 angle_random = 1.0
-scale_curve = SubResource( 8 )
-color_ramp = SubResource( 4 )
-hue_variation = 0.25
-hue_variation_random = 1.0
+scale_curve = SubResource( 11 )
+color_ramp = SubResource( 16 )
+hue_variation = 0.11
 
 [node name="EffectAoeTower" type="StaticBody2D"]
 scale = Vector2( 1.5, 1.5 )
 collision_layer = 819201
 collision_mask = 524289
 script = ExtResource( 3 )
-value = 300.0
+value = 400.0
 charge_time = 5.0
 icon_texture = ExtResource( 2 )
+ui_parent = NodePath("UiBase")
 no_place_area = NodePath("NoPlaceArea")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("VisionArea")
@@ -197,11 +197,11 @@ animation = NodePath("AnimationPlayer")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( 0, 1.21919 )
 z_index = 1
-shape = SubResource( 9 )
+shape = SubResource( 1 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
-anims/default = SubResource( 10 )
-anims/fire = SubResource( 11 )
+anims/default = SubResource( 2 )
+anims/fire = SubResource( 12 )
 
 [node name="Sprite" type="Sprite" parent="."]
 position = Vector2( 0, 2.94314 )
@@ -217,16 +217,18 @@ position = Vector2( 0, -8.72053 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="NoPlaceArea"]
 position = Vector2( 0, 10.0668 )
-shape = SubResource( 12 )
+shape = SubResource( 13 )
 
 [node name="VisionArea" type="Area2D" parent="."]
 scale = Vector2( 0.75, 0.75 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="VisionArea"]
-shape = SubResource( 13 )
+shape = SubResource( 14 )
 
 [node name="Particles2D" type="Particles2D" parent="."]
 position = Vector2( 0, -15.264 )
 amount = 30
-process_material = SubResource( 14 )
+process_material = SubResource( 17 )
 texture = ExtResource( 1 )
+
+[node name="UiBase" type="Node2D" parent="."]

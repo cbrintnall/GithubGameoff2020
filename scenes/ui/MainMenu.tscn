@@ -1,13 +1,19 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=26 format=2]
 
 [ext_resource path="res://assets/textures/ui/main_menu_background.png" type="Texture" id=1]
 [ext_resource path="res://themes/main.tres" type="Theme" id=2]
 [ext_resource path="res://scenes/managers/player_prefs.tscn" type="PackedScene" id=3]
 [ext_resource path="res://assets/ui/GUI.png" type="Texture" id=4]
+[ext_resource path="res://assets/audio/sfx/ui/button_hover.wav" type="AudioStream" id=5]
+[ext_resource path="res://assets/audio/music/day/James Hammond - Video Game Inspired Songs and Loops (Batch 3) - 01 Solace.ogg" type="AudioStream" id=6]
+[ext_resource path="res://assets/textures/ui/moon_for_background.png" type="Texture" id=7]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends CanvasLayer
 
+onready var moon_tween = get_node(\"MoonTween\")
+onready var music_player = get_node(\"Music\")
+onready var button_hover = get_node(\"AudioStreamPlayer\")
 onready var buttons_tween = get_node(\"Tween\")
 onready var play_button = get_node(\"MarginContainer2/VBoxContainer/PlayButton/TextureButton\")
 onready var options_button = get_node(\"MarginContainer2/VBoxContainer/OptionsButton/TextureButton\")
@@ -17,17 +23,16 @@ onready var play_button_base = get_node(\"MarginContainer2/VBoxContainer/PlayBut
 onready var options_button_base = get_node(\"MarginContainer2/VBoxContainer/OptionsButton\")
 onready var quit_button_base = get_node(\"MarginContainer2/VBoxContainer/QuitButton\")
 
-var _game_scene = preload(\"res://scenes/farm.tscn\")
-
 func _ready():
-#	_tween_buttons()
-	
 	var tree = get_tree()
 	var prefs_base = get_node(\"PlayerPrefs\")
 	
-	play_button.connect(\"button_down\", tree, \"change_scene\", [ \"res://scenes/farm.tscn\" ])
+	play_button.connect(\"button_down\", tree, \"change_scene\", [ \"res://scenes/ui/Intro.tscn\" ])
 	quit_button.connect(\"button_down\", tree, \"quit\")
 	options_button.connect(\"button_down\", get_node(\"PlayerPrefs/PlayerPreferences/MarginContainer\"), \"set_visible\", [ true ])
+	play_button.connect(\"mouse_entered\", button_hover, \"play\")
+	quit_button.connect(\"mouse_entered\", button_hover, \"play\")
+	options_button.connect(\"mouse_entered\", button_hover, \"play\")
 
 	prefs_base.register_command(\"generate\", funcref(self, \"_on_generate\"))
 	
@@ -35,6 +40,8 @@ func _ready():
 
 	if len(args) > 0:
 		_on_generate(Array(args).slice(1, len(args)-1))
+		
+	music_player.connect(\"finished\", music_player, \"play\")
 
 func _on_generate(args: Array):
 	var resource_initializer = get_node(\"ResourceInitializer\")
@@ -175,10 +182,10 @@ func create_plant_resource(definition_path: String):
 		var texture = load(frame_base + plant.get(\"frames_path\"))
 		var sprite_frames = SpriteFrames.new()
 		var frame_count = texture.get_size().x/frame_size.x
+		var frames := []
 
-		sprite_frames.add_animation(\"default\")
-
-		for i in range(frame_count):
+		# cut up all the frames according to their specification in the def
+		for i in range(0, frame_count):
 			var frame_texture = AtlasTexture.new()
 
 			frame_texture.atlas = texture
@@ -187,9 +194,9 @@ func create_plant_resource(definition_path: String):
 				frame_size
 			)
 
-			sprite_frames.add_frame(\"default\", frame_texture, frame_count-i)
-			sprite_frames.set_animation_loop(\"default\", false)
+			sprite_frames.add_frame(\"default\", frame_texture)
 
+		sprite_frames.set_animation_loop(\"default\", false)
 		plant_resource.grow_frames = sprite_frames
 		plant_resource.required_energy = plant.get(\"required_energy\", 100)
 		plant_resource.finished_plant = load(meta.get(\"crops_base\") + _normalize_path(plant.get(\"name\", \"NO_NAME\")) + \".tres\")
@@ -257,8 +264,96 @@ region = Rect2( 145, 81, 46, 14 )
 atlas = ExtResource( 4 )
 region = Rect2( 145, 98, 46, 13 )
 
+[sub_resource type="Gradient" id=8]
+offsets = PoolRealArray( 0.0194805, 0.324675, 0.88961, 0.99026 )
+colors = PoolColorArray( 0.682353, 0, 0, 1, 0.890625, 0.388344, 0.0869751, 1, 1, 0.960784, 0.0352941, 1, 1, 1, 1, 0 )
+
+[sub_resource type="GradientTexture" id=9]
+gradient = SubResource( 8 )
+
+[sub_resource type="Curve" id=10]
+max_value = 100.0
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 0.809668, 100 ), -55.1667, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=11]
+curve = SubResource( 10 )
+
+[sub_resource type="Curve" id=6]
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), -3.27075, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=7]
+curve = SubResource( 6 )
+
+[sub_resource type="ParticlesMaterial" id=5]
+emission_shape = 2
+emission_box_extents = Vector3( 16, 1, 1 )
+flag_disable_z = true
+spread = 180.0
+flatness = 1.0
+gravity = Vector3( 0, -98, 0 )
+initial_velocity = 10.0
+initial_velocity_random = 1.0
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+linear_accel = 2.0
+linear_accel_random = 1.0
+radial_accel = 9.25
+damping_curve = SubResource( 11 )
+scale = 4.0
+scale_random = 1.0
+scale_curve = SubResource( 7 )
+color_ramp = SubResource( 9 )
+hue_variation = 0.1
+hue_variation_random = 1.0
+
+[sub_resource type="Gradient" id=17]
+offsets = PoolRealArray( 0.217532, 0.785714, 1 )
+colors = PoolColorArray( 0, 0.572549, 0.701961, 1, 0.179688, 1, 0.942322, 1, 1, 1, 1, 0 )
+
+[sub_resource type="GradientTexture" id=18]
+gradient = SubResource( 17 )
+
+[sub_resource type="Curve" id=13]
+max_value = 100.0
+_data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 100 ), 494.35, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=14]
+curve = SubResource( 13 )
+
+[sub_resource type="Curve" id=15]
+_data = [ Vector2( 0, 0 ), 0.0, 0.0, 0, 0, Vector2( 1, 1 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="CurveTexture" id=16]
+curve = SubResource( 15 )
+
+[sub_resource type="ParticlesMaterial" id=12]
+emission_shape = 2
+emission_box_extents = Vector3( 40, 10, 1 )
+flag_disable_z = true
+spread = 180.0
+gravity = Vector3( 20, 20, 0 )
+initial_velocity = 0.5
+angular_velocity = 720.0
+angular_velocity_random = 1.0
+orbit_velocity = 0.0
+orbit_velocity_random = 0.0
+linear_accel = 30.0
+linear_accel_random = 1.0
+radial_accel = 30.0
+radial_accel_random = 1.0
+damping_random = 1.0
+damping_curve = SubResource( 14 )
+angle = -720.0
+scale = 3.0
+scale_random = 1.0
+scale_curve = SubResource( 16 )
+color_ramp = SubResource( 18 )
+hue_variation = 0.01
+
 [node name="MainMenu" type="CanvasLayer"]
 script = SubResource( 1 )
+
+[node name="MoonTween" type="Tween" parent="."]
 
 [node name="ResourceInitializer" type="Node2D" parent="."]
 script = SubResource( 2 )
@@ -274,6 +369,12 @@ __meta__ = {
 margin_right = 1280.0
 margin_bottom = 720.0
 texture = ExtResource( 1 )
+expand = true
+
+[node name="TextureRect2" type="TextureRect" parent="MarginContainer"]
+margin_right = 1280.0
+margin_bottom = 720.0
+texture = ExtResource( 7 )
 expand = true
 
 [node name="MarginContainer2" type="MarginContainer" parent="."]
@@ -448,7 +549,37 @@ valign = 1
 
 [node name="PlayerPrefs" parent="." instance=ExtResource( 3 )]
 
-[node name="Resume" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer/PanelContainer/HBoxContainer/VBoxContainer" index="0"]
-margin_top = 0.0
+[node name="MarginContainer" parent="PlayerPrefs/PlayerPreferences" index="0"]
+visible = false
+
+[node name="PanelContainer" parent="PlayerPrefs/PlayerPreferences/MarginContainer/CenterContainer" index="0"]
+margin_left = 633.0
+margin_top = 353.0
+margin_right = 647.0
+margin_bottom = 367.0
+
+[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 5 )
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+pause_mode = 2
+stream = ExtResource( 6 )
+autoplay = true
+bus = "Music"
+
+[node name="Decorations" type="Node2D" parent="."]
+visible = false
+
+[node name="Fire" type="Particles2D" parent="Decorations"]
+position = Vector2( 275, 427.222 )
+z_index = 2
+amount = 150
+process_material = SubResource( 5 )
+
+[node name="WaterfallBase" type="Particles2D" parent="Decorations"]
+position = Vector2( 658.983, 706.987 )
+z_index = 2
+amount = 500
+process_material = SubResource( 12 )
 
 [editable path="PlayerPrefs"]

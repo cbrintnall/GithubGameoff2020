@@ -14,6 +14,7 @@ onready var beam_tween = get_node("Moonlight/Tween")
 onready var game_manager = get_node("/root/GameManager")
 onready var player_prefs = game_manager.get_player_prefs()
 onready var ground_manager = game_manager.get_ground_manager()
+onready var farm_manager = game_manager.get_farm_manager()
 onready var health_bar := get_node("UIBase/VBoxContainer/HealthBar")
 onready var energy_bar := get_node("UIBase/VBoxContainer/EnergyBar")
 onready var timer: Timer = get_node("Timer")
@@ -47,6 +48,10 @@ func take_damage(amt: int):
 	if health <= 0:
 		emit_signal("broken")
 
+func set_max_energy(amount: int):
+	max_energy = amount
+	energy_bar.max_value = amount
+
 func _ready():
 	beam_light.visible = false
 	beam_particles.emitting = false
@@ -75,6 +80,8 @@ func _handle_command(args: Array):
 			var amt = int(amount)
 			
 			set_energy(amt)
+		[ "kill" ]:
+			emit_signal("broken")
 	
 func _on_day():
 	var screen_size = OS.get_screen_size()
@@ -82,6 +89,9 @@ func _on_day():
 
 	beam_particles.emitting = false
 	beam_audio.stop()
+	
+	if (farm_manager.day % 2) == 0:
+		_handle_energy_increase()
 	
 	beam_tween.interpolate_property(
 		beam_light,
@@ -116,7 +126,11 @@ func _on_day():
 	beam_tween.start()
 	yield(beam_tween,"tween_all_completed")
 	beam_light.visible = false
-	game_manager.get_event_manager().new_message("The moon's energy has been restored!", Constants.EventLevel.GOOD)
+	game_manager.get_event_manager().new_message("The moon fragment's energy has been restored", Constants.EventLevel.GOOD)
+
+func _handle_energy_increase():
+	game_manager.get_event_manager().new_message("The moon fragment has grown more powerful", Constants.EventLevel.GOOD)
+	set_max_energy(clamp(pow(farm_manager.day, 2), 1000.0, INF))
 
 func _on_night():
 	var screen_size = OS.get_screen_size()

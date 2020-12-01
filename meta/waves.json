@@ -9,6 +9,85 @@
       "enemies": {
         "eyeball": 10
       }
+    },
+    {
+      "difficulty": 1,
+      "enemies": {
+        "trash": 2
+      }
+    },
+    {
+      "difficulty": 2,
+      "enemies": {
+        "eyeball": 7,
+        "trash": 1
+      }
+    },
+    {
+      "difficulty": 2,
+      "enemies": {
+        "eyeball": 4,
+        "trash": 2
+      }
+    },
+    {
+      "difficulty": 3,
+      "enemies": {
+        "eyeball": 6,
+        "trash": 2
+      }
+    },
+    {
+      "difficulty": 3,
+      "enemies": {
+        "eyeball": 6,
+        "trash": 2
+      }
+    },
+    {
+      "difficulty":4,
+      "enemies": {
+        "eyeball": 10,
+        "trash": 1
+      }
+    },
+    {
+      "difficulty": 5,
+      "enemies": {
+        "eyeball": 10,
+        "trash": 3
+      }
+    },
+    {
+      "difficulty": 6,
+      "enemies": {
+        "eyeball": 20
+      }
+    },
+    {
+      "difficulty": 7,
+      "enemies": {
+        "eyeball": 15,
+        "trash": 2
+      }
+    },
+    {
+      "difficulty": 8,
+      "enemies": {
+        "trash": 5
+      }
+    },
+    {
+      "difficulty": 9,
+      "enemies": {
+        "trash": 10
+      }
+    },
+    {
+      "difficulty": 10,
+      "enemies": {
+        "eyeball": 30
+      }
     }
   ]
 }
