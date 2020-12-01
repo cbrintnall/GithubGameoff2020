@@ -1,15 +1,17 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://assets/textures/ui/main_menu_background.png" type="Texture" id=1]
 [ext_resource path="res://assets/audio/sfx/ui/intro_text.wav" type="AudioStream" id=2]
+[ext_resource path="res://assets/audio/sfx/ui/acknowledge.wav" type="AudioStream" id=3]
 
-[sub_resource type="GDScript" id=3]
+[sub_resource type="GDScript" id=1]
 script/source = "extends CanvasLayer
 
 var intro_text = \"\"\"
 Everyone abandoned earth and went to the moon. You've been left behind to provide food, and hopefully survive.
 \"\"\"
 
+onready var acknowledge_text = get_node(\"Acknowledge\")
 onready var fader = get_node(\"Text/CanvasModulate\")
 onready var audio = get_node(\"AudioStreamPlayer\")
 onready var tween = get_node(\"Tween\")
@@ -17,6 +19,7 @@ onready var timer = get_node(\"Timer\")
 onready var label = get_node(\"Text/MarginContainer/VBoxContainer/Label\")
 
 var _current_letter := 0
+var _clicked := false
 
 func _ready():
 	timer.connect(\"timeout\", self, \"_show_text\")
@@ -32,7 +35,9 @@ func _show_text():
 			audio.play()
 		
 func _input(event):
-	if event is InputEventKey:
+	if !_clicked and event is InputEventKey:
+		_clicked = true
+		acknowledge_text.play()
 		timer.stop()
 		label.text = intro_text
 		
@@ -42,7 +47,7 @@ func _input(event):
 			fader.color,
 			Color.black,
 			3.0,
-			Tween.TRANS_CUBIC,
+			Tween.TRANS_LINEAR,
 			Tween.EASE_IN
 		)
 		
@@ -53,15 +58,15 @@ func _input(event):
 		get_tree().change_scene(\"res://scenes/farm.tscn\")
 "
 
-[sub_resource type="DynamicFontData" id=1]
+[sub_resource type="DynamicFontData" id=2]
 font_path = "res://assets/fonts/MinimalPixel v2.ttf"
 
-[sub_resource type="DynamicFont" id=2]
-size = 32
-font_data = SubResource( 1 )
+[sub_resource type="DynamicFont" id=3]
+size = 35
+font_data = SubResource( 2 )
 
 [node name="Intro" type="CanvasLayer"]
-script = SubResource( 3 )
+script = SubResource( 1 )
 
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 
@@ -100,10 +105,10 @@ alignment = 1
 
 [node name="Label" type="Label" parent="Text/MarginContainer/VBoxContainer"]
 margin_right = 1216.0
-margin_bottom = 620.0
+margin_bottom = 617.0
 size_flags_horizontal = 7
 size_flags_vertical = 7
-custom_fonts/font = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
 align = 1
 valign = 1
 autowrap = true
@@ -112,11 +117,11 @@ __meta__ = {
 }
 
 [node name="Label2" type="Label" parent="Text/MarginContainer/VBoxContainer"]
-margin_top = 624.0
+margin_top = 621.0
 margin_right = 1216.0
 margin_bottom = 656.0
 size_flags_vertical = 12
-custom_fonts/font = SubResource( 2 )
+custom_fonts/font = SubResource( 3 )
 text = "Press anything to continue."
 align = 1
 valign = 2
@@ -135,3 +140,6 @@ autostart = true
 
 [node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource( 2 )
+
+[node name="Acknowledge" type="AudioStreamPlayer" parent="."]
+stream = ExtResource( 3 )
