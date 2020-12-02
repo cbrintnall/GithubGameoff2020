@@ -478,6 +478,7 @@ ground_manager = NodePath("../../GameManager/GroundManager")
 position = Vector2( 0, -0.0196867 )
 frames = SubResource( 20 )
 animation = "idle"
+frame = 3
 playing = true
 offset = Vector2( 0, -12 )
 
@@ -505,7 +506,6 @@ shape = SubResource( 24 )
 [node name="AnimatedSprite" type="AnimatedSprite" parent="ActionArea"]
 z_index = -1
 frames = SubResource( 27 )
-frame = 1
 playing = true
 
 [node name="Inventory" type="Node2D" parent="."]
