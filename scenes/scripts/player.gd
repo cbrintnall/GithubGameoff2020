@@ -40,7 +40,13 @@ var _current_tower_scene: PackedScene
 var _current_tower_purchase
 var _controller_action_area := false
 
+# state regarding selecting
+var _using_action := false
+var _last_used
+
 func _ready():
+	var event_bus = get_node("/root/EventBusManager")
+	
 	game_manager.set_current_camera(get_node("Camera2D"))
 	footsteps_timer.connect("timeout", get_node("footsteps/audio"), "play")
 	action_area.visible = true
@@ -52,11 +58,23 @@ func _ready():
 	tools_ui.register_tower(KEY_2, preload("res://scenes/towers/EffectAoeTower.tscn"))
 	tools_ui.register_tower(KEY_3, preload("res://scenes/towers/lunar_pool.tscn"))
 	
-	var input_handler = game_manager.get_player_prefs().get_input_handler()
-	
+	event_bus.connect("new_event", self, "_on_event")
+
+	var input_handler = get_node(Constants.PLAYER_PREFS_PATH).get_input_handler()
+
 	input_handler.connect("input_mode_changed", self, "_on_input_mode_changed")
 	_controller_action_area = input_handler.input_mode == Constants.InputMode.CONTROLLER
 	_base_light_offset = Vector2.RIGHT * lamp_light.position.x
+
+func _on_event(event: int, data: Dictionary):
+	match event:
+		Constants.BusEvents.TOWER_SELECTED:
+			print(data)
+			
+			var tower = data.get("tower")
+			
+			if tower:
+				print(tower)
 
 func _on_input_mode_changed(mode):
 	_controller_action_area = mode == Constants.InputMode.CONTROLLER
@@ -214,62 +232,61 @@ func _unhandled_input(event):
 	if event.is_action_pressed("cancel_selection") and _current_tower_purchase:
 		_current_tower_purchase.queue_free()
 
-	# gross
-	var action_used = (
-		event.is_action_pressed("use") || 
-		(
-			!_controller_action_area and 
-			event is InputEventMouseButton and 
-			event.button_index == 1 and
-			event.pressed
-		)
-	)
-
-	if action_used:
+	# all on presses should be in here
+	if event.is_action_pressed("activate"):
+		_using_action = true
+		
 		if !action_area.can_use:
-			bad_action_player.play()
-			event_manager.new_message(
-				"Target out of reach",
-				Constants.EventLevel.WARNING
-			)
+			_notify_cant_use()
 			return
-
+	
 		if _current_tower_purchase:
 			_handle_use_and_has_pending_tower()
 			return
-		
-		var areas = action_area.get_overlapping_areas()
-		var used = false
-		
-		# check if we need to use something in this area
-		for i in areas:
-			if i and i.has_method("use"):
-				i.use()
-				used = true
-				animated_sprite.play("pickup")
-				yield(animated_sprite,"animation_finished")
-				animated_sprite.play("idle")
-				
-		var bodies = action_area.get_overlapping_bodies()
-		for i in bodies:
-			if i and i.has_method("use"):
-				i.use()
-				used = true
-				animated_sprite.play("pickup")
-				yield(animated_sprite,"animation_finished")
-				animated_sprite.play("idle")
 
-		# otherwise we can just till the land!
-		if !used:
-			if !ground_manager.is_tilled(hovered_tile):
-				# cache tile since play can move mouse before animation is finished and it'll still place
-				var to_till = hovered_tile
-				animated_sprite.play("till")
-				move_vec_multiplier = Vector2.ZERO
-				yield(animated_sprite,"animation_finished")
-				ground_manager.till_dirt(to_till)
-				animated_sprite.play("idle")
-				move_vec_multiplier = Vector2.ONE
+	# all on release should be in here
+	if event.is_action_released("activate"):
+		_using_action = false
+
+#		# otherwise we can just till the land!
+#		if !used:
+#			if !ground_manager.is_tilled(hovered_tile):
+#				# cache tile since play can move mouse before animation is finished and it'll still place
+#				var to_till = hovered_tile
+#				animated_sprite.play("till")
+#				move_vec_multiplier = Vector2.ZERO
+#				yield(animated_sprite,"animation_finished")
+#				ground_manager.till_dirt(to_till)
+#				animated_sprite.play("idle")
+#				move_vec_multiplier = Vector2.ONE
+
+func _notify_cant_use():
+	bad_action_player.play()
+	event_manager.new_message(
+		"Target out of reach",
+		Constants.EventLevel.WARNING
+	)
+	
+func _check_for_usables():
+	var areas = action_area.get_overlapping_areas()
+	
+	# check if we need to use something in this area
+	for i in areas:
+		if _last_used != i and i and i.has_method("use") and action_area.can_use:
+			i.use()
+			_last_used = i
+			animated_sprite.play("pickup")
+			yield(animated_sprite,"animation_finished")
+			animated_sprite.play("idle")
+			
+	var bodies = action_area.get_overlapping_bodies()
+	for i in bodies:
+		if _last_used != i and i and i.has_method("use") and action_area.can_use:
+			i.use()
+			_last_used = i
+			animated_sprite.play("pickup")
+			yield(animated_sprite,"animation_finished")
+			animated_sprite.play("idle")
 
 func _handle_selected_tile(tile, data):
 	if !data:
@@ -299,6 +316,9 @@ func _initiate_tower_transaction(tower):
 func _physics_process(delta):
 	_handle_movement(delta)
 	_check_under_action_area()
+	
+	if _using_action:
+		_check_for_usables()
 
 func set_equipped_tool(t):
 	selected_tool = t

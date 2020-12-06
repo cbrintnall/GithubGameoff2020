@@ -19,6 +19,7 @@ const target_detectable_bit = 18
 const cant_place_bit = 17
 
 # All tower parameters
+export(bool) var uses_targetting := true
 export(String) var tower_name = "Tower"
 export(float) var value = 100.0
 export(float) var damage_per_hit = 10
@@ -26,12 +27,12 @@ export(float) var charge_time = 2.5
 export(AudioStream) var shoot_audio
 export(AudioStream) var charging_audio
 export(Texture) var icon_texture
-export(NodePath) var ui_parent
 export(NodePath) onready var no_place_area = get_node(no_place_area) as Area2D
 export(NodePath) onready var collision_zone = get_node(collision_zone)
 export(NodePath) onready var vision_area = get_node(vision_area) as Area2D
 export(NodePath) onready var animation = get_node(animation)
 
+onready var event_bus = get_node("/root/EventBusManager")
 onready var audio_player = get_node("VariableNodes/ChargeAudio")
 onready var vision_child: CollisionShape2D
 
@@ -41,6 +42,7 @@ var charge_timer = Timer.new()
 var state: int = TowerState.UNCHARGED
 var targets := []
 
+var _target_mode: int = Constants.TowerTargetMode.FIRST
 var _tower_popup := preload("res://scenes/towers/lunar_pool/popup.tscn")
 var _line_wind_down_time = .5
 var _draw_vision := false
@@ -77,9 +79,12 @@ func add_target(target):
 	targets.append(target)
 	emit_signal("new_target", target)
 
+func set_to_target_mode(mode: int):
+	_target_mode = mode
+
 func use():
-	if in_world() and _ui_parent:
-		_tower_ui.visible = true
+	if in_world():
+		event_bus.send_event(Constants.BusEvents.TOWER_SELECTED, { "tower": self })
 
 func destroy_tower():
 	queue_free()
@@ -113,19 +118,7 @@ func _ready():
 	charge_timer.wait_time = charge_time
 	charge_timer.one_shot = true
 	
-	if ui_parent:
-		_initialize_ui()
-	
 	_set_state(TowerState.PURCHASING)
-
-func _initialize_ui():
-	_tower_ui = _tower_popup.instance()
-	_tower_ui.connect("remove_tower", self, "destroy_tower")
-	_tower_ui.visible = false
-	_tower_ui.set_bound_to(self)
-	
-	_ui_parent = get_node(ui_parent)
-	_ui_parent.add_child(_tower_ui)
 
 func _on_collision_exit(body):
 	_set_state(TowerState.PURCHASING)

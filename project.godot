@@ -49,10 +49,20 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://addons/PoissonDiscSampling/PoissonDiscSampling.gd"
 }, {
+"base": "CanvasLayer",
+"class": "RightPanel",
+"language": "GDScript",
+"path": "res://scenes/scripts/game_ui.gd"
+}, {
 "base": "StaticBody2D",
 "class": "Tower",
 "language": "GDScript",
 "path": "res://scenes/scripts/tower.gd"
+}, {
+"base": "MarginContainer",
+"class": "TowerDisplay",
+"language": "GDScript",
+"path": "res://scenes/scripts/tower_display.gd"
 } ]
 _global_script_class_icons={
 "Constants": "",
@@ -63,7 +73,9 @@ _global_script_class_icons={
 "Item": "",
 "MouseManager": "",
 "PoissonDiscSampling": "",
-"Tower": ""
+"RightPanel": "",
+"Tower": "",
+"TowerDisplay": ""
 }
 
 [application]
@@ -79,12 +91,18 @@ config/icon="res://assets/textures/farm/towers/moon_beam_idle.png"
 [autoload]
 
 CaptureManager="*res://scenes/managers/capture_manager.gd"
+EventBusManager="*res://scenes/scripts/event_bus_manager.gd"
+PlayerPrefs="*res://scenes/managers/player_prefs.tscn"
 
 [display]
 
 window/size/width=1280
 window/size/height=720
 window/stretch/aspect="expand"
+
+[editor]
+
+main_run_args="_ debug"
 
 [importer_defaults]
 

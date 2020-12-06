@@ -84,22 +84,57 @@ func _sort_by_progress(a, b):
 	
 	return a_progress > b_progress
 
-func _do_fire():
+func _sort_by_health(a, b):
+	var a_progress = a.get_health() if a.has_method("get_health") else 0
+	var b_progress = b.get_health() if b.has_method("get_health") else 0
+	
+	return a_progress > b_progress
+
+func _get_targets_based_on_mode() -> Array:
 	var local_targets = targets.duplicate()
-	
-	local_targets.sort_custom(self, "_sort_by_progress")
-	
-	var real_targets := []
-	
-	for target in local_targets:
-		if target.has_method("take_damage"):
-			real_targets.append(target)
-	
-	if len(real_targets) > 0:
+
+	if len(local_targets):
+		return []
+		
+	# position based target modes
+	if _target_mode in [Constants.TowerTargetMode.FIRST,Constants.TowerTargetMode.LAST,Constants.TowerTargetMode.RANDOM]:
+		local_targets.sort_custom(self, "_sort_by_progress")
+		
+	# health based target modes
+	if _target_mode in [Constants.TowerTargetMode.LOWEST_HEALTH, Constants.TowerTargetMode.HIGHEST_HEALTH]:
+		local_targets.sort_custom(self, "_sort_by_health")
+
+	# we can only combine FIRST / HIGHEST_HEALTH due to the sorting in the line before,
+	# if this sorting changes then this must too
+	match _target_mode:
+		Constants.TowerTargetMode.FIRST, Constants.TowerTargetMode.HIGHEST_HEALTH:
+			return local_targets[0]
+		Constants.TowerTargetMode.LAST, Constants.TowerTargetMode.LOWEST_HEALTH:
+			return local_targets[len(local_targets)-1]
+		Constants.TowerTargetMode.RANDOM:
+			return local_targets[randi()%len(local_targets)]
+			
+	return []
+
+func _shoot_at_targets(local_targets: Array):
+	if len(local_targets) > 0:
 		_set_state(TowerState.FIRING)
 
-		for i in range(0, int(clamp(len(real_targets), 0, max_targets))):
+		for i in range(0, int(clamp(len(local_targets), 0, max_targets))):
 			_shoot_at_target(local_targets[i])
 
 		_set_state(TowerState.UNCHARGED)
+
+#func _do_fire():
+#
+#
+#	var real_targets := []
+#
+#	if len(real_targets) > 0:
+#		_set_state(TowerState.FIRING)
+#
+#		for i in range(0, int(clamp(len(real_targets), 0, max_targets))):
+#			_shoot_at_target(local_targets[i])
+#
+#		_set_state(TowerState.UNCHARGED)
 

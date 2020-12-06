@@ -61,7 +61,6 @@ value = 200.0
 damage_per_hit = 25.0
 charge_time = 2.0
 icon_texture = ExtResource( 3 )
-ui_parent = NodePath("UiRoot")
 no_place_area = NodePath("Area2D")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("TargetZone")

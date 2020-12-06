@@ -3,6 +3,8 @@ extends Node2D
 const screenshots_base := "user://screenshots/"
 const screenshot_default_name := "screenshot"
 
+onready var viewport = get_viewport()
+
 func _save_screenshot():
 	var screenshot_dir = Directory.new()
 	
@@ -20,3 +22,6 @@ func _save_screenshot():
 func _input(event):
 	if event.is_action_pressed("screenshot"):
 		_save_screenshot()
+
+func _physics_process(delta):
+	get_viewport().get_texture().get_data()

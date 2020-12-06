@@ -45,7 +45,7 @@ func get_event_manager():
 	return event_manager
 
 func get_player_prefs():
-	return get_node("PlayerPrefs")
+	return get_node(Constants.PLAYER_PREFS_PATH)
 
 func get_current_camera() -> Camera2D:
 	return _camera

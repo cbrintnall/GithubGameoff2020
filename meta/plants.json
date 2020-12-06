@@ -13,79 +13,79 @@
     {
       "name": "apple",
       "frames_path": "apple_growing.png",
-      "required_energy": 150,
+      "required_energy": 75,
       "finished_plant_path": ""
     },
     {
       "name": "cinammon",
       "frames_path": "cinammon_growing.png",
-      "required_energy": 125,
+      "required_energy": 60,
       "finished_plant_path": ""
     },
     {
       "name": "coffee",
       "frames_path": "coffee_growing.png",
-      "required_energy": 200,
+      "required_energy": 100,
       "finished_plant_path": ""
     },
     {
       "name": "corn",
       "frames_path": "corn_growing.png",
-      "required_energy": 225,
+      "required_energy": 110,
       "finished_plant_path": ""
     },
     {
       "name": "eggplant",
       "frames_path": "eggplant_growing.png",
-      "required_energy": 300,
+      "required_energy": 150,
       "finished_plant_path": ""
     },
     {
       "name": "grape",
       "frames_path": "grape_growing.png",
-      "required_energy": 200,
+      "required_energy": 100,
       "finished_plant_path": ""
     },
     {
       "name": "green_bean",
       "frames_path": "green_bean_growing.png",
-      "required_energy": 175,
+      "required_energy": 75,
       "finished_plant_path": ""
     },
     {
       "name": "honeydew",
       "frames_path": "honeydew_growing.png",
-      "required_energy": 275,
+      "required_energy": 135,
       "finished_plant_path": ""
     },
     {
       "name": "melon",
       "frames_path": "melon_growing.png",
-      "required_energy": 250,
+      "required_energy": 125,
       "finished_plant_path": ""
     },
     {
       "name": "pineapple",
       "frames_path": "pineapple_growing.png",
-      "required_energy": 300,
+      "required_energy": 150,
       "finished_plant_path": ""
     },
     {
       "name": "tomato",
       "frames_path": "tomato_growing.png",
-      "required_energy": 75,
+      "required_energy": 25,
       "finished_plant_path": "res://scenes/items/tomato.tres"
     },
     {
       "name": "rose",
       "frames_path": "rose_growing.png",
-      "required_energy": 100,
+      "required_energy": 50,
       "finished_plant_path": ""
     },
     {
       "name": "strawberry",
       "frames_path": "starberry_growing.png",
-      "required_energy": 300,
+      "required_energy": 150,
       "finished_plant_path": "res://scenes/items/watermelon.tres"
     }
   ]

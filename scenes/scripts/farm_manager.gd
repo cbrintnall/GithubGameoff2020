@@ -102,7 +102,7 @@ func _ready():
 	# we set it to -1 in editor to hide it, this makes sure it's always there :)
 	get_node("CanvasLayer").layer = 1
 	
-	var prefs = get_node("/root/GameManager").get_player_prefs()
+	var prefs = get_node(Constants.PLAYER_PREFS_PATH)
 
 	prefs.register_command("coins", funcref(self, "_on_coins"))
 	prefs.register_command("time", funcref(self, "_on_time"))

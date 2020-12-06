@@ -19,6 +19,9 @@ var _moving := true
 var _moon
 var _direction
 
+func get_health() -> float:
+	return health
+
 func get_path_progress() -> float:
 	if internal_path.size() == 0:
 		return 0.0
