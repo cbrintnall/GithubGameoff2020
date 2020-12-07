@@ -16,14 +16,11 @@ onready var time_label = get_node("CanvasLayer/MarginContainer/HBoxContainer/Lab
 onready var clock_base = get_node("CanvasLayer/MarginContainer")
 onready var lunar_rock_label = get_node("CanvasLayer/MarginContainer/HBoxContainer/HBoxContainer/Label")
 
-export(int) var moonlight_min_x_offset = -500
-export(int) var moonlight_max_x_offset = 500
-export(int) var lunar_rock_gain_sound_divisor := 1
 export(Color) var day_color
 export(Color) var night_color
 # in hours
-export(int) var day_breakpoint
-export(int) var night_breakpoint
+export(int) var day_breakpoint := 6
+export(int) var night_breakpoint := 18
 export(int) var shipment_buffer_time = 2
 export(float) var transition_time
 
@@ -133,10 +130,6 @@ func _on_coins(args):
 		["remove", var amount]:
 			remove_lunar_rocks(int(amount))
 
-func _process(delta):
-	if !is_day():
-		pass
-
 func _on_timeout():
 	minutes += 1
 	
@@ -156,7 +149,7 @@ func _on_timeout():
 		if hours == (night_breakpoint - shipment_buffer_time):
 			emit_signal("shipment_time")
 		
-		var minute_lerp = inverse_lerp(0, 59, minutes)
+		# var minute_lerp = inverse_lerp(0, 59, minutes)
 		
 		if hours >= night_breakpoint:
 			night_unit_time = clamp(inverse_lerp(night_breakpoint, 24, hours), 0.0, 0.4)

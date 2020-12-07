@@ -11,20 +11,20 @@ export(float) var speed = 10.0
 export(Vector2) var tilemap_size = Vector2(16, 16)
 export(Color) var valid_selection_color = Color.green
 export(Color) var invalid_selection_color = Color.red
-export(NodePath) onready var dirt_tilemap_path = get_node(dirt_tilemap_path)
 export(NodePath) onready var ground_manager = get_node(ground_manager)
 
 onready var lamp_light = get_node("Light2D")
 onready var tools_ui = get_node("ToolsUi")
-onready var game_manager = get_node("/root/GameManager")
-onready var event_manager = get_node("/root/GameManager/EventManager")
+onready var game_manager = get_node(Constants.GAME_MANAGER_PATH)
 onready var bad_action_player = get_node("BadAction")
 onready var step_particles = get_node("footsteps/Steps")
 onready var footsteps_particles = get_node("footsteps/Puffs")
 onready var footsteps_timer = get_node("footsteps/Timer")
 onready var action_area = get_node("ActionArea")
+onready var action_area_shape = action_area.get_node("CollisionShape2D")
 onready var animated_sprite = get_node("AnimatedSprite")
 onready var inventory = get_node("Inventory")
+onready var fake_map = get_node("FakeTilemap")
 
 var selected_tool = Tool.HOE
 
@@ -32,6 +32,8 @@ var hovered_tile: Vector2
 var last_move_vec: Vector2
 var move_vec_multiplier: Vector2 = Vector2.ONE
 var last_hovered_tile: Vector2
+var current_areas := []
+var current_bodies := []
 var last_areas := []
 var last_bodies := []
 
@@ -47,7 +49,11 @@ var _last_used
 func _ready():
 	var event_bus = get_node("/root/EventBusManager")
 	
-	game_manager.set_current_camera(get_node("Camera2D"))
+	if game_manager:
+		game_manager.set_current_camera(get_node("Camera2D"))
+
+	fake_map.cell_size = Constants.STANDARD_TILEMAP_SIZE
+
 	footsteps_timer.connect("timeout", get_node("footsteps/audio"), "play")
 	action_area.visible = true
 	
@@ -79,7 +85,7 @@ func _on_event(event: int, data: Dictionary):
 func _on_input_mode_changed(mode):
 	_controller_action_area = mode == Constants.InputMode.CONTROLLER
 
-func _handle_movement(delta):
+func _handle_movement(_delta: float):
 	var move_vec = Vector2.ZERO
 	
 	if Input.is_action_pressed("move_right"):
@@ -129,71 +135,57 @@ func _handle_movement(delta):
 	last_move_vec = move_vec
 
 func _position_action_area_controller(move_vec: Vector2):
-	var base_position = dirt_tilemap_path.map_to_world(
-		dirt_tilemap_path.world_to_map(position)
-	)
+	var base_position = fake_map.map_to_world(fake_map.world_to_map(position))
 	
-	var shape_extents = action_area.get_node("CollisionShape2D").shape.extents.ceil()
+	var shape_extents = action_area_shape.shape.extents.ceil()
 	
 	base_position += shape_extents
 	base_position += (move_vec * (shape_extents * 2))
 	base_position -= move_vec
 	
 	action_area.global_position = base_position
-	hovered_tile = dirt_tilemap_path.world_to_map(base_position) + move_vec
+	hovered_tile = fake_map.world_to_map(base_position) + move_vec
 	
 func _position_action_area_mouse(move_vec: Vector2):
-	var base_position = dirt_tilemap_path.map_to_world(
-		dirt_tilemap_path.world_to_map(get_global_mouse_position())
-	)
-	
-	var shape_extents = action_area.get_node("CollisionShape2D").shape.extents.ceil()
-	
+	var base_position = fake_map.map_to_world(fake_map.world_to_map(get_global_mouse_position()))
+	var shape_extents = action_area_shape.shape.extents.ceil()
+
 	base_position += shape_extents
-	
 	action_area.global_position = base_position
-	
-	hovered_tile = dirt_tilemap_path.world_to_map(base_position)
+	hovered_tile = fake_map.world_to_map(base_position)
 
 func _check_under_action_area():
-	var areas = action_area.get_overlapping_areas()
-	
-	for area in areas:
+	for area in current_areas:
 		if !(area in last_areas):
 			if area and area.has_method("on_action_hover"):
 				area.on_action_hover()
 	
 	for area in last_areas:
-		if !(area in areas):
+		if !(area in current_areas):
 			if area and area.has_method("on_action_leave"):
 				area.on_action_leave()
 	
-	var bodies = action_area.get_overlapping_bodies()
-	
-	for body in bodies:
+	for body in current_bodies:
 		if !(body in last_bodies):
 			if body and body.has_method("on_action_hover"):
 				body.on_action_hover()
 	
 	for body in last_bodies:
-		if !(body in bodies):
+		if !(body in current_bodies):
 			if body and body.has_method("on_action_leave"):
 				body.on_action_leave()
-	
-	last_areas = areas
-	last_bodies = bodies
 	
 	# we only care about canceling using, hovers are fine
 	if global_position.distance_to(action_area.global_position) > max_action_distance:
 		action_area.set_cant_use()
 		return
 		
-	for i in bodies:
+	for i in current_bodies:
 		if i.has_method("use"):
 			action_area.set_can_use()
 			return
 	
-	for i in areas:
+	for i in current_areas:
 		if i.has_method("use"):
 			action_area.set_can_use()
 			return
@@ -202,11 +194,7 @@ func _check_under_action_area():
 
 func _handle_use_and_has_pending_tower():
 	if !_current_tower_purchase.can_place():
-		bad_action_player.play()
-		event_manager.new_message(
-			"Can't place tower there",
-			Constants.EventLevel.WARNING
-		)
+		_notify_cant_use()
 		return
 
 	tools_ui.purchase_done()
@@ -237,7 +225,6 @@ func _unhandled_input(event):
 		_using_action = true
 		
 		if !action_area.can_use:
-			_notify_cant_use()
 			return
 	
 		if _current_tower_purchase:
@@ -262,25 +249,18 @@ func _unhandled_input(event):
 
 func _notify_cant_use():
 	bad_action_player.play()
-	event_manager.new_message(
-		"Target out of reach",
-		Constants.EventLevel.WARNING
-	)
 	
 func _check_for_usables():
-	var areas = action_area.get_overlapping_areas()
-	
 	# check if we need to use something in this area
-	for i in areas:
+	for i in current_areas:
 		if _last_used != i and i and i.has_method("use") and action_area.can_use:
 			i.use()
 			_last_used = i
 			animated_sprite.play("pickup")
 			yield(animated_sprite,"animation_finished")
 			animated_sprite.play("idle")
-			
-	var bodies = action_area.get_overlapping_bodies()
-	for i in bodies:
+
+	for i in current_bodies:
 		if _last_used != i and i and i.has_method("use") and action_area.can_use:
 			i.use()
 			_last_used = i
@@ -314,11 +294,17 @@ func _initiate_tower_transaction(tower):
 	action_area.add_child(_current_tower_purchase)
 
 func _physics_process(delta):
+	current_bodies = action_area.get_overlapping_bodies()
+	current_areas = action_area.get_overlapping_areas()
+
 	_handle_movement(delta)
 	_check_under_action_area()
 	
 	if _using_action:
 		_check_for_usables()
+
+	last_bodies = current_bodies
+	last_areas = current_areas
 
 func set_equipped_tool(t):
 	selected_tool = t

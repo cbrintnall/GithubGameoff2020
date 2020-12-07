@@ -93,6 +93,8 @@ config/icon="res://assets/textures/farm/towers/moon_beam_idle.png"
 CaptureManager="*res://scenes/managers/capture_manager.gd"
 EventBusManager="*res://scenes/scripts/event_bus_manager.gd"
 PlayerPrefs="*res://scenes/managers/player_prefs.tscn"
+FarmManager="*res://scenes/managers/farm_manager.tscn"
+GameManager="*res://scenes/scripts/game_manager.gd"
 
 [display]
 
@@ -102,7 +104,7 @@ window/stretch/aspect="expand"
 
 [editor]
 
-main_run_args="_ debug"
+main_run_args="scene change res://scenes/levels/debug_room.tscn"
 
 [importer_defaults]
 

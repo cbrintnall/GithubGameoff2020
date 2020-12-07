@@ -38,6 +38,11 @@ func _on_day():
 	_die()
 
 func _on_attack_timeout():
+	# If there is nothing to attack, then just die!
+	if !_moon:
+		_die()
+		return
+	
 	animation.play("attack")
 
 	#TODO: remove, absolute last minute hack
