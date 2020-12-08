@@ -1,15 +1,19 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://scenes/Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://assets/tilesets/farm.tres" type="TileSet" id=2]
 [ext_resource path="res://scenes/enemies/spawner_manager.tscn" type="PackedScene" id=3]
 [ext_resource path="res://scenes/scripts/EnemySpawner.gd" type="Script" id=4]
 [ext_resource path="res://scenes/interactables/use_button.tscn" type="PackedScene" id=5]
+[ext_resource path="res://scenes/resources/resource_spawner.tscn" type="PackedScene" id=6]
 
 [sub_resource type="Curve2D" id=1]
 _data = {
 "points": PoolVector2Array( 0, 0, 0, 0, -0.374771, -0.686539, 0, 0, 0, 0, 431.667, 0.0205688 )
 }
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 68.0267, 49.1636 )
 
 [node name="DebugRoom" type="Node2D"]
 
@@ -46,3 +50,9 @@ tile_data = PoolIntArray( -655372, -1610612731, 0, -655371, -1610612731, 0, -655
 
 [node name="Button" parent="YSort" instance=ExtResource( 5 )]
 usable = NodePath("../../SpawnManager")
+
+[node name="ResourceSpawner" parent="YSort" instance=ExtResource( 6 )]
+position = Vector2( -11.5625, -105.006 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="YSort/ResourceSpawner"]
+shape = SubResource( 2 )

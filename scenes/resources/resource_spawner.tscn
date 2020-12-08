@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://scenes/scripts/resource_spawner.gd" type="Script" id=1]
+[ext_resource path="res://scenes/resource.tscn" type="PackedScene" id=2]
+
+[node name="ResourceSpawner" type="Node2D"]
+script = ExtResource( 1 )
+resource_scene = ExtResource( 2 )
+
+[node name="Timer" type="Timer" parent="."]
+autostart = true
+
+[node name="RayCast2D" type="RayCast2D" parent="."]
+enabled = true
+cast_to = Vector2( 0, 5 )
+collision_mask = 917503
+collide_with_areas = true

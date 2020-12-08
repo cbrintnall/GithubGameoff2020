@@ -22,6 +22,3 @@ func _save_screenshot():
 func _input(event):
 	if event.is_action_pressed("screenshot"):
 		_save_screenshot()
-
-func _physics_process(delta):
-	get_viewport().get_texture().get_data()
