@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://assets/audio/sfx/ui/button_hover.wav" type="AudioStream" id=1]
 [ext_resource path="res://themes/main.tres" type="Theme" id=2]
@@ -8,7 +8,18 @@
 [ext_resource path="res://scenes/managers/player_preferences_handler.gd" type="Script" id=6]
 [ext_resource path="res://scenes/managers/input_handler.gd" type="Script" id=7]
 
-[sub_resource type="AtlasTexture" id=4]
+[sub_resource type="StyleBoxFlat" id=2]
+bg_color = Color( 0, 0, 0, 0.509804 )
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+expand_margin_left = 6.0
+expand_margin_right = 6.0
+expand_margin_top = 6.0
+expand_margin_bottom = 6.0
+
+[sub_resource type="AtlasTexture" id=1]
 atlas = ExtResource( 3 )
 region = Rect2( 2, 34, 44, 44 )
 
@@ -20,7 +31,6 @@ script = ExtResource( 4 )
 script = ExtResource( 5 )
 
 [node name="CenterContainer" type="CenterContainer" parent="DebugUi"]
-visible = false
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
@@ -28,28 +38,49 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="MarginContainer" type="MarginContainer" parent="DebugUi/CenterContainer"]
-margin_left = 633.0
-margin_top = 353.0
-margin_right = 647.0
-margin_bottom = 367.0
+[node name="VBoxContainer" type="VBoxContainer" parent="DebugUi/CenterContainer"]
+margin_left = 603.0
+margin_top = 326.0
+margin_right = 677.0
+margin_bottom = 394.0
+custom_constants/separation = 16
+
+[node name="MarginContainer" type="MarginContainer" parent="DebugUi/CenterContainer/VBoxContainer"]
+margin_right = 74.0
+margin_bottom = 38.0
 mouse_filter = 1
 
-[node name="PanelContainer" type="PanelContainer" parent="DebugUi/CenterContainer/MarginContainer"]
-margin_right = 14.0
-margin_bottom = 14.0
+[node name="PanelContainer" type="PanelContainer" parent="DebugUi/CenterContainer/VBoxContainer/MarginContainer"]
+margin_right = 74.0
+margin_bottom = 38.0
 mouse_filter = 1
 
-[node name="LineEdit" type="LineEdit" parent="DebugUi/CenterContainer/MarginContainer/PanelContainer"]
+[node name="LineEdit" type="LineEdit" parent="DebugUi/CenterContainer/VBoxContainer/MarginContainer/PanelContainer"]
 margin_left = 7.0
 margin_top = 7.0
-margin_right = 65.0
+margin_right = 67.0
 margin_bottom = 31.0
 mouse_filter = 1
 size_flags_horizontal = 3
 theme = ExtResource( 2 )
 expand_to_text_length = true
 caret_blink = true
+
+[node name="PanelContainer" type="PanelContainer" parent="DebugUi/CenterContainer/VBoxContainer"]
+margin_top = 54.0
+margin_right = 74.0
+margin_bottom = 68.0
+custom_styles/panel = SubResource( 2 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="DebugUi/CenterContainer/VBoxContainer/PanelContainer"]
+margin_right = 74.0
+margin_bottom = 14.0
+
+[node name="Label" type="Label" parent="DebugUi/CenterContainer/VBoxContainer/PanelContainer/VBoxContainer"]
+margin_right = 74.0
+margin_bottom = 14.0
+theme = ExtResource( 2 )
+text = "Base Text"
 
 [node name="PlayerPreferences" type="CanvasLayer" parent="."]
 script = ExtResource( 6 )
@@ -185,7 +216,7 @@ margin_right = 192.0
 margin_bottom = 70.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-texture = SubResource( 4 )
+texture = SubResource( 1 )
 region_rect = Rect2( 0, 0, 44, 44 )
 patch_margin_left = 5
 patch_margin_top = 5

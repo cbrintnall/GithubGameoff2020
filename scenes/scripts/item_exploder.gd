@@ -41,6 +41,6 @@ func explode():
 		ground_item.z_index = z_index
 		ground_item.set_item(item)
 		ground_item.set_quantity(_items[item])
-		ground_item.apply_central_impulse(direction * (impulse_strength * rand_range(1, 1.5)))
+		ground_item.apply_central_impulse(direction * impulse_strength)
 		
 	queue_free()

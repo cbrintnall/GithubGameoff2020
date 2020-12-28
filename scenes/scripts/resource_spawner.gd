@@ -6,12 +6,10 @@ onready var collider_check_ray = get_node("RayCast2D")
 
 #poisson params
 var radius = 5.0
-var retries = 30.0
+var retries = 5.0
 
 # max number of resources on map at a given moment
 var max_points = 30
-# when resource emits signal destroyed, decrement this, when spawning, increment
-var current_count = 0
 var _points_queue := []
 var _sampler := PoissonDiscSampling.new()
 var _exploder := preload("res://scenes/scripts/item_exploder.gd")
@@ -36,6 +34,10 @@ func _generate_points():
 	_points_queue = _sampler.generate_points(radius, true_shape, retries)
 
 func _spawn_wave():
+	# dont spawn if we have too many!
+	if get_child_count() > max_points:
+		return
+	
 	var point_idx = randi() % _points_queue.size()
 	var point = _points_queue[point_idx]
 	_points_queue.remove(point_idx)
@@ -46,10 +48,7 @@ func _spawn_wave():
 
 	add_child(new_instance)
 
-	current_count += 1
-
 func _on_resource_destroyed(destroyed):
-	current_count -= 1
 	var loot = destroyed.get_loot_table()
 	var gained_items := []
 	

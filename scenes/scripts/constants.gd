@@ -37,3 +37,10 @@ enum EventLevel {
 	GOOD,
 	META
 }
+
+enum LogLevel {
+	INFO,
+	WARNING,
+	ERROR,
+	DEBUG
+}
