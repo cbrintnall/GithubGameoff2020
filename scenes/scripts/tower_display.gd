@@ -1,5 +1,7 @@
 extends MarginContainer
 
+signal close
+
 class_name TowerDisplay
 
 onready var remove_button = get_node("VBoxContainer/MarginContainer/Button")
@@ -23,6 +25,11 @@ func set_tower(tower: Tower):
 
 	target_selector.visible = tower.uses_targetting
 	target_selector.select(_tower._target_mode)
+	
+	_setup_upgrades()
+	
+func _setup_upgrades():
+	print(_tower.get_upgrades())
 
 func _target_mode_selected(mode: int):
 	if !_tower:
@@ -35,6 +42,7 @@ func _on_remove_tower():
 		return
 		
 	_tower.destroy_tower()
+	emit_signal("close")
 
 func _ready():
 	remove_button.connect("button_down", self, "_on_remove_tower")

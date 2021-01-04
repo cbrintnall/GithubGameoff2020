@@ -1,0 +1,63 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://themes/main.tres" type="Theme" id=1]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Label
+
+const length = 0.5
+
+func do_damage(amt: float):
+	text = str(amt)
+	
+	var height = clamp(amt/10, 5.0, 30.0)
+	var tween = $Tween
+	var xAxisVariation = 20
+	var yAxis = Vector2.UP * height * rand_range(1, 2)
+	var xAxis = Vector2.RIGHT * rand_range(-xAxisVariation, xAxisVariation)
+	
+	tween.interpolate_property(
+		self,
+		\"rect_position\",
+		rect_position,
+		rect_position + yAxis + xAxis,
+		length,
+		Tween.TRANS_CUBIC,
+		Tween.EASE_OUT
+	)
+	
+	tween.interpolate_property(
+		self,
+		\"modulate\",
+		modulate,
+		Color.transparent,
+		0.15,
+		Tween.TRANS_LINEAR,
+		Tween.EASE_IN,
+		length
+	)
+	
+	tween.start()
+	
+	yield(tween,\"tween_all_completed\")
+
+	queue_free()
+"
+
+[node name="Label" type="Label"]
+margin_left = -19.7433
+margin_top = -22.0252
+margin_right = 20.2567
+margin_bottom = -8.0252
+theme = ExtResource( 1 )
+custom_colors/font_color_shadow = Color( 0.219608, 0.219608, 0.219608, 1 )
+custom_constants/shadow_as_outline = 1
+text = "10"
+align = 1
+valign = 1
+script = SubResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Tween" type="Tween" parent="."]

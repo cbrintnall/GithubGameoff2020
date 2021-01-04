@@ -56,6 +56,11 @@ func _ready():
 	player_area.connect(\"body_exited\", self, \"_on_player_exit\")
 	
 	animator.play(\"default\")
+	
+	yield(get_tree().create_timer(5.0), \"timeout\")
+	
+	if is_inside_tree():
+		_do_pickup()
 
 func _on_player_enter(body):
 	if body is KinematicBody2D:
@@ -91,15 +96,17 @@ func _physics_process(delta):
 		animator.play(\"float\")
 	
 	if !_picked_up and _player:
-		var dir = global_position.direction_to(_player.global_position)
 		var dist = global_position.distance_to(_player.global_position)
-		
-		if dist < required_distance:
-			_do_pickup()
-		
-		var speed = clamp(_move_speed * pow(abs(dist - _max_distance), 3), _min_move_speed, 1000.0)
+		# only move if we 're close to player
+		if dist < 50.0:
+			var dir = global_position.direction_to(_player.global_position)
+			
+			if dist < required_distance:
+				_do_pickup()
+			
+			var speed = clamp(_move_speed * pow(abs(dist - _max_distance), 3), _min_move_speed, 1000.0)
 
-		add_central_force(dir * speed)
+			add_central_force(dir * speed)
 "
 
 [sub_resource type="CircleShape2D" id=2]

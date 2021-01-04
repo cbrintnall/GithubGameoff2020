@@ -1,0 +1,44 @@
+[gd_scene load_steps=2 format=2]
+
+[ext_resource path="res://scenes/scripts/tower_display.gd" type="Script" id=1]
+
+[node name="TowerDisplay" type="MarginContainer"]
+margin_top = 48.0
+margin_right = 349.0
+margin_bottom = 94.0
+custom_constants/margin_right = 12
+custom_constants/margin_left = 12
+script = ExtResource( 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+margin_left = 12.0
+margin_right = 337.0
+margin_bottom = 52.0
+custom_constants/separation = 6
+alignment = 1
+
+[node name="MarginContainer" type="MarginContainer" parent="VBoxContainer"]
+margin_right = 325.0
+margin_bottom = 20.0
+
+[node name="Button" type="Button" parent="VBoxContainer/MarginContainer"]
+margin_right = 325.0
+margin_bottom = 20.0
+text = "Remove Tower"
+
+[node name="MarginContainer2" type="MarginContainer" parent="VBoxContainer"]
+margin_top = 26.0
+margin_right = 325.0
+margin_bottom = 46.0
+
+[node name="OptionButton" type="OptionButton" parent="VBoxContainer/MarginContainer2"]
+margin_right = 325.0
+margin_bottom = 20.0
+
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+margin_top = 52.0
+margin_right = 325.0
+margin_bottom = 52.0

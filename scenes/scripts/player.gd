@@ -253,7 +253,7 @@ func _notify_cant_use():
 func _check_for_usables():
 	# check if we need to use something in this area
 	for i in current_areas:
-		if _last_used != i and i and i.has_method("use") and action_area.can_use:
+		if i and i.has_method("use") and action_area.can_use:
 			i.use()
 			_last_used = i
 			animated_sprite.play("pickup")
@@ -261,7 +261,7 @@ func _check_for_usables():
 			animated_sprite.play("idle")
 
 	for i in current_bodies:
-		if _last_used != i and i and i.has_method("use") and action_area.can_use:
+		if i and i.has_method("use") and action_area.can_use:
 			i.use()
 			_last_used = i
 			animated_sprite.play("pickup")

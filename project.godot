@@ -98,8 +98,8 @@ GameManager="*res://scenes/scripts/game_manager.gd"
 
 [display]
 
-window/size/width=1280
-window/size/height=720
+window/size/width=320
+window/size/height=180
 window/stretch/aspect="expand"
 
 [editor]

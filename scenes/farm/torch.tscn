@@ -1,0 +1,29 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://assets/textures/farm/light/torch_active1.png" type="Texture" id=1]
+[ext_resource path="res://assets/textures/farm/light/torch_inactive.png" type="Texture" id=2]
+[ext_resource path="res://assets/textures/farm/light/torch_active3.png" type="Texture" id=3]
+[ext_resource path="res://assets/textures/farm/light/torch_active4.png" type="Texture" id=4]
+[ext_resource path="res://assets/textures/farm/light/torch_active5.png" type="Texture" id=5]
+[ext_resource path="res://assets/textures/farm/light/torch_active2.png" type="Texture" id=6]
+
+[sub_resource type="SpriteFrames" id=3]
+animations = [ {
+"frames": [ ExtResource( 1 ), ExtResource( 6 ), ExtResource( 3 ), ExtResource( 4 ), ExtResource( 5 ) ],
+"loop": true,
+"name": "active",
+"speed": 12.0
+}, {
+"frames": [ ExtResource( 2 ) ],
+"loop": true,
+"name": "inactive",
+"speed": 5.0
+} ]
+
+[node name="AnimatedSprite" type="AnimatedSprite"]
+position = Vector2( 162.281, -74.423 )
+scale = Vector2( 0.5, 0.5 )
+frames = SubResource( 3 )
+animation = "active"
+frame = 2
+playing = true

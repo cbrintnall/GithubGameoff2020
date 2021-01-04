@@ -8,7 +8,7 @@
 [ext_resource path="res://scenes/managers/player_preferences_handler.gd" type="Script" id=6]
 [ext_resource path="res://scenes/managers/input_handler.gd" type="Script" id=7]
 
-[sub_resource type="StyleBoxFlat" id=2]
+[sub_resource type="StyleBoxFlat" id=1]
 bg_color = Color( 0, 0, 0, 0.509804 )
 corner_radius_top_left = 10
 corner_radius_top_right = 10
@@ -19,7 +19,7 @@ expand_margin_right = 6.0
 expand_margin_top = 6.0
 expand_margin_bottom = 6.0
 
-[sub_resource type="AtlasTexture" id=1]
+[sub_resource type="AtlasTexture" id=2]
 atlas = ExtResource( 3 )
 region = Rect2( 2, 34, 44, 44 )
 
@@ -70,7 +70,7 @@ caret_blink = true
 margin_top = 54.0
 margin_right = 74.0
 margin_bottom = 68.0
-custom_styles/panel = SubResource( 2 )
+custom_styles/panel = SubResource( 1 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="DebugUi/CenterContainer/VBoxContainer/PanelContainer"]
 margin_right = 74.0
@@ -216,7 +216,7 @@ margin_right = 192.0
 margin_bottom = 70.0
 size_flags_horizontal = 3
 size_flags_vertical = 3
-texture = SubResource( 1 )
+texture = SubResource( 2 )
 region_rect = Rect2( 0, 0, 44, 44 )
 patch_margin_left = 5
 patch_margin_top = 5

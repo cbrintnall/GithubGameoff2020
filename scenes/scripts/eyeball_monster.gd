@@ -1,5 +1,6 @@
 extends KinematicBody2D
 
+export(NodePath) var damage_base = null
 export(bool) var do_fix := false
 export(Vector2) var attack_offset := Vector2(-30, 0)
 export(float) var max_health := 100.0
@@ -7,17 +8,21 @@ export(float) var damage := 0
 export(float) var speed := 2.0
 export(NodePath) onready var animation = get_node(animation) as AnimatedSprite
 
-onready var damage_tween = get_node("Tween")
+onready var damage_tween = Tween.new()
 
 var internal_path: PoolVector2Array
 var health := max_health
 var progress: float = 0.0
 
+var _damage_ticker := preload("res://scenes/ui/damage_ticker.tscn")
 var _attack_timer: Timer
 var _next_point: int
 var _moving := true
 var _moon
 var _direction
+
+func is_alive() -> bool:
+	return get_health() > 0
 
 func get_health() -> float:
 	return health
@@ -32,6 +37,7 @@ func _ready():
 	var game_manager = get_node("/root/GameManager")
 	_moon = game_manager.get_moon()
 	game_manager.get_farm_manager().connect("day", self, "_on_day")
+	add_child(damage_tween)
 
 # make monsters die during the day!
 func _on_day():
@@ -105,9 +111,28 @@ func set_path(base: Vector2, _path: Curve2D):
 	for i in range(0, internal_path.size()):
 		internal_path[i] += base
 
+func _do_ticker(amt: float):
+	var base
+	
+	if damage_base:
+		base = get_node(damage_base)
+	
+	var ticker = _damage_ticker.instance()
+
+	if base:
+		var new_base = Node2D.new()
+		new_base.add_child(ticker)
+		new_base.global_position = base.global_position
+		
+		get_tree().root.add_child(new_base)
+		
+		ticker.do_damage(amt)
+
 func take_damage(amt: float):
 	health -= amt
 	var total_duration = .25
+	
+	_do_ticker(amt)
 
 	if health <= 0:
 		_die()

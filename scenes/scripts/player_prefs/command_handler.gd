@@ -16,6 +16,9 @@ func write_output(
 	level = Constants.LogLevel.INFO,
 	clear := true 
 ):
+	if !output_container.visible:
+		output_container.visible = true
+
 	var label = base_label.duplicate()
 	
 	label.visible = true
@@ -28,6 +31,14 @@ func write_output(
 			var child = output_container.get_child(i)
 			
 			child.queue_free()
+
+func clear():
+	for i in range(1, output_container.get_child_count()):
+		var child = output_container.get_child(i)
+		
+		child.queue_free()
+		
+	output_container.visible = false
 
 func _ready():
 	base_label.visible = false
@@ -52,7 +63,6 @@ func _on_visibility_changed():
 		get_tree().paused = false
 
 func _on_text_entered(text):
-	input_base.visible = false
 	input.text = ""
 	_handle_command(text)
 

@@ -16,6 +16,19 @@ onready var tween = get_node("Tween")
 var _beam = preload("res://scenes/towers/moon_beam.tscn")
 var _points_and_targets := {}
 
+func get_upgrades() -> Array:
+	return [
+		{
+			"name": "Beams",
+			"generator_func": "upgrade_beam",
+			"setter_func": "set_beam_upgrade"
+		}
+	]
+
+func _ready():
+	var mat = $TowerBody.material as ShaderMaterial
+#	mat.set_shader_param("charge_amount", 0.0)
+
 func _charge():
 	._charge()
 
@@ -42,11 +55,10 @@ func _charge():
 	tween.start()
 
 func _shoot_at_target(target):
-	_shoot_beam_at_point(target, target.global_position)
+	if target:
+		_shoot_beam_at_point(target, target.global_position)
 
 func _shoot_beam_at_point(shot_at, point: Vector2):
-	shot_at.take_damage(damage_per_hit * damage_multiplier)
-	
 	# unused atm, but code left in just in case
 	if beam_lightning:
 		var vectors := []
@@ -67,7 +79,7 @@ func _shoot_beam_at_point(shot_at, point: Vector2):
 	var beam_parent = _beam.instance()
 	root.add_child(beam_parent)
 	beam_parent.global_position = beam_root.global_position
-	beam_parent.set_target(shot_at)
+	beam_parent.set_target(shot_at, damage_per_hit*damage_multiplier)
 	beam_parent.z_index = z_index + 1
 	
 	if shoot_audio:
@@ -90,11 +102,8 @@ func _sort_by_health(a, b):
 	
 	return a_progress > b_progress
 
-func _get_targets_based_on_mode() -> Array:
+func _get_targets_based_on_mode():
 	var local_targets = targets.duplicate()
-
-	if len(local_targets):
-		return []
 		
 	# position based target modes
 	if _target_mode in [Constants.TowerTargetMode.FIRST,Constants.TowerTargetMode.LAST,Constants.TowerTargetMode.RANDOM]:
@@ -103,6 +112,9 @@ func _get_targets_based_on_mode() -> Array:
 	# health based target modes
 	if _target_mode in [Constants.TowerTargetMode.LOWEST_HEALTH, Constants.TowerTargetMode.HIGHEST_HEALTH]:
 		local_targets.sort_custom(self, "_sort_by_health")
+
+	if len(local_targets) == 0:
+		return []
 
 	# we can only combine FIRST / HIGHEST_HEALTH due to the sorting in the line before,
 	# if this sorting changes then this must too
@@ -116,25 +128,29 @@ func _get_targets_based_on_mode() -> Array:
 			
 	return []
 
-func _shoot_at_targets(local_targets: Array):
-	if len(local_targets) > 0:
-		_set_state(TowerState.FIRING)
+func _set_state(state):
+	._set_state(state)
 
-		for i in range(0, int(clamp(len(local_targets), 0, max_targets))):
-			_shoot_at_target(local_targets[i])
+	var mat = $TowerBody.material as ShaderMaterial
 
-		_set_state(TowerState.UNCHARGED)
+#	match state:
+#		TowerState.CHARGED:
+#			mat.set_shader_param("charge_amount", 1.0)
+#		_:
+#			mat.set_shader_param("charge_amount", 0.0)
 
-#func _do_fire():
-#
-#
-#	var real_targets := []
-#
-#	if len(real_targets) > 0:
-#		_set_state(TowerState.FIRING)
-#
-#		for i in range(0, int(clamp(len(real_targets), 0, max_targets))):
-#			_shoot_at_target(local_targets[i])
-#
-#		_set_state(TowerState.UNCHARGED)
+# add focus mode. meaning it will pick one target and fire everything into it
+func _do_fire():
+	_set_state(TowerState.FIRING)
 
+	var tree = get_tree()
+
+	for i in range(max_targets):
+		_shoot_at_target(_get_targets_based_on_mode())
+		yield(tree.create_timer(0.25), "timeout")
+
+	_set_state(TowerState.UNCHARGED)
+
+#func _process(delta):
+#	var mat = $TowerBody.material as ShaderMaterial
+#	mat.set_shader_param("charge_amount", normalized_charge_process())

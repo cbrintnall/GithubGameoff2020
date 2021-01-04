@@ -1,3 +1,4 @@
+tool
 extends Area2D
 
 signal destroyed(Node2D)
@@ -7,7 +8,6 @@ export(Resource) var inner_resource
 
 onready var on_break_audio_stream: AudioStreamPlayer2D = get_node("onbreak")
 onready var sprite: Sprite = get_node("ground_resource")
-onready var label: Label = get_node("LabelParent/Label")
 onready var particles: CPUParticles2D = get_node("Particles2D")
 onready var grow_tween: Tween = get_node("Tween")
 
@@ -17,12 +17,9 @@ var entered: bool
 var _destroyed:bool
 
 func _ready():
-	label.visible = false
-	label.text = inner_resource.ground_resource_name
-	
 	particles.texture = inner_resource.normal_texture
-
 	sprite.texture = inner_resource.normal_texture
+	sprite.normal_map = inner_resource.normal_map_texture
 	
 	if inner_resource.on_break:
 		on_break_audio_stream.stream = inner_resource.on_break
@@ -47,18 +44,14 @@ func on_action_hover():
 	if !grown:
 		yield(self, "finished_growing")
 
-	sprite.texture = inner_resource.hovered_texture
-	# TODO: evaluate if we want to keep this
-#	label.visible = true
-	label.text = inner_resource.ground_resource_name
+	(sprite.material as ShaderMaterial).set_shader_param("outLineSize", 0.05)
 	entered = true
 	
 func on_action_leave():
 	if !grown:
 		yield(self, "finished_growing")
 
-	sprite.texture = inner_resource.normal_texture
-	label.visible = false
+	(sprite.material as ShaderMaterial).set_shader_param("outLineSize", 0.0)
 	entered = false
 
 func use():

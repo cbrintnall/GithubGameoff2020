@@ -1,6 +1,6 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=12 format=2]
 
-[ext_resource path="res://assets/fonts/MinimalPixel v2.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://assets/audio/grass_break.ogg" type="AudioStream" id=1]
 [ext_resource path="res://assets/textures/farm/grass.png" type="Texture" id=2]
 [ext_resource path="res://scenes/scripts/resource.gd" type="Script" id=3]
 [ext_resource path="res://meta/resources/resources/grass.tres" type="Resource" id=4]
@@ -8,25 +8,56 @@
 [sub_resource type="CircleShape2D" id=1]
 radius = 5.25399
 
-[sub_resource type="DynamicFont" id=2]
-size = 7
-font_data = ExtResource( 1 )
-
-[sub_resource type="Curve" id=3]
+[sub_resource type="Curve" id=2]
 min_value = -360.0
 max_value = 360.0
 _data = [ Vector2( 0, 26.1818 ), 0.0, 0.0, 0, 0, Vector2( 1, 52.3636 ), 0.0, 0.0, 0, 0 ]
 
-[sub_resource type="Curve" id=4]
+[sub_resource type="Curve" id=3]
 max_value = 100.0
 _data = [ Vector2( 0, 1 ), 0.0, 0.0, 0, 0, Vector2( 1, 100 ), 305.818, 0.0, 0, 0 ]
 
-[sub_resource type="Gradient" id=5]
+[sub_resource type="Gradient" id=4]
 offsets = PoolRealArray( 0.609272, 0.980132 )
 colors = PoolColorArray( 1, 1, 1, 1, 1, 1, 1, 0 )
 
+[sub_resource type="Shader" id=6]
+code = "shader_type canvas_item;
+render_mode blend_mix;
+
+uniform float outLineSize  = 0.02;
+uniform vec4  outLineColor = vec4(1.0, 1.0, 1.0, 1.0);
+
+void fragment()
+{
+    vec4 tcol = texture(TEXTURE, UV);
+
+    if (tcol.a == 0.0)
+    {
+        if (texture(TEXTURE, UV + vec2(0.0,          outLineSize)).a  != 0.0 ||
+            texture(TEXTURE, UV + vec2(0.0,         -outLineSize)).a  != 0.0 ||
+            texture(TEXTURE, UV + vec2(outLineSize,  0.0)).a          != 0.0 ||
+            texture(TEXTURE, UV + vec2(-outLineSize, 0.0)).a          != 0.0 ||
+            texture(TEXTURE, UV + vec2(-outLineSize, outLineSize)).a  != 0.0 ||
+            texture(TEXTURE, UV + vec2(-outLineSize, -outLineSize)).a != 0.0 ||
+            texture(TEXTURE, UV + vec2(outLineSize,  outLineSize)).a  != 0.0 ||
+            texture(TEXTURE, UV + vec2(outLineSize,  -outLineSize)).a != 0.0) 
+            tcol = outLineColor;
+    }
+
+    COLOR = tcol;
+}"
+
+[sub_resource type="ShaderMaterial" id=7]
+shader = SubResource( 6 )
+shader_param/outLineSize = 0.0
+shader_param/outLineColor = Plane( 1, 1, 1, 1 )
+
+[sub_resource type="OccluderPolygon2D" id=5]
+polygon = PoolVector2Array( -2.49218, 5.00284, 2.51378, 4.9897, 2.51378, -1.00169, 3.4992, -1.01483, 3.4992, -2.00025, 4.49777, -2.01339, 4.47149, -2.98568, 2.50064, -3.01195, 2.52692, -5.00908, 0.516653, -5.00908, 0.503514, -3.99738, -2.5316, -3.99738, -2.49218, -5.03536, -3.51702, -4.9828, -3.53016, -2.99881, -4.52873, -2.98567, -4.48931, -0.962265, -3.5433, -1.00168, -3.53016, 0.982307, -2.51846, 1.00859 )
+
 [node name="Resource" type="Area2D"]
-scale = Vector2( 1, 1e-05 )
+linear_damp = 57.243
 collision_layer = 524288
 collision_mask = 524288
 script = ExtResource( 3 )
@@ -35,23 +66,9 @@ inner_resource = ExtResource( 4 )
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource( 1 )
 
-[node name="LabelParent" type="Node2D" parent="."]
-
-[node name="Label" type="Label" parent="LabelParent"]
-margin_left = -11.0087
-margin_top = -16.7043
-margin_right = 9.99133
-margin_bottom = -2.70427
-grow_horizontal = 2
-custom_fonts/font = SubResource( 2 )
-text = "Grass"
-align = 1
-valign = 1
-__meta__ = {
-"_edit_use_anchors_": false
-}
-
 [node name="onbreak" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 1 )
+bus = "Sound Effects"
 
 [node name="Particles2D" type="CPUParticles2D" parent="."]
 emitting = false
@@ -62,16 +79,21 @@ texture = ExtResource( 2 )
 emission_shape = 1
 emission_sphere_radius = 3.0
 gravity = Vector2( 0, 90 )
-angular_velocity_curve = SubResource( 3 )
+angular_velocity_curve = SubResource( 2 )
 damping = 65.58
-damping_curve = SubResource( 4 )
+damping_curve = SubResource( 3 )
 angle = 174.5
 angle_random = 0.71
 scale_amount = 0.2
 scale_amount_random = 0.3
-color_ramp = SubResource( 5 )
+color_ramp = SubResource( 4 )
 
 [node name="Tween" type="Tween" parent="."]
 
 [node name="ground_resource" type="Sprite" parent="."]
+material = SubResource( 7 )
 texture = ExtResource( 2 )
+
+[node name="LightOccluder2D" type="LightOccluder2D" parent="."]
+z_index = -1
+occluder = SubResource( 5 )

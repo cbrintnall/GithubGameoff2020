@@ -1,8 +1,9 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://scenes/scripts/moon_beam_tower.gd" type="Script" id=1]
 [ext_resource path="res://assets/textures/farm/towers/moon_beam_idle.png" type="Texture" id=2]
 [ext_resource path="res://assets/textures/farm/towers/moon_tower_top.png" type="Texture" id=3]
+[ext_resource path="res://assets/textures/farm/towers/moon_beam_idle_n.png" type="Texture" id=4]
 
 [sub_resource type="CircleShape2D" id=1]
 radius = 7.49287
@@ -53,6 +54,39 @@ tracks/2/keys = {
 offsets = PoolRealArray( 0.680982, 0.969325 )
 colors = PoolColorArray( 0.572549, 0.909804, 0.752941, 1, 1, 1, 1, 0 )
 
+[sub_resource type="Shader" id=6]
+code = "shader_type canvas_item;
+
+uniform vec4 replace_color: hint_color;
+uniform vec4 modified_color: hint_color;
+uniform vec4 other_modified_color: hint_color;
+uniform float charge_amount: hint_range(0., 1.);
+
+void fragment(){
+	vec4 color = texture(TEXTURE, UV);
+	if (color == modified_color || color == other_modified_color) {
+		COLOR = color;
+		if ((1. - UV.y) < charge_amount){
+			COLOR.a = 1.0;
+		} else {
+			COLOR = replace_color;
+		}
+	} else {
+		COLOR.a = 1.0;
+		COLOR = color;
+	}
+}"
+
+[sub_resource type="ShaderMaterial" id=7]
+shader = SubResource( 6 )
+shader_param/replace_color = Color( 0.639216, 0.654902, 0.760784, 1 )
+shader_param/modified_color = Color( 0.137255, 0.14902, 0.180392, 1 )
+shader_param/other_modified_color = Color( 0.364706, 0.529412, 0.654902, 1 )
+shader_param/charge_amount = 1.0
+
+[sub_resource type="OccluderPolygon2D" id=8]
+polygon = PoolVector2Array( -10.3667, 4.85648, -7.65103, -2.44777, -0.253136, 1.85986, 7.42569, -1.79226, 10.6096, 4.4819, -0.0658493, 9.91326 )
+
 [node name="MoonBeamTower" type="StaticBody2D"]
 collision_layer = 688129
 collision_mask = 524289
@@ -65,7 +99,7 @@ no_place_area = NodePath("Area2D")
 collision_zone = NodePath("CollisionShape2D")
 vision_area = NodePath("TargetZone")
 animation = NodePath("AnimationPlayer")
-max_targets = 1
+max_targets = 5
 
 [node name="VariableNodes" type="Node2D" parent="."]
 
@@ -75,9 +109,10 @@ max_targets = 1
 one_shot = true
 
 [node name="BeamRoot" type="Node2D" parent="VariableNodes"]
-position = Vector2( 0, -11.8467 )
+position = Vector2( -0.176777, -25.5696 )
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+visible = false
 position = Vector2( -0.176777, 1.90831 )
 shape = SubResource( 1 )
 
@@ -131,5 +166,11 @@ scale_amount_random = 1.0
 color_ramp = SubResource( 5 )
 
 [node name="TowerBody" type="Sprite" parent="."]
+material = SubResource( 7 )
 position = Vector2( 0, -12.3024 )
 texture = ExtResource( 2 )
+normal_map = ExtResource( 4 )
+
+[node name="LightOccluder2D" type="LightOccluder2D" parent="."]
+z_index = -1
+occluder = SubResource( 8 )

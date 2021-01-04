@@ -18,9 +18,13 @@ func _ready():
 	_register_default_commands()
 
 func _register_default_commands():
+	register_command("clear", funcref(self, "_clear_output"))
 	register_command("scene", funcref(self, "_load_scene"))
 	register_command("commands", funcref(self, "_print_commands"))
 	
+func _clear_output(args := []):
+	console.clear()
+
 func _print_commands(args := []):
 	for command in console.commands:
 		write(command, Constants.LogLevel.DEBUG, false)

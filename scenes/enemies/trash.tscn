@@ -138,6 +138,7 @@ animations = [ {
 collision_layer = 262144
 collision_mask = 0
 script = ExtResource( 4 )
+damage_base = NodePath("DamageBase")
 attack_offset = Vector2( 0, 0 )
 max_health = 200.0
 damage = 3.0
@@ -151,5 +152,9 @@ shape = SubResource( 1 )
 [node name="AnimatedSprite" type="AnimatedSprite" parent="."]
 frames = SubResource( 29 )
 animation = "walk"
+frame = 1
 playing = true
 offset = Vector2( 0, -16.569 )
+
+[node name="DamageBase" type="Node2D" parent="."]
+position = Vector2( 0, -39.9877 )

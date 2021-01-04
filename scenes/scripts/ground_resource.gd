@@ -14,3 +14,4 @@ export(AudioStream) var on_break
 export(String) var ground_resource_name
 export(Texture) var normal_texture
 export(Texture) var hovered_texture
+export(Texture) var normal_map_texture

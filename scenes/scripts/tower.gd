@@ -82,9 +82,22 @@ func add_target(target):
 func set_to_target_mode(mode: int):
 	_target_mode = mode
 
+# return a value between 0 - 1 indicating the process of this being charged
+# returns 0 if not in a charging state, unless it's charged in which case it's 1.
+func normalized_charge_process() -> float:
+	if state == TowerState.CHARGED:
+		return 1.0
+	elif state == TowerState.CHARGING:
+		return charge_timer.time_left/charge_timer.wait_time
+
+	return 0.0
+
 func use():
 	if in_world():
 		event_bus.send_event(Constants.BusEvents.TOWER_SELECTED, { "tower": self })
+
+func get_upgrades() -> Array:
+	return []
 
 func destroy_tower():
 	queue_free()

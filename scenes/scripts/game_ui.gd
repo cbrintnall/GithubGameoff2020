@@ -19,6 +19,8 @@ func _ready():
 	event_bus.connect("new_event", self, "_on_bus_event")
 	base.visible = false
 	
+	tower_panel.connect("close", base, "set_visible", [ false ])
+	
 func _on_bus_event(event: int, data := {}):
 	match event:
 		Constants.BusEvents.TOWER_SELECTED:
